@@ -2,8 +2,26 @@ import type { Receipt } from '@/types';
 
 export const mockReceipts: Receipt[] = [
   {
+    id: 'rc-018',
+    code: 'PT2026-0018',
+    status: 'pending',
+    contractId: 'ct-002',
+    contractCode: 'HDDC/2026/015',
+    installmentId: 'ins-007',
+    projectName: 'Sunshine Residence',
+    unitCode: 'B-0805',
+    amount: 50_000_000,
+    paidDate: '2026-09-29',
+    method: 'bank_transfer',
+    payerName: 'Nguyễn Văn An',
+    content: 'Thanh toán trước một phần Đợt 2 – Bổ sung cọc, HĐĐC HDDC/2026/015 (chờ đối soát)',
+    cashier: 'Phạm Thu Hà',
+    bankReference: 'FT26272118030',
+  },
+  {
     id: 'rc-015',
     code: 'PT2026-0015',
+    status: 'paid',
     contractId: 'ct-001',
     contractCode: 'HDMB/2026/001',
     installmentId: 'ins-003',
@@ -20,6 +38,7 @@ export const mockReceipts: Receipt[] = [
   {
     id: 'rc-012',
     code: 'PT2026-0012',
+    status: 'paid',
     contractId: 'ct-001',
     contractCode: 'HDMB/2026/001',
     installmentId: 'ins-002',
@@ -36,6 +55,7 @@ export const mockReceipts: Receipt[] = [
   {
     id: 'rc-008',
     code: 'PT2026-0008',
+    status: 'paid',
     contractId: 'ct-002',
     contractCode: 'HDDC/2026/015',
     installmentId: 'ins-006',
@@ -51,6 +71,7 @@ export const mockReceipts: Receipt[] = [
   {
     id: 'rc-2025-021',
     code: 'PT2025-0021',
+    status: 'paid',
     contractId: 'ct-001',
     contractCode: 'HDMB/2026/001',
     installmentId: 'ins-001',
@@ -67,6 +88,7 @@ export const mockReceipts: Receipt[] = [
   {
     id: 'rc-2025-009',
     code: 'PT2025-0009',
+    status: 'paid',
     contractId: 'ct-004',
     contractCode: 'HDMB/2024/087-PL01',
     installmentId: 'ins-010',
@@ -83,6 +105,7 @@ export const mockReceipts: Receipt[] = [
   {
     id: 'rc-2024-031',
     code: 'PT2024-0031',
+    status: 'paid',
     contractId: 'ct-004',
     contractCode: 'HDMB/2024/087-PL01',
     installmentId: 'ins-009',
@@ -95,5 +118,21 @@ export const mockReceipts: Receipt[] = [
     content: 'Thanh toán Đợt 1 – Ký hợp đồng, HĐMB HDMB/2024/087-PL01',
     cashier: 'Võ Quốc Bảo',
     bankReference: 'FT24141003318',
+  },
+  {
+    id: 'rc-010',
+    code: 'PT2026-0010',
+    status: 'cancelled',
+    contractId: 'ct-001',
+    contractCode: 'HDMB/2026/001',
+    installmentId: 'ins-002',
+    projectName: 'Sunshine Residence',
+    unitCode: 'A-1203',
+    amount: 375_000_000,
+    paidDate: '2026-04-10',
+    method: 'cash',
+    payerName: 'Nguyễn Văn An',
+    content: 'Phiếu lập nhầm hình thức thanh toán – đã hủy, thay bằng PT2026-0012',
+    cashier: 'Võ Quốc Bảo',
   },
 ];

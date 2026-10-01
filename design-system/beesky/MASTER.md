@@ -58,9 +58,9 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`toneCo
 | `success` (xanh lá) | `#ECFDF3` | `#166534` | `#16A34A` | Đã thanh toán, đang hiệu lực, đã tất toán, phiếu thu, thanh tiến độ 100% |
 | `info` (xanh dương) | `#EFF6FF` | `#1D4ED8` | `#3B82F6` | Thông tin, HĐĐC/PGC |
 | `danger` (đỏ) | `#FEF2F2` | `#B91C1C` | `#EF4444` | Quá hạn, lỗi, đăng xuất |
-| `warning` (vàng cam) | `#FFFBEB` | `#B45309` | `#F59E0B` | Chờ xử lý |
+| `warning` (vàng cam) | `#FFFBEB` | `#B45309` | `#F59E0B` | Chờ xử lý, phiếu thu chờ xác nhận |
 | `primary` (cam) | `#FEF5EC` | `#AD5A0C` | `#F08A24` | Đến hạn, thanh toán một phần |
-| `neutral` (xám) | `#F3F4F6` | `#374151` | `#6B7280` | Chưa đến hạn |
+| `neutral` (xám) | `#F3F4F6` | `#374151` | `#6B7280` | Chưa đến hạn, phiếu thu đã hủy |
 
 ### 1.4 Tương phản — [Skill] áp lên màu [Mockup]
 
@@ -226,6 +226,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **Dialog** | Modal giữa màn hình, nền `scrim`, hộp trắng bo `xl`, tối đa 440px, `shadows.lg`; tiêu đề `h3` làm nhãn dialog, nút X (IconButton); hàng nút cuối (Hủy ghost + hành động primary). Đóng bằng Esc / X / vùng tối / Back; web giữ focus trong hộp thoại, focus đầu vào nút Đóng, đóng xong trả focus về nút mở. Tắt hiệu ứng khi giảm chuyển động. | [Skill] modal-escape, focus |
 | **Breadcrumb** | Desktop: "Mục cha › Mục hiện tại", link `textBrand`, mục hiện tại `textMuted` + `aria-current="page"`, `role="navigation"`. | [Skill] breadcrumb-web |
 | **StickyActionBar** | Thanh trắng dính đáy (mobile/tablet), viền trên + `shadows.navTop`, chứa 1 nút primary full width; đặt ngoài ScrollView (prop `footer` của `Screen`) để không che nội dung; tự chừa vùng an toàn khi không có bottom tab. | [Skill] sticky-navigation, safe-area |
+| **DataTable** | Bảng cho màn ≥ 1024px: khung trắng bo `lg` viền `borderSubtle`; hàng tiêu đề nền `surfaceMuted`, chữ `overline` `textMuted`; dòng cao ≥ 56, phân cách 1px; cột số căn phải `tabular-nums`. Semantics `table` / `row` / `columnheader` / `cell`. Dòng bấm được: hover `primary.50` + pointer, focus Tab, Enter mở. Màn hẹp dùng danh sách thẻ thay bảng. | [Skill] table handling |
 | **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
 | **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
@@ -258,6 +259,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 - ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
 - ❌ Modal không đóng được bằng Esc/Back, không giữ focus, hoặc không trả focus về nút mở — [Skill]
 - ❌ Thanh/nút cố định che nội dung hoặc phần tử đang focus — [Skill]
+- ❌ Bảng dữ liệu trên màn hẹp (tràn / cuộn ngang) — dùng thẻ — [Skill]
 - ❌ Hàng chip/tab lọc cuộn ngang hoặc bị cắt; cắt chữ mã hợp đồng / tên dự án (cho xuống dòng) — [Skill]
 - ❌ Hiển thị số chưa đọc chỉ bằng màu/số trần cho trình đọc màn hình (dùng cụm từ đầy đủ) — [Skill]
 - ❌ Hơn một nút primary trên một màn hình — [Skill]

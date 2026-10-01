@@ -1,60 +1,209 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ReceiptCard } from '@/components/domain';
+import { ReceiptCard, ReceiptCardSkeleton, receiptAmountStyle } from '@/components/domain';
 import { Screen } from '@/components/layout';
-import { Card, Chip, EmptyState, ErrorState, IconCircle, ScreenHeader, SkeletonList, Text } from '@/components/ui';
+import {
+  Badge,
+  Card,
+  Chip,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  Icon,
+  IconCircle,
+  ScreenHeader,
+  Skeleton,
+  Text,
+  type DataTableColumn,
+  type DataTableRow,
+} from '@/components/ui';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useReceiptList } from '@/hooks/useReceipts';
-import { formatCurrency } from '@/lib/format';
-import { chipRow, colors, semantic } from '@/theme';
+import { formatCurrency, formatDate } from '@/lib/format';
+import { receiptStatusMeta } from '@/lib/labels';
+import type { ReceiptTabCounts } from '@/lib/receipt';
+import { chipRow, radius, semantic, sizes, spacing } from '@/theme';
+import type { Receipt, ReceiptTab } from '@/types';
+
+const tabs: { value: ReceiptTab; label: string; unit: string }[] = [
+  { value: 'all', label: 'Tất cả', unit: 'phiếu thu' },
+  { value: 'paid', label: 'Đã thanh toán', unit: 'phiếu thu' },
+  { value: 'byContract', label: 'Theo hợp đồng', unit: 'hợp đồng' },
+];
+
+type Col = 'code' | 'date' | 'contract' | 'amount' | 'status';
+const columns: DataTableColumn<Col>[] = [
+  { key: 'code', title: 'Mã phiếu', flex: 2 },
+  { key: 'date', title: 'Ngày thu', flex: 1.5 },
+  { key: 'contract', title: 'Hợp đồng', flex: 2.2 },
+  { key: 'amount', title: 'Số tiền', flex: 2, align: 'right' },
+  { key: 'status', title: 'Trạng thái', flex: 2 },
+];
+const SKELETON_COUNT = 4;
+
+const openReceipt = (r: Receipt) => router.push({ pathname: '/receipts/[id]', params: { id: r.id } });
 
 export default function ReceiptsScreen() {
-  const [year, setYear] = useState<number | 'all'>('all');
-  const { receipts, years, total, loading, refreshing, error, refetch } = useReceiptList(year);
+  const [tab, setTab] = useState<ReceiptTab>('all');
+  const { isDesktop } = useBreakpoint();
+  const { data, receipts, groups, counts, paidTotal, loading, refreshing, error, refetch } = useReceiptList(tab);
+
+  /** Desktop: bảng; mobile/tablet: danh sách thẻ. */
+  const renderList = (items: Receipt[], label: string) =>
+    isDesktop ? (
+      <DataTable accessibilityLabel={label} columns={columns} rows={items.map(toRow)} />
+    ) : (
+      <View style={styles.list}>
+        {items.map((r) => (
+          <ReceiptCard key={r.id} receipt={r} onPress={() => openReceipt(r)} />
+        ))}
+      </View>
+    );
+
+  const isEmpty = tab === 'byContract' ? groups.length === 0 : receipts.length === 0;
 
   return (
     <Screen onRefresh={() => void refetch()} refreshing={refreshing}>
       <ScreenHeader title="Phiếu thu" subtitle="Chứng từ các khoản bạn đã thanh toán" />
 
-      {loading ? (
-        <SkeletonList count={4} />
-      ) : error ? (
-        <ErrorState message={error} onRetry={() => void refetch()} />
-      ) : (
-        <>
-          <Card>
-            <View className="flex-row items-center gap-ms">
-              <IconCircle name="cash" tone="success" size="xl" />
-              <View className="flex-1">
-                <Text variant="small" color={semantic.textMuted}>
-                  Tổng đã thu {year === 'all' ? '' : `năm ${year}`} · {receipts.length} phiếu
-                </Text>
-                <Text variant="h2" color={colors.success[700]}>
-                  {formatCurrency(total)}
-                </Text>
-              </View>
-            </View>
-          </Card>
+      {data ? <TotalCard paidTotal={paidTotal} counts={counts} /> : null}
 
-          <View style={chipRow} accessibilityRole="tablist">
-            <Chip role="tab" label="Tất cả" selected={year === 'all'} onPress={() => setYear('all')} />
-            {years.map((y) => (
-              <Chip role="tab" key={y} label={`Năm ${y}`} selected={year === y} onPress={() => setYear(y)} />
+      <View style={chipRow} accessibilityRole="tablist">
+        {tabs.map((t) => (
+          <Chip
+            key={t.value}
+            role="tab"
+            label={t.label}
+            count={data ? counts[t.value] : undefined}
+            selected={tab === t.value}
+            onPress={() => setTab(t.value)}
+            accessibilityLabel={data ? `${t.label}, ${counts[t.value]} ${t.unit}` : t.label}
+          />
+        ))}
+      </View>
+
+      {loading ? (
+        isDesktop ? (
+          <Card padding="none">
+            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <View key={i} style={styles.skeletonRow}>
+                <Skeleton height={sizes.control.sm} radius={radius.sm} />
+              </View>
+            ))}
+          </Card>
+        ) : (
+          <View style={styles.list}>
+            {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              <ReceiptCardSkeleton key={i} />
             ))}
           </View>
-
-          {receipts.length === 0 ? (
-            <EmptyState icon="receipt-outline" title="Chưa có phiếu thu" description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được xác nhận." />
-          ) : (
-            <View className="gap-ms">
-              {receipts.map((r) => (
-                <ReceiptCard key={r.id} receipt={r} onPress={() => router.push({ pathname: '/receipts/[id]', params: { id: r.id } })} />
-              ))}
+        )
+      ) : error ? (
+        <Card>
+          <ErrorState message={error} onRetry={() => void refetch()} />
+        </Card>
+      ) : isEmpty ? (
+        <Card>
+          <EmptyState
+            icon="receipt-outline"
+            title={tab === 'paid' ? 'Chưa có phiếu thu đã thanh toán' : 'Chưa có phiếu thu'}
+            description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được ghi nhận."
+            actionLabel={tab !== 'all' ? 'Xem tất cả phiếu thu' : 'Xem lịch thanh toán'}
+            onAction={() => (tab !== 'all' ? setTab('all') : router.push('/payments'))}
+          />
+        </Card>
+      ) : tab === 'byContract' ? (
+        <View style={styles.groups}>
+          {groups.map((g) => (
+            <View key={g.contractId} style={styles.group}>
+              <View style={styles.groupHeader}>
+                <Icon name="document-text-outline" color={semantic.textBrand} />
+                <View style={styles.flex}>
+                  <Text variant="h3" accessibilityRole="header">
+                    {g.contractCode}
+                  </Text>
+                  <Text variant="caption" color={semantic.textMuted}>
+                    {g.projectName} · Căn {g.unitCode} · {g.receipts.length} phiếu
+                  </Text>
+                </View>
+                <View style={styles.groupTotal}>
+                  <Text variant="caption" color={semantic.textMuted}>
+                    Đã thanh toán
+                  </Text>
+                  <Text variant="smallMedium" weight="bold" color={semantic.textSuccess}>
+                    {formatCurrency(g.paidTotal)}
+                  </Text>
+                </View>
+              </View>
+              {renderList(g.receipts, `Phiếu thu của hợp đồng ${g.contractCode}`)}
             </View>
-          )}
-        </>
+          ))}
+        </View>
+      ) : (
+        renderList(receipts, tab === 'paid' ? 'Phiếu thu đã thanh toán' : 'Tất cả phiếu thu')
       )}
     </Screen>
   );
 }
+
+function toRow(r: Receipt): DataTableRow<Col> {
+  const meta = receiptStatusMeta[r.status];
+  const amount = receiptAmountStyle(r);
+  return {
+    key: r.id,
+    onPress: () => openReceipt(r),
+    accessibilityHint: `Mở phiếu thu ${r.code}`,
+    cells: {
+      code: (
+        <View style={styles.codeCell}>
+          <Icon name="document-text-outline" size="sm" color={semantic.iconMuted} />
+          <Text variant="smallMedium" weight="semibold" style={styles.flex}>
+            {r.code}
+          </Text>
+        </View>
+      ),
+      date: <Text variant="small">{formatDate(r.paidDate)}</Text>,
+      contract: <Text variant="small">{r.contractCode}</Text>,
+      amount: (
+        <Text variant="smallMedium" weight="bold" color={amount.color} align="right" style={[styles.amount, amount.strike && styles.strike]}>
+          {formatCurrency(r.amount)}
+        </Text>
+      ),
+      status: <Badge label={meta.label} tone={meta.tone} icon={meta.icon} />,
+    },
+  };
+}
+
+function TotalCard({ paidTotal, counts }: { paidTotal: number; counts: ReceiptTabCounts }) {
+  return (
+    <Card>
+      <View style={styles.totalRow}>
+        <IconCircle name="cash" tone="success" size="xl" />
+        <View style={styles.flex}>
+          <Text variant="small" color={semantic.textMuted}>
+            Tổng đã thanh toán · {counts.paid} phiếu
+          </Text>
+          <Text variant="h2" color={semantic.textSuccess}>
+            {formatCurrency(paidTotal)}
+          </Text>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+const styles = StyleSheet.create({
+  list: { gap: spacing.ms },
+  groups: { gap: spacing.lg },
+  group: { gap: spacing.ms },
+  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  groupTotal: { alignItems: 'flex-end' },
+  flex: { flex: 1, minWidth: 0 },
+  totalRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  codeCell: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  amount: { fontVariant: ['tabular-nums'] },
+  strike: { textDecorationLine: 'line-through' },
+  skeletonRow: { padding: spacing.md },
+});

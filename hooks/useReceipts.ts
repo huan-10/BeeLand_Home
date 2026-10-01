@@ -1,23 +1,34 @@
 import { useMemo } from 'react';
 
-import { filterReceiptsByYear, getReceiptYears, sumReceipts } from '@/lib/receipt';
+import {
+  countReceiptTabs,
+  filterReceiptsByTab,
+  groupReceiptsByContract,
+  sortReceiptsByDate,
+  sumPaidReceipts,
+} from '@/lib/receipt';
 import { getReceiptById, getReceipts } from '@/services';
-import type { ReceiptFilter } from '@/types';
+import type { ReceiptFilter, ReceiptTab } from '@/types';
 
 import { useAsync } from './useAsync';
 
 export function useReceipts(filter: ReceiptFilter = {}) {
-  return useAsync(() => getReceipts(filter), [filter.contractId, filter.year]);
+  return useAsync(() => getReceipts(filter), [filter.contractId, filter.year, filter.status]);
 }
 
-/** Danh sách phiếu thu có lọc theo năm, kèm danh sách năm và tổng tiền. */
-export function useReceiptList(year: number | 'all') {
+/** Màn Phiếu thu: danh sách theo tab, nhóm theo hợp đồng, số lượng từng tab và tổng đã thu. */
+export function useReceiptList(tab: ReceiptTab) {
   const state = useReceipts();
   const derived = useMemo(() => {
     const all = state.data ?? [];
-    const receipts = filterReceiptsByYear(all, year);
-    return { receipts, years: getReceiptYears(all), total: sumReceipts(receipts) };
-  }, [state.data, year]);
+    const receipts = sortReceiptsByDate(filterReceiptsByTab(all, tab));
+    return {
+      receipts,
+      groups: tab === 'byContract' ? groupReceiptsByContract(all) : [],
+      counts: countReceiptTabs(all),
+      paidTotal: sumPaidReceipts(all),
+    };
+  }, [state.data, tab]);
   return { ...state, ...derived };
 }
 

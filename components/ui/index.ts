@@ -25,3 +25,4 @@ export * from './ActionTile';
 export * from './Breadcrumb';
 export * from './Dialog';
 export * from './Tabs';
+export * from './DataTable';

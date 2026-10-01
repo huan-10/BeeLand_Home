@@ -1,28 +1,41 @@
 # Trang: Phiếu thu (`app/(app)/receipts/index.tsx` và `receipts/[id].tsx`)
 
-> Chỉ ghi điểm **khác** `MASTER.md`. File này áp dụng cho cả danh sách và chi tiết phiếu thu.
+> Chỉ ghi điểm **khác** `MASTER.md`. Tra skill (`--domain ux`): `"data table responsive"` (bảng không được tràn trên mobile → dùng dạng thẻ; không cuộn ngang), `"empty state"` (luôn có lời giải thích + hành động).
 
-## Khác Master — Danh sách
-- Thẻ tổng hợp đầu trang: `IconCircle xl` success + "Tổng đã thu (năm …) · N phiếu" + số tiền `h2` màu `success.700`.
-- Chip lọc theo **năm** (Tất cả + các năm có phiếu thu, mới nhất trước).
-- Số tiền trong `ReceiptCard` có dấu `+` và màu `success.700`.
+## Trạng thái phiếu thu (`receiptStatusMeta`)
+| Trạng thái | Badge (chữ + icon) | Tông | Số tiền |
+|-----------|--------------------|------|---------|
+| `paid` | "Đã thanh toán" ✓ | success | `textSuccess` |
+| `pending` | "Chờ xác nhận" đồng hồ | warning | `text` |
+| `cancelled` | "Đã hủy" ⊗ | neutral | `textMuted` + gạch ngang |
 
-## Khác Master — Chi tiết
-- Bố cục **"tờ phiếu"**: thẻ duy nhất rộng tối đa `layout.readableMaxWidth` (560), căn giữa ở mọi bề rộng, padding `lg`, `shadows.md`.
-- Đầu phiếu: Logo `sm` + badge success "Đã xác nhận" (icon tích); giữa: overline "PHIẾU THU" (`letterSpacing.wide`), số phiếu, số tiền `display` màu `success.700`; đường kẻ **nét đứt** ngăn cách; các `InfoRow`.
-- Một nút **secondary** "Xem hợp đồng" (không có nút primary trên màn hình này).
+"Tổng đã thanh toán" chỉ cộng phiếu `paid` (`sumPaidReceipts`).
 
-## Bố cục
-| | Mobile | Desktop |
+## Danh sách
+- `ScreenHeader` "Phiếu thu" · thẻ tổng "Tổng đã thanh toán · N phiếu" (`IconCircle xl` success, số tiền `h2` `textSuccess`).
+- **Tab lọc** (`Chip role="tab"`, `chipRow` xuống dòng): **Tất cả (n)** · **Đã thanh toán (n)** · **Theo hợp đồng (n hợp đồng)**; tên truy cập "Đã thanh toán, 6 phiếu thu". Lọc / nhóm / đếm trong `lib/receipt.ts`, dữ liệu qua `useReceiptList(tab)`.
+- **Theo hợp đồng**: mỗi nhóm có tiêu đề (icon tài liệu, mã HĐ `h3` role header, "dự án · căn · n phiếu", "Đã thanh toán" tổng nhóm bên phải) rồi danh sách/bảng phiếu của nhóm. Nhóm có phiếu mới nhất đứng trước.
+
+### Bố cục
+| | Mobile & tablet (< 1024px) | Desktop (≥ 1024px) |
 |---|---|---|
-| Danh sách | 1 cột | 1 cột (thẻ phiếu thu dạng hàng, không chia lưới) |
-| Chi tiết | Tờ phiếu toàn chiều rộng | Tờ phiếu 560px căn giữa |
+| Dòng phiếu thu | **Thẻ** `ReceiptCard`: `IconCircle` tài liệu (tông theo trạng thái) · mã phiếu semibold · "ngày · mã HĐ" · số tiền (phải) · Badge trạng thái | **Bảng** `DataTable` |
+| Bảng | — | Cột: **Mã phiếu** (icon tài liệu + mã) · **Ngày thu** · **Hợp đồng** · **Số tiền** (căn phải, `tabular-nums`) · **Trạng thái** (Badge). `role="table"` → `row` → `columnheader` / `cell`; tiêu đề cột `overline` `textMuted` trên nền `surfaceMuted`. Dòng: hover nền `primary.50` + pointer, focus bằng Tab, **Enter** mở chi tiết |
 
-## Trạng thái
+Bấm thẻ / dòng → `/receipts/[id]`.
+
+### Trạng thái
 | Trạng thái | Hiển thị |
 |-----------|----------|
-| Đang tải (danh sách) | `SkeletonList` 4 thẻ |
-| Đang tải (chi tiết) | Skeleton `sizes.skeleton.page` |
-| Lỗi | `ErrorState` + Thử lại |
-| Rỗng | `EmptyState` "Chưa có phiếu thu" — "Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được xác nhận." |
-| Làm mới | Kéo để làm mới (danh sách) |
+| Đang tải | Desktop: thẻ chứa 4 Skeleton dòng; mobile: 4 `ReceiptCardSkeleton` |
+| Lỗi | `ErrorState` + "Thử lại" trong `Card` |
+| Rỗng | `EmptyState` "Chưa có phiếu thu" / "Chưa có phiếu thu đã thanh toán" + hành động: "Xem tất cả phiếu thu" (đang lọc) hoặc "Xem lịch thanh toán" (tab Tất cả) |
+| Làm mới | Kéo để làm mới |
+
+## Chi tiết
+- Bố cục **"tờ phiếu"**: thẻ duy nhất tối đa `layout.readableMaxWidth` (560), căn giữa, padding `lg`, `shadows.md`.
+- Đầu phiếu: Logo `sm` + **Badge trạng thái thật** (`receiptStatusMeta`, size `md`); giữa: overline "PHIẾU THU", số phiếu, số tiền `display` (màu theo trạng thái, gạch ngang khi đã hủy).
+- Phiếu `pending` / `cancelled`: hộp thông báo pastel theo tông (`role="status"`) giải thích trạng thái.
+- Đường kẻ nét đứt + `InfoRow`: Ngày thu, Người nộp, Hợp đồng, Dự án / Căn, Hình thức, Mã giao dịch, Thu ngân, Nội dung.
+- Hành động: **"Tải PDF"** (secondary, `download-outline`) và **"Chia sẻ"** (outline, `share-social-outline`) chia đôi một hàng, có `loading`. Gọi `exportReceiptPdf` / `shareReceipt` (`services/receiptService.ts`, **TODO** xuất file) → hiện trả `unavailable` → Toast "… sắp ra mắt"; khi có `url` sẽ mở bằng `openDocument`. Dưới cùng: `TextLink` "Xem hợp đồng {mã}".
+- Không có nút primary trên màn chi tiết phiếu thu.

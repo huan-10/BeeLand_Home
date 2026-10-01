@@ -5,6 +5,7 @@ import type {
   InstallmentStatus,
   NotificationType,
   PaymentMethod,
+  ReceiptStatus,
 } from '@/types';
 
 interface StatusMeta {
@@ -32,6 +33,13 @@ export const installmentStatusMeta: Record<InstallmentStatus, StatusMeta & { ico
   upcoming: { label: 'Đến hạn', tone: 'primary', icon: 'alarm-outline' },
   overdue: { label: 'Quá hạn', tone: 'danger', icon: 'alert' },
   scheduled: { label: 'Chưa đến hạn', tone: 'neutral', icon: 'time-outline' },
+};
+
+/** Trạng thái phiếu thu: chữ + icon + tông màu. */
+export const receiptStatusMeta: Record<ReceiptStatus, StatusMeta & { icon: IconName }> = {
+  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'checkmark-circle' },
+  pending: { label: 'Chờ xác nhận', tone: 'warning', icon: 'time-outline' },
+  cancelled: { label: 'Đã hủy', tone: 'neutral', icon: 'close-circle-outline' },
 };
 
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
