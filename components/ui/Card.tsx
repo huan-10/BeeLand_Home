@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
-import { colors, radius, shadows, type ShadowLevel } from '@/theme';
+import { borderWidth, interactive, opacity, radius, semantic, shadows, spacing, type ShadowLevel, type Spacing } from '@/theme';
 
 export interface CardProps extends ViewProps {
-  padding?: number;
+  padding?: Spacing;
   shadow?: ShadowLevel;
   bordered?: boolean;
   onPress?: () => void;
@@ -11,15 +11,17 @@ export interface CardProps extends ViewProps {
   className?: string;
 }
 
-export function Card({ padding = 16, shadow = 'sm', bordered = true, onPress, style, children, ...rest }: CardProps) {
-  const cardStyle = [styles.card, shadows[shadow], { padding }, bordered && styles.bordered, style];
+/** Thẻ trắng bo góc 16, viền mảnh + bóng nhẹ (theo mockup). */
+export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, style, children, ...rest }: CardProps) {
+  const cardStyle = [styles.card, shadows[shadow], { padding: spacing[padding] }, bordered && styles.bordered, style];
 
   if (onPress) {
     return (
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        style={({ pressed }) => [cardStyle, pressed && styles.pressed]}
+        // Phản hồi bằng opacity, không scale để không xê dịch bố cục.
+        style={({ pressed }) => [cardStyle, interactive, pressed && styles.pressed]}
         {...rest}>
         {children}
       </Pressable>
@@ -34,7 +36,7 @@ export function Card({ padding = 16, shadow = 'sm', bordered = true, onPress, st
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radius.lg },
-  bordered: { borderWidth: 1, borderColor: colors.gray[100] },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.995 }] },
+  card: { backgroundColor: semantic.surface, borderRadius: radius.lg },
+  bordered: { borderWidth: borderWidth.hairline, borderColor: semantic.borderSubtle },
+  pressed: { opacity: opacity.pressed },
 });

@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { hasErrors, validateLoginForm, type LoginFormErrors } from '@/lib/validation';
 import { demoAccountHint, getErrorMessage } from '@/services';
-import { colors, radius, toneColors } from '@/theme';
+import { borderWidth, colors, interactive, layout, opacity, radius, semantic, spacing, toneColors } from '@/theme';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -48,18 +48,18 @@ export default function LoginScreen() {
   const form = (
     <View style={styles.form}>
       <View style={styles.formHeader}>
-        {!isWide ? <Logo size={44} /> : null}
+        {!isWide ? <Logo size="lg" /> : null}
         <Text variant="h1" style={styles.title}>
           Đăng nhập
         </Text>
-        <Text variant="small" color={colors.gray[500]}>
+        <Text variant="small" color={semantic.textMuted}>
           Quản lý hợp đồng, lịch thanh toán và phiếu thu của bạn mọi lúc, mọi nơi.
         </Text>
       </View>
 
       {formError ? (
         <View style={styles.alert} accessibilityRole="alert">
-          <Icon name="alert-circle" size={18} color={toneColors.danger.fg} />
+          <Icon name="alert-circle" color={toneColors.danger.fg} />
           <Text variant="small" color={toneColors.danger.fg} style={styles.flex}>
             {formError}
           </Text>
@@ -104,17 +104,17 @@ export default function LoginScreen() {
       <Button title="Đăng nhập" size="lg" loading={submitting} onPress={() => void submit()} fullWidth />
 
       {demoAccountHint ? (
-      <Pressable onPress={fillDemo} accessibilityRole="button" style={({ pressed }) => [styles.demo, pressed && styles.demoPressed]}>
-        <Icon name="information-circle" size={20} color={colors.info[600]} />
+      <Pressable onPress={fillDemo} accessibilityRole="button" style={({ pressed }) => [styles.demo, interactive, pressed && styles.demoPressed]}>
+        <Icon name="information-circle" color={toneColors.info.fg} />
         <View style={styles.flex}>
-          <Text variant="smallMedium" color={colors.info[700]}>
+          <Text variant="smallMedium" color={toneColors.info.fg}>
             Tài khoản dùng thử
           </Text>
-          <Text variant="caption" color={colors.info[700]}>
+          <Text variant="caption" color={toneColors.info.fg}>
             Email: {demoAccountHint.email} · Mật khẩu: {demoAccountHint.password}
           </Text>
         </View>
-        <Text variant="caption" weight="semibold" color={colors.info[600]}>
+        <Text variant="caption" weight="semibold" color={toneColors.info.fg}>
           Điền nhanh
         </Text>
       </Pressable>
@@ -127,30 +127,30 @@ export default function LoginScreen() {
       <View style={[styles.split, !isWide && styles.column]}>
         {isWide ? (
           <LinearGradient
-            colors={[colors.primary[400], colors.primary[700]]}
+            colors={[colors.primary[500], colors.primary[700]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.brand}>
-            <Logo size={44} inverted />
+            <Logo size="lg" inverted />
             <View style={styles.brandBody}>
-              <Text variant="display" color={colors.white}>
+              <Text variant="display" color={semantic.textOnPrimary}>
                 Ngôi nhà của bạn,{'\n'}minh bạch từng đợt thanh toán.
               </Text>
-              <Text variant="body" color={colors.primary[50]} style={styles.brandText}>
+              <Text variant="body" color={semantic.textOnPrimary} style={styles.brandText}>
                 Theo dõi tiến độ hợp đồng, nhận nhắc lịch thanh toán và tra cứu phiếu thu điện tử trong một ứng dụng.
               </Text>
               <View style={styles.features}>
                 {['Theo dõi tiến độ thanh toán', 'Nhắc hạn trước 30 ngày', 'Phiếu thu điện tử'].map((f) => (
                   <View key={f} style={styles.feature}>
-                    <Icon name="checkmark-circle" size={20} color={colors.white} />
-                    <Text variant="bodyMedium" color={colors.white}>
+                    <Icon name="checkmark-circle" color={semantic.textOnPrimary} />
+                    <Text variant="bodyMedium" color={semantic.textOnPrimary}>
                       {f}
                     </Text>
                   </View>
                 ))}
               </View>
             </View>
-            <Text variant="caption" color={colors.primary[100]}>
+            <Text variant="caption" color={semantic.textOnPrimary}>
               © {new Date().getFullYear()} BeeSky
             </Text>
           </LinearGradient>
@@ -158,9 +158,9 @@ export default function LoginScreen() {
 
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[styles.formScroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
+          contentContainerStyle={[styles.formScroll, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}
           keyboardShouldPersistTaps="handled">
-          {isWide ? <Card padding={32} shadow="md" style={styles.formCard}>{form}</Card> : form}
+          {isWide ? <Card padding="xl" shadow="md" style={styles.formCard}>{form}</Card> : form}
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
@@ -168,39 +168,39 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: semantic.bg },
   split: { flex: 1, flexDirection: 'row' },
   column: { flexDirection: 'column' },
   flex: { flex: 1 },
-  brand: { flex: 1, maxWidth: 560, padding: 48, justifyContent: 'space-between' },
-  brandBody: { gap: 16 },
-  brandText: { maxWidth: 420 },
-  features: { gap: 12, marginTop: 16 },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  formScroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20 },
-  formCard: { width: '100%', maxWidth: 440, alignSelf: 'center' },
-  form: { width: '100%', maxWidth: 440, alignSelf: 'center', gap: 18 },
-  formHeader: { gap: 8, marginBottom: 4 },
-  title: { marginTop: 16 },
+  brand: { flex: 1, maxWidth: layout.brandPanelMaxWidth, padding: spacing['2xl'], justifyContent: 'space-between' },
+  brandBody: { gap: spacing.md },
+  brandText: { maxWidth: layout.brandTextMaxWidth },
+  features: { gap: spacing.ms, marginTop: spacing.md },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  formScroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.ml },
+  formCard: { width: '100%', maxWidth: layout.formMaxWidth, alignSelf: 'center' },
+  form: { width: '100%', maxWidth: layout.formMaxWidth, alignSelf: 'center', gap: spacing.md },
+  formHeader: { gap: spacing.sm, marginBottom: spacing.xs },
+  title: { marginTop: spacing.md },
   alert: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 12,
+    gap: spacing.sm,
+    padding: spacing.ms,
     borderRadius: radius.md,
     backgroundColor: toneColors.danger.bg,
-    borderWidth: 1,
-    borderColor: colors.danger[100],
+    borderWidth: borderWidth.hairline,
+    borderColor: toneColors.danger.border,
   },
   demo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 12,
+    gap: spacing.sm,
+    padding: spacing.ms,
     borderRadius: radius.md,
-    backgroundColor: colors.info[50],
-    borderWidth: 1,
-    borderColor: colors.info[100],
+    backgroundColor: toneColors.info.bg,
+    borderWidth: borderWidth.hairline,
+    borderColor: toneColors.info.border,
   },
-  demoPressed: { opacity: 0.8 },
+  demoPressed: { opacity: opacity.pressed },
 });

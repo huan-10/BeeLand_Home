@@ -7,6 +7,7 @@ import { ResponsiveGrid, Screen } from '@/components/layout';
 import { Chip, EmptyState, ErrorState, Input, ScreenHeader, SkeletonList } from '@/components/ui';
 import { useContracts } from '@/hooks/useContracts';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { chipRow } from '@/theme';
 import type { ContractStatus } from '@/types';
 
 const statusFilters: { value: ContractStatus | 'all'; label: string }[] = [
@@ -26,7 +27,7 @@ export default function ContractsScreen() {
     <Screen onRefresh={() => void refetch()} refreshing={refreshing}>
       <ScreenHeader title="Hợp đồng" subtitle="Danh sách hợp đồng và phiếu giữ chỗ của bạn" />
 
-      <View className="gap-3">
+      <View className="gap-ms">
         <Input
           icon="search-outline"
           placeholder="Tìm theo số hợp đồng, mã căn, dự án..."
@@ -35,7 +36,7 @@ export default function ContractsScreen() {
           autoCapitalize="none"
           clearButtonMode="while-editing"
         />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRow}>
           {statusFilters.map((f) => (
             <Chip key={f.value} label={f.label} selected={status === f.value} onPress={() => setStatus(f.value)} />
           ))}

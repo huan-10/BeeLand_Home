@@ -9,7 +9,7 @@ import { useContract } from '@/hooks/useContracts';
 import { useReceipts } from '@/hooks/useReceipts';
 import { formatDate } from '@/lib/format';
 import { contractStatusMeta, contractTypeLabels } from '@/lib/labels';
-import { colors, radius } from '@/theme';
+import { radius, semantic, sizes } from '@/theme';
 
 export default function ContractDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,9 +23,9 @@ export default function ContractDetailScreen() {
     return (
       <Screen>
         <ScreenHeader title="Chi tiết hợp đồng" onBack={goBack} />
-        <Skeleton height={140} radius={radius.lg} />
-        <Skeleton height={200} radius={radius.xl} />
-        <Skeleton height={320} radius={radius.lg} />
+        <Skeleton height={sizes.skeleton.card} radius={radius.lg} />
+        <Skeleton height={sizes.skeleton.hero} radius={radius.xl} />
+        <Skeleton height={sizes.skeleton.block} radius={radius.lg} />
       </Screen>
     );
   }
@@ -45,11 +45,11 @@ export default function ContractDetailScreen() {
 
   const infoCard = (
     <Card>
-      <View className="flex-row items-center gap-3 mb-2">
-        <IconCircle name="business" tone="primary" size={48} />
+      <View className="flex-row items-center gap-ms mb-sm">
+        <IconCircle name="business" tone="primary" size="xl" />
         <View className="flex-1">
           <Text variant="h3">{contract.projectName}</Text>
-          <Text variant="small" color={colors.gray[500]}>
+          <Text variant="small" color={semantic.textMuted}>
             {contract.block} · Căn {contract.unitCode}
           </Text>
         </View>
@@ -65,7 +65,7 @@ export default function ContractDetailScreen() {
 
   const schedule = (
     <Section title={`Lịch thanh toán (${summary.paidInstallmentCount}/${summary.installmentCount} đợt)`}>
-      <Card padding={20}>
+      <Card padding="ml">
         {installments.length > 0 ? (
           <InstallmentTimeline installments={installments} />
         ) : (
@@ -78,16 +78,16 @@ export default function ContractDetailScreen() {
   const receiptSection = (
     <Section title="Phiếu thu liên quan">
       {receipts.loading ? (
-        <Skeleton height={72} radius={radius.lg} />
+        <Skeleton height={sizes.skeleton.row} radius={radius.lg} />
       ) : receipts.data && receipts.data.length > 0 ? (
-        <View className="gap-2">
+        <View className="gap-sm">
           {receipts.data.map((r) => (
             <ReceiptCard key={r.id} receipt={r} onPress={() => router.push({ pathname: '/receipts/[id]', params: { id: r.id } })} />
           ))}
         </View>
       ) : (
         <Card>
-          <Text variant="small" color={colors.gray[500]} align="center">
+          <Text variant="small" color={semantic.textMuted} align="center">
             Chưa có phiếu thu cho hợp đồng này.
           </Text>
         </Card>
@@ -110,13 +110,13 @@ export default function ContractDetailScreen() {
       <ScreenHeader title={contract.code} subtitle={contractTypeLabels[contract.type].label} onBack={goBack} />
 
       {isWide ? (
-        <View className="flex-row gap-5 items-start">
-          <View className="flex-1 gap-5">
+        <View className="flex-row gap-ml items-start">
+          <View className="flex-1 gap-ml">
             {overview}
             {infoCard}
             {receiptSection}
           </View>
-          <View className="flex-1 gap-5">{schedule}</View>
+          <View className="flex-1 gap-ml">{schedule}</View>
         </View>
       ) : (
         <>

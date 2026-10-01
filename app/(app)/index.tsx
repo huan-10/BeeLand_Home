@@ -1,15 +1,27 @@
 import { router, type Href } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ContractCard, NextPaymentCard, NotificationItem, PaymentOverviewCard } from '@/components/domain';
 import { ResponsiveGrid, Screen, Section } from '@/components/layout';
-import { Avatar, Card, EmptyState, ErrorState, Icon, IconCircle, Skeleton, SkeletonList, Text } from '@/components/ui';
+import { Avatar, Card, EmptyState, ErrorState, Icon, IconButton, IconCircle, Skeleton, SkeletonList, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useContracts } from '@/hooks/useContracts';
 import { useDashboard } from '@/hooks/useDashboard';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { colors, radius, toneColors, type IconName, type Tone } from '@/theme';
+import {
+  borderWidth,
+  colors,
+  interactive,
+  opacity,
+  radius,
+  semantic,
+  sizes,
+  spacing,
+  toneColors,
+  type IconName,
+  type Tone,
+} from '@/theme';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -27,65 +39,34 @@ export default function HomeScreen() {
   return (
     <Screen onRefresh={refresh} refreshing={dashboard.refreshing || contracts.refreshing}>
       {/* Lời chào + chuông thông báo */}
-      <View className="flex-row items-center gap-3">
+      <View className="flex-row items-center gap-ms">
         {!isWide && user ? <Avatar name={user.fullName} /> : null}
         <View className="flex-1">
-          <Text variant="small" color={colors.gray[500]}>
+          <Text variant="small" color={semantic.textMuted}>
             Xin chào,
           </Text>
           <Text variant="h2" numberOfLines={1}>
             {user?.fullName ?? 'Quý khách'}
           </Text>
         </View>
-        <Pressable
-          onPress={() => router.push('/notifications')}
-          accessibilityRole="button"
+        <IconButton
+          icon="notifications-outline"
           accessibilityLabel="Thông báo"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: radius.md,
-            backgroundColor: colors.white,
-            borderWidth: 1,
-            borderColor: colors.gray[200],
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Icon name="notifications-outline" size={22} color={colors.gray[700]} />
-          {data && data.unreadNotificationCount > 0 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-                minWidth: 18,
-                height: 18,
-                paddingHorizontal: 4,
-                borderRadius: 9,
-                backgroundColor: colors.danger[500],
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: colors.white,
-              }}>
-              <Text variant="caption" weight="bold" color={colors.white} style={{ fontSize: 10, lineHeight: 12 }}>
-                {data.unreadNotificationCount}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
+          badgeCount={data?.unreadNotificationCount}
+          onPress={() => router.push('/notifications')}
+        />
       </View>
 
       {dashboard.loading ? (
-        <View className="gap-4">
-          <Skeleton height={200} radius={radius.xl} />
-          <Skeleton height={150} radius={radius.lg} />
+        <View className="gap-md">
+          <Skeleton height={sizes.skeleton.hero} radius={radius.xl} />
+          <Skeleton height={sizes.skeleton.card} radius={radius.lg} />
         </View>
       ) : dashboard.error || !data ? (
         <ErrorState message={dashboard.error ?? undefined} onRetry={() => void dashboard.refetch()} />
       ) : (
         <>
-          <ResponsiveGrid columns={2} gap={16}>
+          <ResponsiveGrid columns={2} gap={spacing.md}>
             <PaymentOverviewCard
               title={`Tổng giá trị ${data.contractCount} hợp đồng`}
               totalValue={data.totalValue}
@@ -111,10 +92,10 @@ export default function HomeScreen() {
             <Card
               key={item.id}
               onPress={() => router.push({ pathname: '/contracts/[id]', params: { id: item.contractId } })}
-              style={{ backgroundColor: toneColors.danger.bg, borderColor: colors.danger[100] }}
+              style={styles.overdueCard}
               shadow="none">
-              <View className="flex-row items-center gap-3">
-                <IconCircle name="warning" tone="danger" size={40} />
+              <View className="flex-row items-center gap-ms">
+                <IconCircle name="warning" tone="danger" size="md" />
                 <View className="flex-1">
                   <Text variant="smallMedium" weight="semibold" color={colors.danger[700]}>
                     {item.contractCode}: {item.name} đã quá hạn
@@ -123,7 +104,7 @@ export default function HomeScreen() {
                     {formatCurrency(item.remainingAmount)} · hạn {formatDate(item.dueDate)}
                   </Text>
                 </View>
-                <Icon name="chevron-forward" size={18} color={colors.danger[600]} />
+                <Icon name="chevron-forward" size="sm" color={colors.danger[600]} />
               </View>
             </Card>
           ))}
@@ -154,7 +135,7 @@ export default function HomeScreen() {
 
       {data && data.latestNotifications.length > 0 ? (
         <Section title="Thông báo mới" actionLabel="Tất cả" onAction={() => router.push('/notifications')}>
-          <View className="gap-2">
+          <View className="gap-sm">
             {data.latestNotifications.map((n) => (
               <NotificationItem
                 key={n.id}
@@ -178,25 +159,15 @@ const quickActions: { label: string; icon: IconName; tone: Tone; href: Href }[] 
 
 function QuickActions() {
   return (
-    <View className="flex-row gap-3">
+    <View className="flex-row gap-ms">
       {quickActions.map((a) => (
         <Pressable
           key={a.label}
           onPress={() => router.push(a.href)}
           accessibilityRole="button"
-          style={({ pressed }) => ({
-            flex: 1,
-            alignItems: 'center',
-            gap: 8,
-            paddingVertical: 14,
-            paddingHorizontal: 4,
-            borderRadius: radius.lg,
-            backgroundColor: colors.white,
-            borderWidth: 1,
-            borderColor: colors.gray[100],
-            opacity: pressed ? 0.8 : 1,
-          })}>
-          <IconCircle name={a.icon} tone={a.tone} size={40} />
+          accessibilityLabel={a.label}
+          style={({ pressed }) => [styles.quickAction, interactive, pressed && styles.pressed]}>
+          <IconCircle name={a.icon} tone={a.tone} size="md" />
           <Text variant="caption" weight="medium" align="center" numberOfLines={2}>
             {a.label}
           </Text>
@@ -205,3 +176,19 @@ function QuickActions() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overdueCard: { backgroundColor: toneColors.danger.bg, borderColor: toneColors.danger.border },
+  quickAction: {
+    flex: 1,
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.lg,
+    backgroundColor: semantic.surface,
+    borderWidth: borderWidth.hairline,
+    borderColor: semantic.borderSubtle,
+  },
+  pressed: { opacity: opacity.pressed },
+});

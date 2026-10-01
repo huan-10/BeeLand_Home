@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/layout';
 import { Avatar, Button, Card, Icon, IconCircle, InfoRow, ScreenHeader, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
-import { colors, type IconName, type Tone } from '@/theme';
+import { colors, interactive, layout, radius, semantic, spacing, type IconName, type Tone } from '@/theme';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -22,13 +22,13 @@ export default function ProfileScreen() {
     <Screen>
       <ScreenHeader title="Cá nhân" />
 
-      <View style={{ width: '100%', maxWidth: 640, gap: 20 }}>
-        <Card padding={20}>
-          <View className="flex-row items-center gap-4">
-            <Avatar name={user.fullName} size={64} />
-            <View className="flex-1 gap-1">
+      <View style={styles.column}>
+        <Card padding="ml">
+          <View className="flex-row items-center gap-md">
+            <Avatar name={user.fullName} size="lg" />
+            <View className="flex-1 gap-xs">
               <Text variant="h2">{user.fullName}</Text>
-              <Text variant="small" color={colors.gray[500]}>
+              <Text variant="small" color={semantic.textMuted}>
                 Mã khách hàng: {user.customerCode}
               </Text>
             </View>
@@ -36,7 +36,7 @@ export default function ProfileScreen() {
         </Card>
 
         <Card>
-          <Text variant="label" color={colors.gray[500]} style={{ marginBottom: 4 }}>
+          <Text variant="label" color={semantic.textMuted} style={styles.cardTitle}>
             Thông tin liên hệ
           </Text>
           <InfoRow label="Email" value={user.email} />
@@ -45,14 +45,15 @@ export default function ProfileScreen() {
           <InfoRow label="Địa chỉ" value={user.address} last />
         </Card>
 
-        <Card padding={8}>
+        <Card padding="sm">
           <MenuItem icon="notifications" tone="warning" label="Thông báo" onPress={() => router.push('/notifications')} />
           <MenuItem icon="receipt" tone="success" label="Phiếu thu của tôi" onPress={() => router.push('/receipts')} />
           <MenuItem icon="call" tone="info" label="Hotline hỗ trợ" value="1900 6868" />
         </Card>
 
+        {/* Hành động nguy hiểm tách riêng khỏi danh sách menu. */}
         <Button title="Đăng xuất" variant="danger" leftIcon="log-out-outline" loading={signingOut} onPress={() => void handleSignOut()} />
-        <Text variant="caption" color={colors.gray[400]} align="center">
+        <Text variant="caption" color={semantic.textMuted} align="center">
           BeeSky · Phiên bản 1.0.0
         </Text>
       </View>
@@ -66,24 +67,32 @@ function MenuItem({ icon, tone, label, value, onPress }: { icon: IconName; tone:
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : 'text'}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        padding: 10,
-        borderRadius: 12,
-        backgroundColor: pressed ? colors.gray[50] : 'transparent',
-      })}>
-      <IconCircle name={icon} tone={tone} size={36} />
-      <Text variant="bodyMedium" style={{ flex: 1 }}>
+      accessibilityLabel={value ? `${label}: ${value}` : label}
+      style={({ pressed }) => [styles.menuItem, onPress ? interactive : null, pressed && styles.menuPressed]}>
+      <IconCircle name={icon} tone={tone} size="sm" />
+      <Text variant="bodyMedium" style={styles.flex}>
         {label}
       </Text>
       {value ? (
-        <Text variant="smallMedium" color={colors.gray[600]}>
+        <Text variant="smallMedium" color={semantic.textSecondary}>
           {value}
         </Text>
       ) : null}
-      {onPress ? <Icon name="chevron-forward" size={18} color={colors.gray[400]} /> : null}
+      {onPress ? <Icon name="chevron-forward" size="sm" color={semantic.iconMuted} /> : null}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  column: { width: '100%', maxWidth: layout.profileMaxWidth, gap: spacing.ml },
+  cardTitle: { marginBottom: spacing.xs },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.ms,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+  },
+  menuPressed: { backgroundColor: colors.gray[50] },
+  flex: { flex: 1 },
+});

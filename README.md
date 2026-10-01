@@ -74,5 +74,6 @@ Khi có lỗi, ném `ServiceError` với thông điệp tiếng Việt — màn 
 ## Giao diện
 
 - Màu chủ đạo cam `#F08A24` (thang 50–900), xanh lá (thành công), xanh dương (thông tin), đỏ (cảnh báo), thang xám.
-- Bo góc 12 / 16 / 24, đổ bóng nhẹ, font Inter (qua `expo-font`), light mode.
+- Bo góc 12 / 16 / 24, đổ bóng nhẹ, font Be Vietnam Pro + Noto Sans (đủ dấu tiếng Việt, qua `expo-font`), light mode.
+- Quy chuẩn đầy đủ: `design-system/beesky/MASTER.md` và `design-system/beesky/pages/`.
 - Token khai báo một lần trong `theme/tokens.json`, dùng chung cho `tailwind.config.js` (NativeWind) và style TypeScript.

@@ -2,33 +2,43 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui';
-import { colors, radius } from '@/theme';
+import { colors, fontSizes, resolveFontFamily, sizes, spacing } from '@/theme';
 
 export interface LogoProps {
-  size?: number;
+  size?: keyof typeof sizes.logo;
   /** Hiển thị chữ "BeeSky" bên cạnh biểu tượng. */
   withWordmark?: boolean;
+  /** Dùng trên nền cam: biểu tượng trắng, chữ trắng. */
   inverted?: boolean;
 }
 
-export function Logo({ size = 40, withWordmark = true, inverted = false }: LogoProps) {
+const wordmarkSize: Record<keyof typeof sizes.logo, keyof typeof fontSizes> = {
+  sm: 'base',
+  md: 'lg',
+  lg: 'xl',
+  xl: '2xl',
+};
+
+export function Logo({ size = 'md', withWordmark = true, inverted = false }: LogoProps) {
+  const box = sizes.logo[size];
+  const textStyle = [fontSizes[wordmarkSize[size]], { fontFamily: resolveFontFamily('heading', 'bold') }];
   return (
     <View style={styles.row} accessibilityRole="image" accessibilityLabel="BeeSky">
       <LinearGradient
         colors={inverted ? [colors.white, colors.primary[50]] : [colors.primary[400], colors.primary[600]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.mark, { width: size, height: size, borderRadius: size * 0.3 }]}>
-        <Text weight="bold" color={inverted ? colors.primary[600] : colors.white} style={{ fontSize: size * 0.55, lineHeight: size * 0.7 }}>
+        style={[styles.mark, { width: box, height: box, borderRadius: box * 0.3 }]}>
+        <Text style={textStyle} color={inverted ? colors.primary[600] : colors.white}>
           B
         </Text>
       </LinearGradient>
       {withWordmark ? (
-        <Text weight="bold" style={{ fontSize: size * 0.5, lineHeight: size * 0.65 }}>
-          <Text weight="bold" color={inverted ? colors.white : colors.gray[900]} style={{ fontSize: size * 0.5 }}>
+        <Text style={textStyle}>
+          <Text style={textStyle} color={inverted ? colors.white : colors.gray[900]}>
             Bee
           </Text>
-          <Text weight="bold" color={inverted ? colors.primary[100] : colors.primary[500]} style={{ fontSize: size * 0.5 }}>
+          <Text style={textStyle} color={inverted ? colors.primary[100] : colors.primary[500]}>
             Sky
           </Text>
         </Text>
@@ -38,6 +48,6 @@ export function Logo({ size = 40, withWordmark = true, inverted = false }: LogoP
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mark: { alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  mark: { alignItems: 'center', justifyContent: 'center' },
 });

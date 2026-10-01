@@ -2,16 +2,17 @@
 const tokens = require('./theme/tokens.json');
 
 const px = (value) => `${value}px`;
+const toPx = (obj) => Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, px(value)]));
 
 module.exports = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
+    // Thay toàn bộ thang spacing mặc định bằng token: gap-md, p-lg, mb-sm...
+    spacing: toPx(tokens.spacing),
     extend: {
       colors: tokens.colors,
-      borderRadius: Object.fromEntries(
-        Object.entries(tokens.radius).map(([key, value]) => [key, px(value)]),
-      ),
+      borderRadius: toPx(tokens.radius),
       fontSize: Object.fromEntries(
         Object.entries(tokens.fontSize).map(([key, [size, lineHeight]]) => [
           key,
@@ -19,14 +20,14 @@ module.exports = {
         ]),
       ),
       fontFamily: {
-        sans: [tokens.fontFamily.regular],
-        // Tên riêng để không trùng với các lớp font-weight của Tailwind.
-        'inter-medium': [tokens.fontFamily.medium],
-        'inter-semibold': [tokens.fontFamily.semibold],
-        'inter-bold': [tokens.fontFamily.bold],
+        sans: [tokens.fontFamily.body.regular],
+        heading: [tokens.fontFamily.heading.bold],
+        body: [tokens.fontFamily.body.regular],
       },
       maxWidth: {
         content: px(tokens.layout.contentMaxWidth),
+        form: px(tokens.layout.formMaxWidth),
+        readable: px(tokens.layout.readableMaxWidth),
       },
       width: {
         sidebar: px(tokens.layout.sidebarWidth),

@@ -1,6 +1,27 @@
-import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
-import { colors, radius, type IconName } from '@/theme';
+import {
+  borderWidth,
+  colors,
+  hitSlop,
+  interactive,
+  opacity,
+  radius,
+  semantic,
+  sizes,
+  spacing,
+  toneColors,
+  type IconName,
+  type IconSize,
+} from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -20,16 +41,17 @@ export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> 
 }
 
 const variantStyles: Record<ButtonVariant, { bg: string; pressedBg: string; fg: string; border: string }> = {
-  primary: { bg: colors.primary[500], pressedBg: colors.primary[600], fg: colors.white, border: colors.primary[500] },
-  secondary: { bg: colors.primary[50], pressedBg: colors.primary[100], fg: colors.primary[700], border: colors.primary[100] },
-  ghost: { bg: colors.transparent, pressedBg: colors.gray[100], fg: colors.gray[700], border: colors.transparent },
-  danger: { bg: colors.white, pressedBg: colors.danger[50], fg: colors.danger[600], border: colors.danger[100] },
+  // Nền cam theo mockup; chữ trắng đậm (xem MASTER.md §Tương phản).
+  primary: { bg: semantic.brand, pressedBg: semantic.brandPressed, fg: semantic.textOnPrimary, border: semantic.brand },
+  secondary: { bg: toneColors.primary.bg, pressedBg: colors.primary[100], fg: semantic.textBrand, border: toneColors.primary.border },
+  ghost: { bg: colors.transparent, pressedBg: colors.gray[100], fg: semantic.textSecondary, border: colors.transparent },
+  danger: { bg: semantic.surface, pressedBg: toneColors.danger.bg, fg: colors.danger[600], border: toneColors.danger.border },
 };
 
-const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number; icon: number; text: 'smallMedium' | 'bodyMedium' }> = {
-  sm: { height: 36, paddingHorizontal: 12, icon: 16, text: 'smallMedium' },
-  md: { height: 46, paddingHorizontal: 16, icon: 18, text: 'bodyMedium' },
-  lg: { height: 54, paddingHorizontal: 20, icon: 20, text: 'bodyMedium' },
+const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number; icon: IconSize; text: 'smallMedium' | 'bodyMedium' }> = {
+  sm: { height: sizes.control.sm, paddingHorizontal: spacing.ms, icon: 'sm', text: 'smallMedium' },
+  md: { height: sizes.control.md, paddingHorizontal: spacing.md, icon: 'md', text: 'bodyMedium' },
+  lg: { height: sizes.control.lg, paddingHorizontal: spacing.ml, icon: 'md', text: 'bodyMedium' },
 };
 
 export function Button({
@@ -51,10 +73,14 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
+      // Nút nhỏ (40) được nới vùng chạm để đạt tối thiểu 44.
+      hitSlop={size === 'sm' ? hitSlop : undefined}
       style={({ pressed }) => [
         styles.base,
+        interactive,
         {
           height: s.height,
           paddingHorizontal: s.paddingHorizontal,
@@ -84,12 +110,12 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: borderWidth.hairline,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
-  content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   fullWidth: { alignSelf: 'stretch' },
-  disabled: { opacity: 0.5 },
+  disabled: { opacity: opacity.disabled },
 });

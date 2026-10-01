@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Badge, Button, Card, IconCircle, Text } from '@/components/ui';
 import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
 import { installmentStatusMeta } from '@/lib/labels';
-import { colors } from '@/theme';
+import { semantic, spacing } from '@/theme';
 import type { PaymentInstallmentView } from '@/types';
 
 export interface NextPaymentCardProps {
@@ -19,7 +19,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
       <View style={styles.header}>
         <IconCircle name="alarm" tone={meta.tone} />
         <View style={styles.flex}>
-          <Text variant="caption" color={colors.gray[500]}>
+          <Text variant="caption" color={semantic.textMuted}>
             Đợt thanh toán tiếp theo
           </Text>
           <Text variant="bodyMedium" weight="semibold" numberOfLines={1}>
@@ -30,15 +30,15 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
       </View>
       <View style={styles.body}>
         <View style={styles.flex}>
-          <Text variant="caption" color={colors.gray[500]}>
+          <Text variant="caption" color={semantic.textMuted}>
             Số tiền
           </Text>
-          <Text variant="h2" color={colors.primary[600]}>
+          <Text variant="h2" color={semantic.textBrand}>
             {formatCurrency(installment.remainingAmount)}
           </Text>
         </View>
         <View style={styles.dueCol}>
-          <Text variant="caption" color={colors.gray[500]}>
+          <Text variant="caption" color={semantic.textMuted}>
             Hạn thanh toán
           </Text>
           <Text variant="bodyMedium" weight="semibold">
@@ -46,7 +46,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
           </Text>
         </View>
       </View>
-      <Text variant="caption" color={colors.gray[500]}>
+      <Text variant="caption" color={semantic.textMuted}>
         {installment.contractCode} · {installment.projectName} · Căn {installment.unitCode}
       </Text>
       {onViewContract ? (
@@ -57,9 +57,9 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
 }
 
 const styles = StyleSheet.create({
-  card: { gap: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  card: { gap: spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
   flex: { flex: 1 },
-  body: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
+  body: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.ms },
   dueCol: { alignItems: 'flex-end' },
 });

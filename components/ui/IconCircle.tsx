@@ -1,29 +1,34 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { toneColors, type IconName, type Tone } from '@/theme';
+import { radius, sizes, toneColors, type IconName, type Tone } from '@/theme';
 
 import { Icon } from './Icon';
 
 export interface IconCircleProps {
   name: IconName;
   tone?: Tone;
-  size?: number;
+  size?: keyof typeof sizes.iconBox;
 }
 
-/** Icon đặt trong ô vuông bo góc có nền nhạt theo sắc thái. */
-export function IconCircle({ name, tone = 'primary', size = 44 }: IconCircleProps) {
+const iconForBox: Record<keyof typeof sizes.iconBox, keyof typeof sizes.icon> = {
+  sm: 'sm',
+  md: 'md',
+  lg: 'md',
+  xl: 'lg',
+  hero: 'xl',
+};
+
+/** Icon trong ô bo góc nền pastel theo sắc thái (theo mockup). */
+export function IconCircle({ name, tone = 'primary', size = 'lg' }: IconCircleProps) {
   const c = toneColors[tone];
+  const box = sizes.iconBox[size];
   return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.3,
-        backgroundColor: c.bg,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-      <Icon name={name} size={size * 0.5} color={c.fg} />
+    <View style={[styles.box, { width: box, height: box, backgroundColor: c.bg }]}>
+      <Icon name={name} size={iconForBox[size]} color={c.fg} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  box: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+});

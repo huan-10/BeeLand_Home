@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native';
 
-import { colors, radius } from '@/theme';
+import { borderWidth, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -11,15 +11,16 @@ export interface ChipProps {
   count?: number;
 }
 
-/** Nút lọc dạng viên thuốc. */
+/** Nút lọc dạng viên thuốc; cao tối thiểu 40 + hitSlop để đạt vùng chạm 44. */
 export function Chip({ label, selected, onPress, count }: ChipProps) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      style={({ pressed }) => [styles.chip, selected ? styles.selected : styles.idle, pressed && styles.pressed]}>
-      <Text variant="smallMedium" color={selected ? colors.white : colors.gray[700]}>
+      hitSlop={{ top: spacing['2xs'], bottom: spacing['2xs'] }}
+      style={({ pressed }) => [styles.chip, interactive, selected ? styles.selected : styles.idle, pressed && styles.pressed]}>
+      <Text variant="smallMedium" weight={selected ? 'semibold' : 'medium'} color={selected ? semantic.textOnPrimary : semantic.textSecondary}>
         {count !== undefined ? `${label} (${count})` : label}
       </Text>
     </Pressable>
@@ -27,8 +28,14 @@ export function Chip({ label, selected, onPress, count }: ChipProps) {
 }
 
 const styles = StyleSheet.create({
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, borderWidth: 1 },
-  idle: { backgroundColor: colors.white, borderColor: colors.gray[200] },
-  selected: { backgroundColor: colors.primary[500], borderColor: colors.primary[500] },
-  pressed: { opacity: 0.8 },
+  chip: {
+    minHeight: sizes.control.sm,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    borderWidth: borderWidth.hairline,
+  },
+  idle: { backgroundColor: semantic.surface, borderColor: semantic.border },
+  selected: { backgroundColor: semantic.brand, borderColor: semantic.brand },
+  pressed: { opacity: opacity.pressed },
 });

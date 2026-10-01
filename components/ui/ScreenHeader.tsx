@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { colors, radius } from '@/theme';
+import { borderWidth, colors, interactive, radius, semantic, sizes, spacing } from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -22,17 +22,16 @@ export function ScreenHeader({ title, subtitle, onBack, right }: ScreenHeaderPro
           onPress={onBack}
           accessibilityRole="button"
           accessibilityLabel="Quay lại"
-          hitSlop={8}
-          style={({ pressed }) => [styles.back, pressed && styles.backPressed]}>
-          <Icon name="chevron-back" size={22} color={colors.gray[800]} />
+          style={({ pressed }) => [styles.back, interactive, pressed && styles.backPressed]}>
+          <Icon name="chevron-back" size="lg" color={colors.gray[800]} />
         </Pressable>
       ) : null}
       <View style={styles.titles}>
-        <Text variant="h1" numberOfLines={1} accessibilityRole="header">
+        <Text variant="h1" numberOfLines={2} accessibilityRole="header">
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="small" color={colors.gray[500]} numberOfLines={2}>
+          <Text variant="small" color={semantic.textMuted} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
@@ -43,18 +42,18 @@ export function ScreenHeader({ title, subtitle, onBack, right }: ScreenHeaderPro
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  container: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms, paddingVertical: spacing.sm },
   back: {
-    width: 40,
-    height: 40,
+    width: sizes.touchTarget,
+    height: sizes.touchTarget,
     borderRadius: radius.md,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.gray[200],
+    backgroundColor: semantic.surface,
+    borderWidth: borderWidth.hairline,
+    borderColor: semantic.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backPressed: { backgroundColor: colors.gray[100] },
-  titles: { flex: 1, gap: 2 },
-  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  titles: { flex: 1, gap: spacing['2xs'] },
+  right: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

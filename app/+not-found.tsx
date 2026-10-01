@@ -2,7 +2,7 @@ import { router, Stack } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui';
-import { colors } from '@/theme';
+import { semantic } from '@/theme';
 
 export default function NotFoundScreen() {
   return (
@@ -22,5 +22,5 @@ export default function NotFoundScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: semantic.bg },
 });

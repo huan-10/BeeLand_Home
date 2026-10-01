@@ -1,9 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Badge, Card, Icon, Text } from '@/components/ui';
+import { Badge, Card, IconCircle, Text } from '@/components/ui';
 import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
 import { installmentStatusMeta } from '@/lib/labels';
-import { colors, toneColors } from '@/theme';
+import { borderWidth, colors, semantic, spacing } from '@/theme';
 import type { PaymentInstallmentView } from '@/types';
 
 export interface InstallmentCardProps {
@@ -16,20 +16,18 @@ export interface InstallmentCardProps {
 export function InstallmentCard({ installment, showContract, onPress }: InstallmentCardProps) {
   const meta = installmentStatusMeta[installment.status];
   const isPaid = installment.status === 'paid';
-  const dateColor = installment.status === 'overdue' ? colors.danger[600] : colors.gray[500];
+  const dateColor = installment.status === 'overdue' ? colors.danger[600] : semantic.textMuted;
 
   return (
-    <Card onPress={onPress}>
+    <Card onPress={onPress} accessibilityLabel={`${installment.name}, ${formatCurrency(installment.amount)}, ${meta.label}`}>
       <View style={styles.row}>
-        <View style={[styles.iconBox, { backgroundColor: toneColors[meta.tone].bg }]}>
-          <Icon name={isPaid ? 'checkmark-circle' : 'calendar'} size={22} color={toneColors[meta.tone].fg} />
-        </View>
+        <IconCircle name={isPaid ? 'checkmark-circle' : 'calendar'} tone={meta.tone} />
         <View style={styles.main}>
           <Text variant="bodyMedium" weight="semibold" numberOfLines={1}>
             {installment.name}
           </Text>
           {showContract ? (
-            <Text variant="caption" color={colors.gray[500]} numberOfLines={1}>
+            <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
               {installment.contractCode} · Căn {installment.unitCode}
             </Text>
           ) : null}
@@ -51,18 +49,17 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  main: { flex: 1, gap: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  main: { flex: 1, gap: spacing['2xs'] },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
+    gap: spacing.sm,
+    marginTop: spacing.ms,
+    paddingTop: spacing.ms,
+    borderTopWidth: borderWidth.hairline,
+    borderTopColor: semantic.borderSubtle,
   },
   date: { flex: 1 },
 });

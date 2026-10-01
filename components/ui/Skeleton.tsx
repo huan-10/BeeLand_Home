@@ -1,8 +1,15 @@
 import { useEffect } from 'react';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { colors, radius as radii } from '@/theme';
+import { colors, fontSizes, motion, opacity as opacityTokens, radius as radii, sizes, spacing } from '@/theme';
 
 import { Card } from './Card';
 
@@ -13,13 +20,18 @@ export interface SkeletonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Khối giữ chỗ nhấp nháy khi đang tải dữ liệu. */
-export function Skeleton({ width = '100%', height = 16, radius = radii.sm, style }: SkeletonProps) {
-  const opacity = useSharedValue(0.5);
+const lineHeight = fontSizes.sm.fontSize;
+
+/** Khối giữ chỗ nhấp nháy khi tải dữ liệu. Tắt nhấp nháy khi người dùng bật giảm chuyển động. */
+export function Skeleton({ width = '100%', height = lineHeight, radius = radii.sm, style }: SkeletonProps) {
+  const reduceMotion = useReducedMotion();
+  const opacity = useSharedValue(opacityTokens.skeletonMin);
 
   useEffect(() => {
-    opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
-  }, [opacity]);
+    if (reduceMotion) return;
+    opacity.value = withRepeat(withTiming(1, { duration: motion.skeleton }), -1, true);
+    return () => cancelAnimation(opacity);
+  }, [opacity, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
@@ -36,14 +48,14 @@ export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
     <Card>
       <View style={styles.row}>
-        <Skeleton width={44} height={44} radius={radii.md} />
+        <Skeleton width={sizes.iconBox.lg} height={sizes.iconBox.lg} radius={radii.md} />
         <View style={styles.col}>
-          <Skeleton width="60%" height={14} />
-          <Skeleton width="40%" height={12} />
+          <Skeleton width="60%" />
+          <Skeleton width="40%" height={fontSizes.xs.fontSize} />
         </View>
       </View>
       {Array.from({ length: Math.max(lines - 2, 0) }).map((_, i) => (
-        <Skeleton key={i} height={12} width={i % 2 ? '70%' : '90%'} style={styles.line} />
+        <Skeleton key={i} height={fontSizes.xs.fontSize} width={i % 2 ? '70%' : '90%'} style={styles.line} />
       ))}
     </Card>
   );
@@ -51,7 +63,7 @@ export function SkeletonCard({ lines = 3 }: { lines?: number }) {
 
 export function SkeletonList({ count = 3 }: { count?: number }) {
   return (
-    <View style={styles.list}>
+    <View style={styles.list} accessibilityLabel="Đang tải danh sách" aria-busy>
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonCard key={i} />
       ))}
@@ -60,8 +72,8 @@ export function SkeletonList({ count = 3 }: { count?: number }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  col: { flex: 1, gap: 8 },
-  line: { marginTop: 12 },
-  list: { gap: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  col: { flex: 1, gap: spacing.sm },
+  line: { marginTop: spacing.ms },
+  list: { gap: spacing.ms },
 });

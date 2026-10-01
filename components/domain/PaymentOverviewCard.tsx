@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { ProgressBar, Text } from '@/components/ui';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { formatCurrency, formatPercent } from '@/lib/format';
-import { colors, radius, shadows } from '@/theme';
+import { borderWidth, colors, radius, semantic, shadows, spacing } from '@/theme';
 
 export interface PaymentOverviewCardProps {
   title: string;
@@ -14,48 +14,55 @@ export interface PaymentOverviewCardProps {
   paidPercent: number;
 }
 
-/** Thẻ tổng quan nền cam: tổng giá trị, đã thanh toán, còn lại và tiến độ. */
+/** Thẻ tổng quan nền cam (theo mockup): tổng giá trị, đã thanh toán, còn lại và tiến độ. */
 export function PaymentOverviewCard({ title, totalValue, paidAmount, remainingAmount, paidPercent }: PaymentOverviewCardProps) {
   const { isWide } = useBreakpoint();
   const amountVariant = isWide ? 'bodyMedium' : 'smallMedium';
+  const onPrimary = semantic.textOnPrimary;
+
   return (
     <LinearGradient
-      colors={[colors.primary[400], colors.primary[600]]}
+      colors={[colors.primary[500], colors.primary[700]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.card, shadows.md]}>
-      <Text variant="small" color={colors.primary[50]}>
+      <Text variant="smallMedium" color={onPrimary}>
         {title}
       </Text>
-      <Text variant={isWide ? 'display' : 'h1'} color={colors.white} style={styles.total} numberOfLines={1}>
+      <Text variant={isWide ? 'display' : 'h1'} color={onPrimary} style={styles.total} numberOfLines={1}>
         {formatCurrency(totalValue)}
       </Text>
 
       <View style={styles.progressRow}>
-        <Text variant="caption" weight="medium" color={colors.primary[50]}>
+        <Text variant="caption" weight="medium" color={onPrimary}>
           Tiến độ thanh toán
         </Text>
-        <Text variant="smallMedium" weight="bold" color={colors.white}>
+        <Text variant="smallMedium" weight="bold" color={onPrimary}>
           {formatPercent(paidPercent)}
         </Text>
       </View>
-      <ProgressBar value={paidPercent} tone="success" trackColor="rgba(255,255,255,0.3)" height={8} />
+      <ProgressBar
+        value={paidPercent}
+        tone="success"
+        trackColor={colors.overlay.onPrimaryMuted}
+        accessibilityLabel={`Tiến độ thanh toán ${formatPercent(paidPercent)}`}
+      />
 
       <View style={styles.split}>
         <View style={styles.splitItem}>
-          <Text variant="caption" color={colors.primary[50]}>
+          <Text variant="caption" color={onPrimary}>
             Đã thanh toán
           </Text>
-          <Text variant={amountVariant} weight="bold" color={colors.white} numberOfLines={1}>
+          <Text variant={amountVariant} weight="bold" color={onPrimary} numberOfLines={1}>
             {formatCurrency(paidAmount)}
           </Text>
         </View>
         <View style={styles.separator} />
         <View style={styles.splitItem}>
-          <Text variant="caption" color={colors.primary[50]}>
+          <Text variant="caption" color={onPrimary}>
             Còn lại
           </Text>
-          <Text variant={amountVariant} weight="bold" color={colors.white} numberOfLines={1}>
+          <Text variant={amountVariant} weight="bold" color={onPrimary} numberOfLines={1}>
             {formatCurrency(remainingAmount)}
           </Text>
         </View>
@@ -65,16 +72,16 @@ export function PaymentOverviewCard({ title, totalValue, paidAmount, remainingAm
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.xl, padding: 20, gap: 8, overflow: 'hidden' },
-  total: { marginBottom: 8 },
+  card: { borderRadius: radius.xl, padding: spacing.ml, gap: spacing.sm, overflow: 'hidden' },
+  total: { marginBottom: spacing.sm },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   split: {
     flexDirection: 'row',
-    marginTop: 12,
-    padding: 12,
+    marginTop: spacing.ms,
+    padding: spacing.ms,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.overlay.onPrimarySubtle,
   },
-  splitItem: { flex: 1, gap: 2 },
-  separator: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginHorizontal: 12 },
+  splitItem: { flex: 1, gap: spacing['2xs'] },
+  separator: { width: borderWidth.hairline, backgroundColor: colors.overlay.onPrimaryMuted, marginHorizontal: spacing.ms },
 });

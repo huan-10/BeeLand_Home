@@ -1,12 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Logo, Screen } from '@/components/layout';
 import { Badge, Button, Card, ErrorState, InfoRow, ScreenHeader, Skeleton, Text } from '@/components/ui';
 import { useReceipt } from '@/hooks/useReceipts';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { paymentMethodLabels } from '@/lib/labels';
-import { colors, radius } from '@/theme';
+import { borderWidth, colors, layout, letterSpacing, radius, semantic, sizes, spacing } from '@/theme';
 
 export default function ReceiptDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,32 +19,30 @@ export default function ReceiptDetailScreen() {
       <ScreenHeader title={receipt?.code ?? 'Phiếu thu'} subtitle="Chi tiết phiếu thu" onBack={goBack} />
 
       {loading ? (
-        <Skeleton height={480} radius={radius.lg} />
+        <Skeleton height={sizes.skeleton.page} radius={radius.lg} />
       ) : error || !receipt ? (
         <ErrorState message={error ?? undefined} onRetry={() => void refetch()} />
       ) : (
-        <View style={{ width: '100%', maxWidth: 560, alignSelf: 'center', gap: 16 }}>
-          <Card padding={24} shadow="md">
-            <View className="flex-row items-center justify-between mb-4">
-              <Logo size={32} />
+        <View style={styles.paper}>
+          <Card padding="lg" shadow="md">
+            <View className="flex-row items-center justify-between mb-md">
+              <Logo size="sm" />
               <Badge label="Đã xác nhận" tone="success" icon="checkmark-circle" size="md" />
             </View>
 
-            <View className="items-center py-4 gap-1">
-              <Text variant="caption" weight="semibold" color={colors.gray[500]} style={{ letterSpacing: 1 }}>
+            <View className="items-center py-md gap-xs">
+              <Text variant="overline" color={semantic.textMuted} style={styles.overline}>
                 PHIẾU THU
               </Text>
-              <Text variant="smallMedium" color={colors.gray[700]}>
+              <Text variant="smallMedium" color={semantic.textSecondary}>
                 Số: {receipt.code}
               </Text>
-              <Text variant="display" color={colors.success[700]} style={{ marginTop: 8 }}>
+              <Text variant="display" color={colors.success[700]} style={styles.amount}>
                 {formatCurrency(receipt.amount)}
               </Text>
             </View>
 
-            <View
-              style={{ borderTopWidth: 1, borderStyle: 'dashed', borderColor: colors.gray[200], marginVertical: 8 }}
-            />
+            <View style={styles.dashed} />
 
             <InfoRow label="Ngày thu" value={formatDate(receipt.paidDate)} />
             <InfoRow label="Người nộp" value={receipt.payerName} />
@@ -67,3 +65,15 @@ export default function ReceiptDetailScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  paper: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center', gap: spacing.md },
+  overline: { letterSpacing: letterSpacing.wide },
+  amount: { marginTop: spacing.sm },
+  dashed: {
+    borderTopWidth: borderWidth.hairline,
+    borderStyle: 'dashed',
+    borderColor: colors.gray[200],
+    marginVertical: spacing.sm,
+  },
+});

@@ -5,7 +5,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar, Icon, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { colors, layout, radius } from '@/theme';
+import {
+  borderWidth,
+  colors,
+  hitSlop,
+  interactive,
+  layout,
+  letterSpacing,
+  radius,
+  semantic,
+  shadows,
+  sizes,
+  spacing,
+} from '@/theme';
 
 import { Logo } from './Logo';
 import { primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
@@ -47,7 +59,7 @@ interface BarProps {
 function BottomBar({ activeName, onNavigate }: BarProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 8) }]} accessibilityRole="tablist">
+    <View style={[styles.bottomBar, shadows.navTop, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]} accessibilityRole="tablist">
       {primaryNavItems.map((item) => {
         const active = activeName === item.name;
         return (
@@ -57,16 +69,15 @@ function BottomBar({ activeName, onNavigate }: BarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             accessibilityLabel={item.label}
-            style={styles.bottomItem}>
+            style={[styles.bottomItem, interactive]}>
             <View style={[styles.bottomIcon, active && styles.bottomIconActive]}>
-              <Icon name={active ? item.activeIcon : item.icon} size={22} color={active ? colors.primary[600] : colors.gray[400]} />
+              <Icon name={active ? item.activeIcon : item.icon} size="lg" color={active ? colors.primary[600] : semantic.iconMuted} />
             </View>
             <Text
               variant="caption"
               weight={active ? 'semibold' : 'medium'}
-              color={active ? colors.primary[600] : colors.gray[500]}
-              numberOfLines={1}
-              style={styles.bottomLabel}>
+              color={active ? semantic.textBrand : semantic.textMuted}
+              numberOfLines={1}>
               {item.label}
             </Text>
           </Pressable>
@@ -81,13 +92,13 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.sidebar, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.sidebar, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.md }]}>
       <View style={styles.sidebarLogo}>
-        <Logo size={36} />
+        <Logo size="md" />
       </View>
 
       <View style={styles.sidebarNav} accessibilityRole="tablist">
-        <Text variant="caption" weight="semibold" color={colors.gray[400]} style={styles.sidebarSection}>
+        <Text variant="overline" color={semantic.textMuted} style={styles.sidebarSection}>
           MENU
         </Text>
         {primaryNavItems.map((item) => (
@@ -101,17 +112,23 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
 
       {user ? (
         <View style={styles.userCard}>
-          <Avatar name={user.fullName} size={36} />
+          <Avatar name={user.fullName} size="sm" />
           <View style={styles.userInfo}>
             <Text variant="smallMedium" numberOfLines={1}>
               {user.fullName}
             </Text>
-            <Text variant="caption" color={colors.gray[500]} numberOfLines={1}>
+            <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
               {user.customerCode}
             </Text>
           </View>
-          <Pressable onPress={() => void signOut()} accessibilityRole="button" accessibilityLabel="Đăng xuất" hitSlop={8}>
-            <Icon name="log-out-outline" size={20} color={colors.gray[500]} />
+          {/* Đăng xuất tách khỏi menu điều hướng (destructive-nav-separation). */}
+          <Pressable
+            onPress={() => void signOut()}
+            accessibilityRole="button"
+            accessibilityLabel="Đăng xuất"
+            hitSlop={hitSlop}
+            style={interactive}>
+            <Icon name="log-out-outline" color={semantic.textMuted} />
           </Pressable>
         </View>
       ) : null}
@@ -124,10 +141,11 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
     <Pressable
       onPress={onPress}
       accessibilityRole="tab"
+      accessibilityLabel={item.label}
       accessibilityState={{ selected: active }}
-      style={({ pressed }) => [styles.sidebarItem, active && styles.sidebarItemActive, pressed && !active && styles.sidebarItemPressed]}>
-      <Icon name={active ? item.activeIcon : item.icon} size={20} color={active ? colors.primary[600] : colors.gray[500]} />
-      <Text variant="smallMedium" weight={active ? 'semibold' : 'medium'} color={active ? colors.primary[700] : colors.gray[700]}>
+      style={({ pressed }) => [styles.sidebarItem, interactive, active && styles.sidebarItemActive, pressed && !active && styles.sidebarItemPressed]}>
+      <Icon name={active ? item.activeIcon : item.icon} color={active ? colors.primary[600] : semantic.textMuted} />
+      <Text variant="smallMedium" weight={active ? 'semibold' : 'medium'} color={active ? semantic.textBrand : semantic.textSecondary}>
         {item.label}
       </Text>
     </Pressable>
@@ -137,46 +155,50 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
 const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
-    paddingTop: 8,
-    paddingHorizontal: 4,
-    boxShadow: '0px -2px 12px rgba(16, 24, 40, 0.04)',
+    backgroundColor: semantic.surface,
+    borderTopWidth: borderWidth.hairline,
+    borderTopColor: semantic.borderSubtle,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
-  bottomItem: { flex: 1, alignItems: 'center', gap: 2 },
-  bottomIcon: { width: 48, height: 30, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
+  bottomItem: { flex: 1, alignItems: 'center', gap: spacing['2xs'], minHeight: sizes.touchTarget },
+  bottomIcon: {
+    width: sizes.tabIndicator.width,
+    height: sizes.tabIndicator.height,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bottomIconActive: { backgroundColor: colors.primary[50] },
-  bottomLabel: { fontSize: 11 },
 
   sidebar: {
     width: layout.sidebarWidth,
-    backgroundColor: colors.white,
-    borderRightWidth: 1,
-    borderRightColor: colors.gray[100],
-    paddingHorizontal: 16,
+    backgroundColor: semantic.surface,
+    borderRightWidth: borderWidth.hairline,
+    borderRightColor: semantic.borderSubtle,
+    paddingHorizontal: spacing.md,
   },
-  sidebarLogo: { paddingHorizontal: 8, marginBottom: 32 },
-  sidebarNav: { flex: 1, gap: 4 },
-  sidebarSection: { paddingHorizontal: 12, marginBottom: 4, letterSpacing: 0.8 },
+  sidebarLogo: { paddingHorizontal: spacing.sm, marginBottom: spacing.xl },
+  sidebarNav: { flex: 1, gap: spacing.xs },
+  sidebarSection: { paddingHorizontal: spacing.ms, marginBottom: spacing.xs, letterSpacing: letterSpacing.wide },
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    height: 44,
+    gap: spacing.ms,
+    paddingHorizontal: spacing.ms,
+    minHeight: sizes.touchTarget,
     borderRadius: radius.md,
   },
   sidebarItemActive: { backgroundColor: colors.primary[50] },
-  sidebarItemPressed: { backgroundColor: colors.gray[50] },
-  sidebarDivider: { height: 1, backgroundColor: colors.gray[100], marginVertical: 12, marginHorizontal: 12 },
+  sidebarItemPressed: { backgroundColor: semantic.surfaceMuted },
+  sidebarDivider: { height: borderWidth.hairline, backgroundColor: semantic.borderSubtle, marginVertical: spacing.ms, marginHorizontal: spacing.ms },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 12,
+    gap: spacing.sm,
+    padding: spacing.ms,
     borderRadius: radius.lg,
-    backgroundColor: colors.gray[50],
+    backgroundColor: semantic.surfaceMuted,
   },
   userInfo: { flex: 1 },
 });

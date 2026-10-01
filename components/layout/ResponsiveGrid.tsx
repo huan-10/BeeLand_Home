@@ -2,6 +2,7 @@ import { Children, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { spacing } from '@/theme';
 
 export interface ResponsiveGridProps {
   children: ReactNode;
@@ -11,7 +12,7 @@ export interface ResponsiveGridProps {
 }
 
 /** Lưới đơn giản: chia phần tử thành từng hàng, mỗi ô `flex: 1`. */
-export function ResponsiveGrid({ children, columns = 2, gap = 12 }: ResponsiveGridProps) {
+export function ResponsiveGrid({ children, columns = 2, gap = spacing.ms }: ResponsiveGridProps) {
   const { isWide } = useBreakpoint();
   const cols = isWide ? columns : 1;
   const items = Children.toArray(children);

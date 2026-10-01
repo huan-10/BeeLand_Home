@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Python cache (skill scripts)
+__pycache__/
+*.pyc

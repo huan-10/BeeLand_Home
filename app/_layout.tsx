@@ -11,7 +11,7 @@ import 'react-native-reanimated';
 
 import { Logo } from '@/components/layout';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { appFonts, colors } from '@/theme';
+import { appFonts, colors, semantic, spacing } from '@/theme';
 
 export {
   // Bắt lỗi render của toàn bộ cây điều hướng.
@@ -24,12 +24,12 @@ const navigationTheme: Theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: colors.primary[500],
-    background: colors.background,
-    card: colors.white,
-    text: colors.gray[900],
-    border: colors.gray[100],
-    notification: colors.danger[500],
+    primary: semantic.brand,
+    background: semantic.bg,
+    card: semantic.surface,
+    text: semantic.text,
+    border: semantic.borderSubtle,
+    notification: colors.danger[600],
   },
 };
 
@@ -64,8 +64,8 @@ function RootNavigator() {
   if (status === 'loading') {
     return (
       <View style={styles.loading}>
-        <Logo size={48} />
-        <ActivityIndicator color={colors.primary[500]} />
+        <Logo size="xl" />
+        <ActivityIndicator color={semantic.brand} accessibilityLabel="Đang tải" />
       </View>
     );
   }
@@ -73,7 +73,7 @@ function RootNavigator() {
   const isAuthenticated = status === 'authenticated';
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: semantic.bg } }}>
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
@@ -85,5 +85,5 @@ function RootNavigator() {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, backgroundColor: colors.background },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg, backgroundColor: semantic.bg },
 });

@@ -2,6 +2,8 @@ export * from './colors';
 export * from './fonts';
 export * from './icons';
 export * from './layout';
+export * from './motion';
 export * from './radius';
 export * from './shadows';
+export * from './sizes';
 export * from './typography';

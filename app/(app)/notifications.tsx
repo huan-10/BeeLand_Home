@@ -31,7 +31,7 @@ export default function NotificationsScreen() {
       ) : data.length === 0 ? (
         <EmptyState icon="notifications-off-outline" title="Chưa có thông báo" />
       ) : (
-        <View className="gap-2">
+        <View className="gap-sm">
           {data.map((n) => (
             <NotificationItem key={n.id} notification={n} onPress={() => void open(n)} />
           ))}

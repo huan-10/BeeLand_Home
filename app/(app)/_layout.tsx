@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 
 import { AppNavigation } from '@/components/layout';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { colors } from '@/theme';
+import { semantic } from '@/theme';
 
 export default function AppLayout() {
   const { isWide } = useBreakpoint();
@@ -13,7 +13,7 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarPosition: isWide ? 'left' : 'bottom',
-        sceneStyle: { backgroundColor: colors.background },
+        sceneStyle: { backgroundColor: semantic.bg },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Trang chủ' }} />
       <Tabs.Screen name="contracts" options={{ title: 'Hợp đồng' }} />

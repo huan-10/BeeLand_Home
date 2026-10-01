@@ -7,7 +7,7 @@ import { ResponsiveGrid, Screen } from '@/components/layout';
 import { Card, Chip, EmptyState, ErrorState, IconCircle, ScreenHeader, SkeletonList, Text } from '@/components/ui';
 import { usePaymentSchedule } from '@/hooks/useInstallments';
 import { formatCurrency } from '@/lib/format';
-import { colors, type IconName, type Tone } from '@/theme';
+import { chipRow, semantic, type IconName, type Tone } from '@/theme';
 import type { InstallmentFilter } from '@/types';
 
 const filters: { value: InstallmentFilter; label: string }[] = [
@@ -32,7 +32,7 @@ export default function PaymentsScreen() {
         </ResponsiveGrid>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRow}>
         {filters.map((f) => (
           <Chip key={f.value} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
         ))}
@@ -48,7 +48,7 @@ export default function PaymentsScreen() {
           title={filter === 'paid' ? 'Chưa có đợt nào được thanh toán' : 'Bạn không có khoản cần thanh toán'}
         />
       ) : (
-        <View className="gap-3">
+        <View className="gap-ms">
           {data.items.map((item) => (
             <InstallmentCard
               key={item.id}
@@ -66,10 +66,10 @@ export default function PaymentsScreen() {
 function StatCard({ icon, tone, label, value, hint }: { icon: IconName; tone: Tone; label: string; value: string; hint: string }) {
   return (
     <Card>
-      <View className="flex-row items-center gap-3">
-        <IconCircle name={icon} tone={tone} size={40} />
+      <View className="flex-row items-center gap-ms">
+        <IconCircle name={icon} tone={tone} size="md" />
         <View className="flex-1">
-          <Text variant="caption" color={colors.gray[500]}>
+          <Text variant="caption" color={semantic.textMuted}>
             {label} · {hint}
           </Text>
           <Text variant="bodyMedium" weight="bold" numberOfLines={1} adjustsFontSizeToFit>

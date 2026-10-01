@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { IconCircle, Text } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/format';
 import { notificationTypeMeta } from '@/lib/labels';
-import { colors, radius } from '@/theme';
+import { colors, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
 import type { AppNotification } from '@/types';
 
 export function NotificationItem({ notification, onPress }: { notification: AppNotification; onPress?: () => void }) {
@@ -12,8 +12,10 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.item, !notification.read && styles.unread, pressed && styles.pressed]}>
-      <IconCircle name={meta.icon} tone={meta.tone} size={40} />
+      accessibilityLabel={`${notification.read ? '' : 'Chưa đọc. '}${notification.title}`}
+      accessibilityHint={notification.message}
+      style={({ pressed }) => [styles.item, interactive, !notification.read && styles.unread, pressed && styles.pressed]}>
+      <IconCircle name={meta.icon} tone={meta.tone} size="md" />
       <View style={styles.main}>
         <View style={styles.titleRow}>
           <Text variant="smallMedium" weight="semibold" style={styles.flex} numberOfLines={2}>
@@ -21,10 +23,10 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
           </Text>
           {!notification.read ? <View style={styles.dot} /> : null}
         </View>
-        <Text variant="small" color={colors.gray[600]} numberOfLines={3}>
+        <Text variant="small" color={semantic.textSecondary} numberOfLines={3}>
           {notification.message}
         </Text>
-        <Text variant="caption" color={colors.gray[400]}>
+        <Text variant="caption" color={semantic.textMuted}>
           {formatRelativeTime(notification.createdAt)}
         </Text>
       </View>
@@ -33,11 +35,11 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', gap: 12, padding: 14, borderRadius: radius.lg, backgroundColor: colors.white },
+  item: { flexDirection: 'row', gap: spacing.ms, padding: spacing.md, borderRadius: radius.lg, backgroundColor: semantic.surface },
   unread: { backgroundColor: colors.primary[50] },
-  pressed: { opacity: 0.85 },
-  main: { flex: 1, gap: 4 },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  pressed: { opacity: opacity.pressed },
+  main: { flex: 1, gap: spacing.xs },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   flex: { flex: 1 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary[500], marginTop: 6 },
+  dot: { width: sizes.dot.md, height: sizes.dot.md, borderRadius: radius.full, backgroundColor: semantic.brand, marginTop: spacing.xs + spacing['2xs'] },
 });

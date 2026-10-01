@@ -3,24 +3,24 @@ import { StyleSheet, View } from 'react-native';
 import { Badge, Icon, Text } from '@/components/ui';
 import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
 import { installmentStatusMeta } from '@/lib/labels';
-import { colors, toneColors } from '@/theme';
+import { borderWidth, colors, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 import type { PaymentInstallmentView } from '@/types';
 
-/** Lịch thanh toán dạng dòng thời gian cho trang chi tiết hợp đồng. */
+/** Lịch thanh toán dạng timeline (theo mockup): nút tròn + đường nối, đã trả tô màu. */
 export function InstallmentTimeline({ installments }: { installments: PaymentInstallmentView[] }) {
   return (
-    <View>
+    <View accessibilityRole="list">
       {installments.map((item, index) => {
         const meta = installmentStatusMeta[item.status];
         const tone = toneColors[meta.tone];
         const isLast = index === installments.length - 1;
         const isPaid = item.status === 'paid';
         return (
-          <View key={item.id} style={styles.item}>
+          <View key={item.id} style={styles.item} accessibilityLabel={`${item.name}, ${formatCurrency(item.amount)}, ${meta.label}`}>
             <View style={styles.rail}>
-              <View style={[styles.node, { backgroundColor: isPaid ? tone.solid : colors.white, borderColor: tone.solid }]}>
+              <View style={[styles.node, { backgroundColor: isPaid ? tone.solid : semantic.surface, borderColor: tone.solid }]}>
                 {isPaid ? (
-                  <Icon name="checkmark" size={14} color={colors.white} />
+                  <Icon name="checkmark" size="sm" color={semantic.textOnPrimary} />
                 ) : (
                   <Text variant="caption" weight="bold" color={tone.fg}>
                     {item.sequence}
@@ -36,17 +36,17 @@ export function InstallmentTimeline({ installments }: { installments: PaymentIns
                 </Text>
                 <Badge label={meta.label} tone={meta.tone} />
               </View>
-              <Text variant="h3" color={isPaid ? colors.gray[900] : tone.fg}>
+              <Text variant="h3" color={isPaid ? semantic.text : tone.fg}>
                 {formatCurrency(item.amount)}
               </Text>
-              <Text variant="caption" color={colors.gray[500]}>
+              <Text variant="caption" color={semantic.textMuted}>
                 {item.percentOfContract}% giá trị HĐ ·{' '}
                 {isPaid && item.paidDate
                   ? `Thanh toán ngày ${formatDate(item.paidDate)}`
                   : `Hạn ${formatDate(item.dueDate)} (${formatDaysLeft(item.daysUntilDue).toLowerCase()})`}
               </Text>
               {item.description ? (
-                <Text variant="caption" color={colors.gray[400]}>
+                <Text variant="caption" color={semantic.textMuted}>
                   {item.description}
                 </Text>
               ) : null}
@@ -59,12 +59,19 @@ export function InstallmentTimeline({ installments }: { installments: PaymentIns
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', gap: 14 },
-  rail: { alignItems: 'center', width: 28 },
-  node: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  line: { flex: 1, width: 2, backgroundColor: colors.gray[200], marginVertical: 4 },
-  content: { flex: 1, gap: 4, paddingTop: 2 },
-  contentGap: { paddingBottom: 24 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  item: { flexDirection: 'row', gap: spacing.ms },
+  rail: { alignItems: 'center', width: sizes.timelineNode },
+  node: {
+    width: sizes.timelineNode,
+    height: sizes.timelineNode,
+    borderRadius: radius.full,
+    borderWidth: borderWidth.strong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  line: { flex: 1, width: borderWidth.strong, backgroundColor: colors.gray[200], marginVertical: spacing.xs },
+  content: { flex: 1, gap: spacing.xs, paddingTop: spacing['2xs'] },
+  contentGap: { paddingBottom: spacing.lg },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
 });

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { colors } from '@/theme';
+import { borderWidth, semantic, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -15,7 +15,7 @@ export interface InfoRowProps {
 export function InfoRow({ label, value, last }: InfoRowProps) {
   return (
     <View style={[styles.row, !last && styles.divider]}>
-      <Text variant="small" color={colors.gray[500]} style={styles.label}>
+      <Text variant="small" color={semantic.textMuted} style={styles.label}>
         {label}
       </Text>
       {typeof value === 'string' || typeof value === 'number' ? (
@@ -30,8 +30,8 @@ export function InfoRow({ label, value, last }: InfoRowProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, gap: 16 },
-  divider: { borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.ms, gap: spacing.md },
+  divider: { borderBottomWidth: borderWidth.hairline, borderBottomColor: semantic.borderSubtle },
   label: { flexShrink: 0 },
   value: { flex: 1 },
   valueNode: { flex: 1, alignItems: 'flex-end' },
