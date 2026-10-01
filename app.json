@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "beeland-app-KH",
+    "name": "BeeSky",
     "slug": "beeland-app-KH",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "beelandappkh",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
@@ -22,7 +22,13 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "BeeSky – Khách hàng",
+      "shortName": "BeeSky",
+      "description": "Tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản.",
+      "themeColor": "#F08A24",
+      "backgroundColor": "#F6F7F9",
+      "lang": "vi"
     },
     "plugins": [
       "expo-router",
@@ -31,7 +37,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#F6F7F9"
         }
       ],
       "expo-secure-store"

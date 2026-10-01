@@ -1,0 +1,113 @@
+import type {
+  Contract,
+  ContractPaymentSummary,
+  InstallmentFilter,
+  InstallmentStatus,
+  PaymentInstallment,
+  PaymentInstallmentView,
+} from '@/types';
+
+import { daysUntil } from './date';
+
+/** Số ngày trước hạn được coi là "sắp đến hạn". */
+export const UPCOMING_WINDOW_DAYS = 30;
+
+export function getInstallmentStatus(installment: PaymentInstallment, today: Date = new Date()): InstallmentStatus {
+  if (installment.paidAmount >= installment.amount) return 'paid';
+  const days = daysUntil(installment.dueDate, today);
+  if (days < 0) return 'overdue';
+  if (installment.paidAmount > 0) return 'partial';
+  if (days <= UPCOMING_WINDOW_DAYS) return 'upcoming';
+  return 'scheduled';
+}
+
+export function toInstallmentView(
+  installment: PaymentInstallment,
+  contract: Pick<Contract, 'code' | 'projectName' | 'unitCode'>,
+  today: Date = new Date(),
+): PaymentInstallmentView {
+  return {
+    ...installment,
+    status: getInstallmentStatus(installment, today),
+    remainingAmount: Math.max(installment.amount - installment.paidAmount, 0),
+    daysUntilDue: daysUntil(installment.dueDate, today),
+    contractCode: contract.code,
+    projectName: contract.projectName,
+    unitCode: contract.unitCode,
+  };
+}
+
+export function calcPercent(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.max(0, (part / total) * 100));
+}
+
+/** Đợt cần thanh toán tiếp theo: ưu tiên đợt quá hạn, sau đó là đợt có hạn gần nhất. */
+export function findNextInstallment(installments: PaymentInstallmentView[]): PaymentInstallmentView | null {
+  const unpaid = installments
+    .filter((i) => i.status !== 'paid')
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  return unpaid[0] ?? null;
+}
+
+export function summarizeContractPayments(
+  contract: Contract,
+  installments: PaymentInstallmentView[],
+): ContractPaymentSummary {
+  const paidAmount = installments.reduce((sum, i) => sum + i.paidAmount, 0);
+  return {
+    totalValue: contract.totalValue,
+    paidAmount,
+    remainingAmount: Math.max(contract.totalValue - paidAmount, 0),
+    paidPercent: calcPercent(paidAmount, contract.totalValue),
+    installmentCount: installments.length,
+    paidInstallmentCount: installments.filter((i) => i.status === 'paid').length,
+    overdueCount: installments.filter((i) => i.status === 'overdue').length,
+    nextInstallment: findNextInstallment(installments),
+  };
+}
+
+export function filterInstallments(
+  installments: PaymentInstallmentView[],
+  filter: InstallmentFilter,
+): PaymentInstallmentView[] {
+  switch (filter) {
+    case 'paid':
+      return installments.filter((i) => i.status === 'paid');
+    case 'due':
+      return installments.filter((i) => i.status !== 'paid');
+    default:
+      return installments;
+  }
+}
+
+/** Sắp xếp: chưa thanh toán theo hạn gần nhất trước, đã thanh toán (mới nhất) sau. */
+export function sortInstallmentsForDisplay(installments: PaymentInstallmentView[]): PaymentInstallmentView[] {
+  const unpaid = installments.filter((i) => i.status !== 'paid').sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const paid = installments
+    .filter((i) => i.status === 'paid')
+    .sort((a, b) => (b.paidDate ?? b.dueDate).localeCompare(a.paidDate ?? a.dueDate));
+  return [...unpaid, ...paid];
+}
+
+export interface ScheduleSummary {
+  dueAmount: number;
+  dueCount: number;
+  overdueAmount: number;
+  overdueCount: number;
+  paidAmount: number;
+  paidCount: number;
+}
+
+export function summarizeSchedule(installments: PaymentInstallmentView[]): ScheduleSummary {
+  const unpaid = installments.filter((i) => i.status !== 'paid');
+  const overdue = installments.filter((i) => i.status === 'overdue');
+  return {
+    dueAmount: unpaid.reduce((sum, i) => sum + i.remainingAmount, 0),
+    dueCount: unpaid.length,
+    overdueAmount: overdue.reduce((sum, i) => sum + i.remainingAmount, 0),
+    overdueCount: overdue.length,
+    paidAmount: installments.reduce((sum, i) => sum + i.paidAmount, 0),
+    paidCount: installments.length - unpaid.length,
+  };
+}
