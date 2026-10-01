@@ -28,18 +28,18 @@ export const contractStatusMeta: Record<ContractStatus, StatusMeta> = {
 
 /** Trạng thái đợt thanh toán: luôn có chữ + icon (không chỉ dựa vào màu). */
 export const installmentStatusMeta: Record<InstallmentStatus, StatusMeta & { icon: IconName }> = {
-  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'checkmark' },
-  partial: { label: 'Thanh toán một phần', tone: 'primary', icon: 'hourglass-outline' },
-  upcoming: { label: 'Đến hạn', tone: 'primary', icon: 'alarm-outline' },
-  overdue: { label: 'Quá hạn', tone: 'danger', icon: 'alert' },
-  scheduled: { label: 'Chưa đến hạn', tone: 'neutral', icon: 'time-outline' },
+  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'check' },
+  partial: { label: 'Thanh toán một phần', tone: 'primary', icon: 'hourglass' },
+  upcoming: { label: 'Đến hạn', tone: 'primary', icon: 'alarm' },
+  overdue: { label: 'Quá hạn', tone: 'danger', icon: 'alertCircle' },
+  scheduled: { label: 'Chưa đến hạn', tone: 'neutral', icon: 'clock' },
 };
 
 /** Trạng thái phiếu thu: chữ + icon + tông màu. */
 export const receiptStatusMeta: Record<ReceiptStatus, StatusMeta & { icon: IconName }> = {
-  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'checkmark-circle' },
-  pending: { label: 'Chờ xác nhận', tone: 'warning', icon: 'time-outline' },
-  cancelled: { label: 'Đã hủy', tone: 'neutral', icon: 'close-circle-outline' },
+  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'checkCircle' },
+  pending: { label: 'Chờ xác nhận', tone: 'warning', icon: 'clock' },
+  cancelled: { label: 'Đã hủy', tone: 'neutral', icon: 'closeCircle' },
 };
 
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -49,9 +49,9 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
 };
 
 export const notificationTypeMeta: Record<NotificationType, { tone: Tone; icon: IconName }> = {
-  payment_reminder: { tone: 'primary', icon: 'alarm-outline' },
-  payment_overdue: { tone: 'danger', icon: 'alert-circle-outline' },
-  receipt: { tone: 'success', icon: 'receipt-outline' },
-  contract: { tone: 'info', icon: 'document-text-outline' },
-  project: { tone: 'info', icon: 'business-outline' },
+  payment_reminder: { tone: 'primary', icon: 'alarm' },
+  payment_overdue: { tone: 'danger', icon: 'alertCircle' },
+  receipt: { tone: 'success', icon: 'receipt' },
+  contract: { tone: 'info', icon: 'document' },
+  project: { tone: 'info', icon: 'building' },
 };

@@ -28,10 +28,10 @@ import type { AppNotification } from '@/types';
 const NOTIFICATION_LIMIT = 3;
 
 const actions: { label: string; icon: IconName; tone: Tone; href: Href }[] = [
-  { label: 'Hợp đồng', icon: 'document-text', tone: 'primary', href: '/contracts' },
+  { label: 'Hợp đồng', icon: 'document', tone: 'primary', href: '/contracts' },
   { label: 'Thanh toán', icon: 'calendar', tone: 'info', href: '/payments' },
   { label: 'Phiếu thu', icon: 'receipt', tone: 'success', href: '/receipts' },
-  { label: 'Hồ sơ', icon: 'person', tone: 'warning', href: '/profile' },
+  { label: 'Hồ sơ', icon: 'user', tone: 'warning', href: '/profile' },
 ];
 
 export default function HomeScreen() {
@@ -78,7 +78,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <IconButton
-              icon="notifications-outline"
+              icon="bell"
               accessibilityLabel="Thông báo"
               dot={notifications.unreadCount > 0}
               dotLabel={unreadLabel(notifications.unreadCount)}
@@ -121,7 +121,7 @@ export default function HomeScreen() {
               </Card>
             ) : notifications.items.length === 0 ? (
               <Card>
-                <EmptyState icon="notifications-off-outline" title="Chưa có thông báo" description="Nhắc lịch thanh toán và cập nhật dự án sẽ hiển thị tại đây." />
+                <EmptyState icon="bellOff" title="Chưa có thông báo" description="Nhắc lịch thanh toán và cập nhật dự án sẽ hiển thị tại đây." />
               </Card>
             ) : (
               <View style={styles.list}>
@@ -161,7 +161,7 @@ export default function HomeScreen() {
                           {item.contractCode} · {formatCurrency(item.remainingAmount)} · hạn {formatDate(item.dueDate)}
                         </Text>
                       </View>
-                      <Icon name="chevron-forward" size="sm" color={colors.danger[600]} />
+                      <Icon name="chevronRight" size="sm" color={colors.danger[600]} />
                     </View>
                   </Card>
                 ))}
@@ -174,7 +174,7 @@ export default function HomeScreen() {
                   />
                 ) : dashboard.data.overdueInstallments.length === 0 ? (
                   <Card>
-                    <EmptyState icon="checkmark-done-outline" title="Không có khoản sắp đến hạn" description="Bạn đã thanh toán đầy đủ các đợt hiện tại." />
+                    <EmptyState icon="checkDouble" title="Không có khoản sắp đến hạn" description="Bạn đã thanh toán đầy đủ các đợt hiện tại." />
                   </Card>
                 ) : null}
               </View>

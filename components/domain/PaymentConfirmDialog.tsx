@@ -24,7 +24,7 @@ export function PaymentConfirmDialog({ visible, installment, submitting, onConfi
       actions={
         <>
           <Button title="Hủy" variant="ghost" onPress={onClose} disabled={submitting} />
-          <Button title="Xác nhận thanh toán" leftIcon="card-outline" loading={submitting} onPress={onConfirm} />
+          <Button title="Xác nhận thanh toán" leftIcon="card" loading={submitting} onPress={onConfirm} />
         </>
       }>
       <View style={styles.amountBox}>

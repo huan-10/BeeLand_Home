@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { borderWidth, colors, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
+import { interactive, opacity, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
@@ -17,14 +17,18 @@ export interface ChipProps {
   accessibilityLabel?: string;
 }
 
-/** Nút lọc dạng viên thuốc; cao tối thiểu 44 (vùng chạm). Web: hover viền cam. */
+/**
+ * Nút lọc dạng viên thuốc, cao 44 (vùng chạm).
+ * Đang chọn: nền tối `inverse` chữ trắng. Thường: thẻ trắng bóng nhẹ. Số lượng hiển thị trong viên nhỏ.
+ */
 export function Chip({ label, selected, onPress, count, role = 'button', accessibilityLabel }: ChipProps) {
   const { hovered, hoverProps } = useHover();
+  const fg = selected ? semantic.onInverse : semantic.textSecondary;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole={role}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={accessibilityLabel ?? (count !== undefined ? `${label}, ${count}` : label)}
       aria-selected={!!selected}
       {...hoverProps}
       style={({ pressed }) => [
@@ -34,9 +38,16 @@ export function Chip({ label, selected, onPress, count, role = 'button', accessi
         hovered && (selected ? styles.selectedHover : styles.idleHover),
         pressed && styles.pressed,
       ]}>
-      <Text variant="smallMedium" weight={selected ? 'semibold' : 'medium'} color={selected ? semantic.textOnBrand : semantic.textSecondary}>
-        {count !== undefined ? `${label} (${count})` : label}
+      <Text variant="captionStrong" weight="semibold" color={fg}>
+        {label}
       </Text>
+      {count !== undefined ? (
+        <View style={[styles.count, selected ? styles.countSelected : styles.countIdle]}>
+          <Text variant="label" numeric color={selected ? semantic.onInverse : semantic.textSecondary}>
+            {count}
+          </Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -44,14 +55,18 @@ export function Chip({ label, selected, onPress, count, role = 'button', accessi
 const styles = StyleSheet.create({
   chip: {
     minHeight: sizes.control.sm,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.full,
-    borderWidth: borderWidth.hairline,
   },
-  idle: { backgroundColor: semantic.surface, borderColor: semantic.border },
-  selected: { backgroundColor: semantic.brand, borderColor: semantic.brand },
-  idleHover: { borderColor: semantic.brand, backgroundColor: colors.primary[50] },
-  selectedHover: { backgroundColor: semantic.brandPressed, borderColor: semantic.brandPressed },
+  idle: { backgroundColor: semantic.surface, ...shadows.soft },
+  selected: { backgroundColor: semantic.inverse },
+  idleHover: { backgroundColor: semantic.surfaceSunken },
+  selectedHover: { backgroundColor: semantic.inverseHover },
   pressed: { opacity: opacity.pressed },
+  count: { minWidth: sizes.countBadge + spacing.xs, paddingHorizontal: spacing.xs, borderRadius: radius.full, alignItems: 'center' },
+  countIdle: { backgroundColor: semantic.surfaceSunken },
+  countSelected: { backgroundColor: semantic.inverseTrack },
 });

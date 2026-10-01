@@ -50,7 +50,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
         {installment.contractCode} · {installment.projectName} · Căn {installment.unitCode}
       </Text>
       {onViewContract ? (
-        <Button title="Xem lịch thanh toán" variant="secondary" size="sm" rightIcon="arrow-forward" onPress={onViewContract} />
+        <Button title="Xem lịch thanh toán" variant="secondary" size="sm" rightIcon="arrowRight" onPress={onViewContract} />
       ) : null}
     </Card>
   );

@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen() {
       <AuthLayout title="Kiểm tra hộp thư" footer={footer}>
         <FadeIn>
           <StateView
-            icon={sentVia === 'email' ? 'mail-open-outline' : 'chatbubble-ellipses-outline'}
+            icon={sentVia === 'email' ? 'mailOpen' : 'message'}
             tone="success"
             title="Đã gửi hướng dẫn"
             description={
@@ -73,7 +73,7 @@ export default function ForgotPasswordScreen() {
         <Input
           ref={inputRef}
           label="Số điện thoại hoặc email"
-          icon="person-outline"
+          icon="user"
           placeholder="VD: 0901 234 567"
           keyboardType="email-address"
           autoCapitalize="none"

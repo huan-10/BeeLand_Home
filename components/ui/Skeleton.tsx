@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { colors, fontSizes, motion, opacity as opacityTokens, radius as radii, sizes, spacing } from '@/theme';
+import { fontSizes, motion, opacity as opacityTokens, radius as radii, semantic, sizes, spacing } from '@/theme';
 
 import { Card } from './Card';
 
@@ -38,7 +38,7 @@ export function Skeleton({ width = '100%', height = lineHeight, radius = radii.s
   return (
     <Animated.View
       accessibilityLabel="Đang tải"
-      style={[{ width, height, borderRadius: radius, backgroundColor: colors.gray[200] }, animatedStyle, style]}
+      style={[{ width, height, borderRadius: radius, backgroundColor: semantic.border }, animatedStyle, style]}
     />
   );
 }
@@ -48,7 +48,7 @@ export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
     <Card>
       <View style={styles.row}>
-        <Skeleton width={sizes.iconBox.lg} height={sizes.iconBox.lg} radius={radii.md} />
+        <Skeleton width={sizes.iconBox.lg} height={sizes.iconBox.lg} radius={radii.full} />
         <View style={styles.col}>
           <Skeleton width="60%" />
           <Skeleton width="40%" height={fontSizes.label.fontSize} />

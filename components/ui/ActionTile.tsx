@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { borderWidth, interactive, motion, opacity, radius, semantic, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
+import { interactive, letterSpacing, motion, opacity, radius, semantic, shadows, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
 
 import { IconCircle } from './IconCircle';
 import { Text } from './Text';
@@ -17,7 +17,7 @@ export interface ActionTileProps {
 }
 
 /**
- * Ô chức năng: icon pastel + nhãn. Web: hover đổi nền/viền theo tông (không đổi kích thước);
+ * Ô chức năng: thẻ trắng bo 24, icon tròn pastel + nhãn. Web: hover nền theo tông + bóng `raised` (không đổi kích thước);
  * nhấn: giảm opacity; focus: viền `:focus-visible` toàn cục.
  */
 export function ActionTile({ label, icon, tone, onPress, accessibilityHint, compact }: ActionTileProps) {
@@ -34,11 +34,11 @@ export function ActionTile({ label, icon, tone, onPress, accessibilityHint, comp
       style={({ pressed }) => [
         styles.tile,
         interactive,
-        hovered && { backgroundColor: c.bg, borderColor: c.border },
+        hovered && [styles.hovered, { backgroundColor: c.bg }],
         pressed && styles.pressed,
       ]}>
       <IconCircle name={icon} tone={tone} size={compact ? 'lg' : 'xl'} />
-      <Text variant={compact ? 'caption' : 'smallMedium'} weight="semibold" align="center">
+      <Text variant={compact ? 'label' : 'captionStrong'} weight="semibold" align="center" style={compact && styles.compactLabel}>
         {label}
       </Text>
     </Pressable>
@@ -54,12 +54,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
-    borderRadius: radius.lg,
+    borderRadius: radius['2xl'],
     backgroundColor: semantic.surface,
-    borderWidth: borderWidth.hairline,
-    borderColor: semantic.borderSubtle,
+    ...shadows.soft,
     // Web: chuyển màu mượt khi hover.
     transitionDuration: `${motion.fast}ms`,
   },
+  hovered: shadows.raised,
+  // Ô hẹp: nhãn 12 không giãn chữ để vừa 4 ô một hàng.
+  compactLabel: { letterSpacing: letterSpacing.normal },
   pressed: { opacity: opacity.pressed },
 });

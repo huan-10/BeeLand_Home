@@ -4,7 +4,6 @@ import {
   BeVietnamPro_600SemiBold,
   BeVietnamPro_700Bold,
 } from '@expo-google-fonts/be-vietnam-pro';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { fontFamily } from './typography';
 
@@ -14,5 +13,4 @@ export const appFonts = {
   [fontFamily.medium]: BeVietnamPro_500Medium,
   [fontFamily.semibold]: BeVietnamPro_600SemiBold,
   [fontFamily.bold]: BeVietnamPro_700Bold,
-  ...Ionicons.font,
 };

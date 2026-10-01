@@ -18,7 +18,7 @@ export interface CheckboxProps {
 /** Ô đánh dấu có nhãn; cả hàng là vùng chạm (cao tối thiểu 44). */
 export function Checkbox({ label, checked, onChange, error, disabled }: CheckboxProps) {
   const { hovered, hoverProps } = useHover();
-  const borderColor = error ? colors.danger[500] : checked || hovered ? semantic.brand : colors.gray[400];
+  const borderColor = error ? colors.danger[600] : checked || hovered ? semantic.action : semantic.textMuted;
   return (
     <View>
       <Pressable
@@ -33,16 +33,16 @@ export function Checkbox({ label, checked, onChange, error, disabled }: Checkbox
         <View
           style={[
             styles.box,
-            { borderColor, backgroundColor: checked ? (hovered ? semantic.brandPressed : semantic.brand) : hovered ? colors.primary[50] : semantic.surface },
+            { borderColor, backgroundColor: checked ? (hovered ? semantic.actionHover : semantic.action) : hovered ? colors.primary[50] : semantic.surface },
           ]}>
-          {checked ? <Icon name="checkmark" size="sm" color={semantic.textOnBrand} /> : null}
+          {checked ? <Icon name="check" size="sm" color={semantic.textOnAction} strong /> : null}
         </View>
-        <Text variant="small" color={semantic.textSecondary} style={styles.label}>
+        <Text variant="caption" color={semantic.textSecondary} style={styles.label}>
           {label}
         </Text>
       </Pressable>
       {error ? (
-        <Text variant="caption" color={colors.danger[600]} role="alert">
+        <Text variant="caption" color={colors.danger[700]} role="alert">
           {error}
         </Text>
       ) : null}
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   box: {
     width: sizes.checkbox,
     height: sizes.checkbox,
-    borderRadius: radius.xs,
+    borderRadius: radius.sm,
     borderWidth: borderWidth.strong,
     alignItems: 'center',
     justifyContent: 'center',

@@ -12,7 +12,7 @@ export interface EmptyStateProps {
 }
 
 /** Trạng thái rỗng: luôn có lời giải thích và (nếu có thể) một hành động tiếp theo. */
-export function EmptyState({ icon = 'file-tray-outline', title, description, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({ icon = 'inbox', title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <StateView
       icon={icon}

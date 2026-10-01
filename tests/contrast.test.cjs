@@ -61,6 +61,10 @@ for (const [bgName, bg] of [['surface', s.surface], ['bg', s.bg], ['surfaceMuted
   for (const fg of ['text', 'textSecondary', 'textMuted', 'textBrand', 'textSuccess']) check(`${fg} / ${bgName}`, s[fg], bg, TEXT);
 }
 check('placeholder / surface', s.placeholder, s.surface, TEXT);
+// Ô nhập kiểu mềm: nền cát nhạt khi chưa focus
+check('placeholder / surfaceSunken (ô nhập)', s.placeholder, s.surfaceSunken, TEXT);
+check('icon ô nhập / surfaceSunken', s.textMuted, s.surfaceSunken, GRAPHIC);
+check('viền ô nhập focus / surface', s.focusRing, s.surface, GRAPHIC);
 
 // Nút chính: chữ trắng trên cam đậm ở mọi trạng thái
 for (const state of ['action', 'actionHover', 'actionPressed']) check(`textOnAction / ${state}`, s.textOnAction, s[state], TEXT);

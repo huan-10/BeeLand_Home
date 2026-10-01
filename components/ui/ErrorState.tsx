@@ -15,7 +15,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <StateView
-      icon="cloud-offline-outline"
+      icon="offline"
       tone="danger"
       title={title}
       description={message}

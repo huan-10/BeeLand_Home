@@ -23,7 +23,7 @@ export function ReceiptCard({ receipt, onPress }: { receipt: Receipt; onPress?: 
       accessibilityLabel={`Phiếu thu ${receipt.code}, ${formatCurrency(receipt.amount)}, ngày ${formatDate(receipt.paidDate)}, hợp đồng ${receipt.contractCode}, ${meta.label}`}
       accessibilityHint="Mở chi tiết phiếu thu">
       <View style={styles.row}>
-        <IconCircle name="document-text" tone={meta.tone} />
+        <IconCircle name="document" tone={meta.tone} />
         <View style={styles.main}>
           <Text variant="bodyMedium" weight="semibold">
             {receipt.code}

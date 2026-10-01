@@ -37,18 +37,19 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const [secure, setSecure] = useState(true);
   const messageId = useId();
   const toggleHover = useHover();
+  const hoverField = useHover();
 
-  const borderColor = error ? colors.danger[500] : focused ? semantic.focusRing : semantic.border;
+  const borderColor = error ? colors.danger[600] : focused ? semantic.focusRing : hoverField.hovered ? semantic.borderStrong : semantic.surfaceSunken;
 
   return (
     <View style={styles.wrapper}>
       {label ? (
-        <Text variant="smallMedium" color={semantic.textSecondary}>
+        <Text variant="captionStrong" weight="semibold" color={semantic.textSecondary}>
           {label}
         </Text>
       ) : null}
-      <View style={[styles.field, { borderColor }, focused && !error && styles.focused, !editable && styles.disabled]}>
-        {icon ? <Icon name={icon} color={focused ? semantic.brand : semantic.iconMuted} /> : null}
+      <View {...hoverField.hoverProps} style={[styles.field, { borderColor }, focused && styles.focusedField, focused && !error && styles.focused, !editable && styles.disabled]}>
+        {icon ? <Icon name={icon} color={focused ? semantic.textBrand : semantic.textMuted} /> : null}
         <TextInput
           ref={ref}
           accessibilityLabel={label ?? rest.placeholder}
@@ -75,14 +76,14 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             style={[styles.toggle, interactive, toggleHover.hovered && styles.toggleHover]}
             accessibilityRole="button"
             accessibilityLabel={secure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu'}>
-            <Icon name={secure ? 'eye-outline' : 'eye-off-outline'} color={semantic.textMuted} />
+            <Icon name={secure ? 'eye' : 'eyeOff'} color={semantic.textMuted} />
           </Pressable>
         ) : null}
       </View>
       {error ? (
         <View style={styles.message} nativeID={messageId} accessibilityLiveRegion="polite" role="alert">
-          <Icon name="alert-circle" size="sm" color={colors.danger[600]} />
-          <Text variant="caption" color={colors.danger[600]}>
+          <Icon name="alertCircle" size="sm" color={colors.danger[700]} />
+          <Text variant="caption" color={colors.danger[700]}>
             {error}
           </Text>
         </View>
@@ -104,9 +105,11 @@ const styles = StyleSheet.create({
     height: sizes.control.md,
     paddingHorizontal: spacing.md,
     borderWidth: borderWidth.thick,
-    borderRadius: radius.md,
-    backgroundColor: semantic.surface,
+    borderRadius: radius.lg,
+    // Ô nhập "mềm": nền cát nhạt, viền cùng màu; focus → nền trắng, viền cam đậm + vòng sáng.
+    backgroundColor: semantic.surfaceSunken,
   },
+  focusedField: { backgroundColor: semantic.surface },
   focused: shadows.focusHalo,
   disabled: { backgroundColor: semantic.surfaceMuted },
   input: {
@@ -125,10 +128,10 @@ const styles = StyleSheet.create({
     width: sizes.touchTarget,
     height: sizes.touchTarget,
     marginRight: -spacing.ms,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleHover: { backgroundColor: colors.gray[100] },
+  toggleHover: { backgroundColor: semantic.border },
   message: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
 });

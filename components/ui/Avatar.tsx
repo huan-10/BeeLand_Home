@@ -9,7 +9,7 @@ export function Avatar({ name, size = 'md' }: { name: string; size?: keyof typeo
   const box = sizes.avatar[size];
   return (
     <View style={[styles.avatar, { width: box, height: box }]} accessibilityLabel={`Ảnh đại diện ${name}`}>
-      <Text variant={size === 'lg' ? 'h2' : size === 'md' ? 'bodyMedium' : 'smallMedium'} weight="bold" color={colors.primary[800]}>
+      <Text variant={size === 'lg' ? 'title' : size === 'md' ? 'subhead' : 'captionStrong'} weight="bold" color={colors.primary[800]}>
         {getInitials(name)}
       </Text>
     </View>

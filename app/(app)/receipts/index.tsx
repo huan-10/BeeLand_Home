@@ -107,7 +107,7 @@ export default function ReceiptsScreen() {
       ) : isEmpty ? (
         <Card>
           <EmptyState
-            icon="receipt-outline"
+            icon="receipt"
             title={tab === 'paid' ? 'Chưa có phiếu thu đã thanh toán' : 'Chưa có phiếu thu'}
             description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được ghi nhận."
             actionLabel={tab !== 'all' ? 'Xem tất cả phiếu thu' : 'Xem lịch thanh toán'}
@@ -119,7 +119,7 @@ export default function ReceiptsScreen() {
           {groups.map((g) => (
             <View key={g.contractId} style={styles.group}>
               <View style={styles.groupHeader}>
-                <Icon name="document-text-outline" color={semantic.textBrand} />
+                <Icon name="document" color={semantic.textBrand} />
                 <View style={styles.flex}>
                   <Text variant="h3" accessibilityRole="header">
                     {g.contractCode}
@@ -158,7 +158,7 @@ function toRow(r: Receipt): DataTableRow<Col> {
     cells: {
       code: (
         <View style={styles.codeCell}>
-          <Icon name="document-text-outline" size="sm" color={semantic.iconMuted} />
+          <Icon name="document" size="sm" color={semantic.iconMuted} />
           <Text variant="smallMedium" weight="semibold" style={styles.flex}>
             {r.code}
           </Text>

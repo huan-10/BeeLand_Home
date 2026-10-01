@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { borderWidth, colors, interactive, semantic, sizes, spacing } from '@/theme';
+import { interactive, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
@@ -27,7 +27,8 @@ export const tabId = (id: string, key: string) => `${id}-tab-${key}`;
 export const panelId = (id: string, key: string) => `${id}-panel-${key}`;
 
 /**
- * Tab chuyển nội dung (WAI-ARIA Tabs): `role="tablist"` / `role="tab"` + `aria-selected`.
+ * Tab chuyển nội dung dạng thanh phân đoạn: nền cát, tab đang chọn là viên trắng nổi, chữ đậm.
+ * WAI-ARIA Tabs: `role="tablist"` / `role="tab"` + `aria-selected`.
  * Web: roving tabindex (chỉ tab đang chọn nhận Tab), ←/→ chuyển tab, Home/End về đầu/cuối.
  */
 export function Tabs<K extends string>({ id, items, value, onChange, accessibilityLabel }: TabsProps<K>) {
@@ -87,8 +88,8 @@ function TabButton({ id, tabKey, label, selected, onPress }: { id: string; tabKe
       tabIndex={selected ? 0 : -1}
       onPress={onPress}
       {...hoverProps}
-      style={({ pressed }) => [styles.tab, interactive, selected && styles.selected, (pressed || hovered) && styles.pressed]}>
-      <Text variant="smallMedium" weight={selected ? 'bold' : 'medium'} color={selected ? semantic.textBrand : semantic.textMuted} align="center">
+      style={({ pressed }) => [styles.tab, interactive, selected && styles.selected, (pressed || hovered) && (selected ? styles.selectedHover : styles.pressed)]}>
+      <Text variant="captionStrong" weight={selected ? 'bold' : 'medium'} color={selected ? semantic.text : semantic.textMuted} align="center">
         {label}
       </Text>
     </Pressable>
@@ -106,18 +107,17 @@ export function TabPanel({ id, tabKey, children }: { id: string; tabKey: string;
 }
 
 const styles = StyleSheet.create({
-  list: { flexDirection: 'row', borderBottomWidth: borderWidth.hairline, borderBottomColor: semantic.border },
+  list: { flexDirection: 'row', padding: spacing.xs, gap: spacing.xs, borderRadius: radius.full, backgroundColor: semantic.surfaceSunken },
   tab: {
     flex: 1,
     minHeight: sizes.touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
-    borderBottomWidth: borderWidth.strong + borderWidth.hairline,
-    borderBottomColor: colors.transparent,
-    marginBottom: -borderWidth.hairline,
+    borderRadius: radius.full,
   },
-  selected: { borderBottomColor: semantic.brand },
-  pressed: { backgroundColor: semantic.surfaceMuted },
+  selected: { backgroundColor: semantic.surface, ...shadows.soft },
+  selectedHover: shadows.raised,
+  pressed: { backgroundColor: semantic.border },
   panel: { gap: spacing.ms, paddingTop: spacing.md },
 });

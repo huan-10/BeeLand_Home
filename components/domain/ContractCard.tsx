@@ -54,13 +54,13 @@ export function ContractCard({ contract, onPress }: ContractCardProps) {
 
         <View style={styles.meta}>
           <View style={styles.metaItem}>
-            <Icon name="home-outline" size="sm" color={semantic.iconMuted} />
+            <Icon name="home" size="sm" color={semantic.iconMuted} />
             <Text variant="small" color={semantic.textSecondary} style={styles.flexText}>
               Căn {contract.unitCode} · {contract.block}
             </Text>
           </View>
           <View style={styles.metaItem}>
-            <Icon name="calendar-outline" size="sm" color={semantic.iconMuted} />
+            <Icon name="calendar" size="sm" color={semantic.iconMuted} />
             <Text variant="small" color={semantic.textSecondary}>
               Ngày ký {formatDate(contract.signedDate)}
             </Text>

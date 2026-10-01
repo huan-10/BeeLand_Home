@@ -63,7 +63,7 @@ export default function PaymentsScreen() {
             <StatCard icon="warning" tone="danger" label="Quá hạn" value={formatCurrency(data.summary.overdueAmount)} hint={`${data.summary.overdueCount} đợt`} />
           </Col>
           <Col span={{ mobile: 12, desktop: 4 }}>
-            <StatCard icon="checkmark-circle" tone="success" label="Đã thanh toán" value={formatCurrency(data.summary.paidAmount)} hint={`${data.summary.paidCount} đợt`} />
+            <StatCard icon="checkCircle" tone="success" label="Đã thanh toán" value={formatCurrency(data.summary.paidAmount)} hint={`${data.summary.paidCount} đợt`} />
           </Col>
         </Grid>
       ) : null}
@@ -83,7 +83,7 @@ export default function PaymentsScreen() {
       ) : data.items.length === 0 ? (
         <Card>
           <EmptyState
-            icon="calendar-clear-outline"
+            icon="calendarCheck"
             title={filter === 'paid' ? 'Chưa có đợt nào được thanh toán' : 'Bạn không có khoản cần thanh toán'}
             description={filter === 'paid' ? 'Các đợt đã thanh toán sẽ hiển thị tại đây.' : 'Tất cả các đợt đã được thanh toán đầy đủ.'}
             actionLabel="Xem phiếu thu"
@@ -162,7 +162,7 @@ function OverdueAlert({ items, amount }: { items: PaymentInstallmentView[]; amou
   return (
     <View style={styles.alert} role="alert">
       <View style={styles.alertHeader}>
-        <Icon name="alert-circle" size="lg" color={toneColors.danger.fg} accessibilityLabel="Cảnh báo" />
+        <Icon name="alertCircle" size="lg" color={toneColors.danger.fg} accessibilityLabel="Cảnh báo" />
         <Text variant="bodyMedium" weight="bold" color={toneColors.danger.fg} style={styles.flex}>
           {items.length} đợt quá hạn · {formatCurrency(amount)}
         </Text>
@@ -197,7 +197,7 @@ function OverdueRow({ item }: { item: PaymentInstallmentView }) {
       <Text variant="smallMedium" weight="bold" color={toneColors.danger.fg}>
         {formatCurrency(item.remainingAmount)}
       </Text>
-      <Icon name="chevron-forward" size="sm" color={toneColors.danger.fg} />
+      <Icon name="chevronRight" size="sm" color={toneColors.danger.fg} />
     </Pressable>
   );
 }

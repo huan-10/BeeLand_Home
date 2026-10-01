@@ -113,7 +113,7 @@ export default function LoginScreen() {
         <Input
           ref={identifierRef}
           label="Số điện thoại hoặc email"
-          icon="person-outline"
+          icon="user"
           placeholder="VD: 0901 234 567"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -133,7 +133,7 @@ export default function LoginScreen() {
         <Input
           ref={passwordRef}
           label="Mật khẩu"
-          icon="lock-closed-outline"
+          icon="lock"
           placeholder="Nhập mật khẩu"
           password
           autoCapitalize="none"
@@ -164,7 +164,7 @@ export default function LoginScreen() {
           <Button
             title="Google"
             variant="outline"
-            leftIcon="logo-google"
+            brand="google"
             style={styles.social}
             onPress={() => toast.show(COMING_SOON)}
             accessibilityHint={COMING_SOON}
@@ -172,7 +172,7 @@ export default function LoginScreen() {
           <Button
             title="Apple"
             variant="outline"
-            leftIcon="logo-apple"
+            brand="apple"
             style={styles.social}
             onPress={() => toast.show(COMING_SOON)}
             accessibilityHint={COMING_SOON}
@@ -186,7 +186,7 @@ export default function LoginScreen() {
             accessibilityLabel={`Dùng tài khoản demo ${demoAccountHint.email}, mật khẩu ${demoAccountHint.password}`}
             {...demoHover.hoverProps}
             style={({ pressed }) => [styles.demo, interactive, demoHover.hovered && styles.demoHover, pressed && styles.demoPressed]}>
-            <Icon name="information-circle" color={toneColors.info.fg} />
+            <Icon name="info" color={toneColors.info.fg} />
             <View style={styles.flex}>
               <Text variant="smallMedium" weight="semibold" color={toneColors.info.fg}>
                 Tài khoản dùng thử

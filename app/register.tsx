@@ -125,7 +125,7 @@ export default function RegisterScreen() {
         <Input
           ref={fullNameRef}
           label="Họ và tên"
-          icon="person-outline"
+          icon="user"
           placeholder="Nguyễn Văn A"
           autoComplete="name"
           textContentType="name"
@@ -139,7 +139,7 @@ export default function RegisterScreen() {
         <Input
           ref={phoneRef}
           label="Số điện thoại"
-          icon="call-outline"
+          icon="phone"
           placeholder="0901 234 567"
           keyboardType="phone-pad"
           autoComplete="tel"
@@ -153,7 +153,7 @@ export default function RegisterScreen() {
         <Input
           ref={emailRef}
           label="Email"
-          icon="mail-outline"
+          icon="mail"
           placeholder="ten@email.com"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -169,7 +169,7 @@ export default function RegisterScreen() {
         <Input
           ref={passwordRef}
           label="Mật khẩu"
-          icon="lock-closed-outline"
+          icon="lock"
           placeholder="Tạo mật khẩu"
           password
           autoCapitalize="none"
@@ -185,7 +185,7 @@ export default function RegisterScreen() {
         <Input
           ref={confirmPasswordRef}
           label="Nhập lại mật khẩu"
-          icon="lock-closed-outline"
+          icon="lock"
           placeholder="Nhập lại mật khẩu"
           password
           autoCapitalize="none"

@@ -47,8 +47,8 @@ export function ContractSummaryCard({ contract, onOpenDocument, footer }: Contra
           {contract.projectName}
         </Text>
         <View style={styles.meta}>
-          <MetaRow icon="home-outline" text={`Căn ${contract.unitCode} · ${contract.block} · Tầng ${contract.floor}`} />
-          <MetaRow icon="calendar-outline" text={`Ngày ký ${formatDate(contract.signedDate)}`} />
+          <MetaRow icon="home" text={`Căn ${contract.unitCode} · ${contract.block} · Tầng ${contract.floor}`} />
+          <MetaRow icon="calendar" text={`Ngày ký ${formatDate(contract.signedDate)}`} />
         </View>
 
         <View style={styles.amounts}>
@@ -73,11 +73,11 @@ export function ContractSummaryCard({ contract, onOpenDocument, footer }: Contra
           accessibilityHint="Mở tệp hợp đồng PDF"
           {...docHover.hoverProps}
           style={({ pressed }) => [styles.docRow, interactive, docHover.hovered && styles.docHover, pressed && styles.pressed]}>
-          <Icon name="document-text-outline" color={toneColors.primary.fg} />
+          <Icon name="document" color={toneColors.primary.fg} />
           <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={styles.flex}>
             Xem hợp đồng (PDF)
           </Text>
-          <Icon name="open-outline" size="sm" color={toneColors.primary.fg} />
+          <Icon name="external" size="sm" color={toneColors.primary.fg} />
         </Pressable>
 
         {footer}
@@ -86,7 +86,7 @@ export function ContractSummaryCard({ contract, onOpenDocument, footer }: Contra
   );
 }
 
-function MetaRow({ icon, text }: { icon: 'home-outline' | 'calendar-outline'; text: string }) {
+function MetaRow({ icon, text }: { icon: 'home' | 'calendar'; text: string }) {
   return (
     <View style={styles.metaRow}>
       <Icon name={icon} size="sm" color={semantic.iconMuted} />

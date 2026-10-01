@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { borderWidth, colors, interactive, radius, semantic, sizes, spacing } from '@/theme';
+import { interactive, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
@@ -27,15 +27,15 @@ export function ScreenHeader({ title, subtitle, onBack, right }: ScreenHeaderPro
           accessibilityLabel="Quay lại"
           {...hoverProps}
           style={({ pressed }) => [styles.back, interactive, (pressed || hovered) && styles.backPressed]}>
-          <Icon name="chevron-back" size="lg" color={colors.gray[800]} />
+          <Icon name="chevronLeft" size="lg" color={semantic.text} />
         </Pressable>
       ) : null}
       <View style={styles.titles}>
-        <Text variant="h1" accessibilityRole="header">
+        <Text variant="title" accessibilityRole="header">
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="small" color={semantic.textMuted}>
+          <Text variant="caption" color={semantic.textMuted}>
             {subtitle}
           </Text>
         ) : null}
@@ -50,14 +50,13 @@ const styles = StyleSheet.create({
   back: {
     width: sizes.touchTarget,
     height: sizes.touchTarget,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     backgroundColor: semantic.surface,
-    borderWidth: borderWidth.hairline,
-    borderColor: semantic.border,
+    ...shadows.soft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backPressed: { backgroundColor: colors.gray[100] },
+  backPressed: { backgroundColor: semantic.surfaceSunken },
   titles: { flex: 1, gap: spacing.xs },
   right: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

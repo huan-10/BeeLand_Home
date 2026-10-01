@@ -57,10 +57,10 @@ export default function ProfileScreen() {
             Bảo mật & hỗ trợ
           </Text>
           <MenuItem icon="key" tone="primary" label="Đổi mật khẩu" onPress={() => setPasswordOpen(true)} />
-          <MenuItem icon="notifications" tone="warning" label="Thông báo" onPress={() => router.push('/notifications')} />
+          <MenuItem icon="bell" tone="warning" label="Thông báo" onPress={() => router.push('/notifications')} />
           <MenuItem icon="receipt" tone="success" label="Phiếu thu của tôi" onPress={() => router.push('/receipts')} />
           <MenuItem
-            icon="call"
+            icon="phone"
             tone="info"
             label="Hotline hỗ trợ"
             value={HOTLINE}
@@ -69,7 +69,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Hành động nguy hiểm tách riêng khỏi danh sách menu và cần xác nhận. */}
-        <Button title="Đăng xuất" variant="danger" leftIcon="log-out-outline" onPress={() => setLogoutOpen(true)} />
+        <Button title="Đăng xuất" variant="danger" leftIcon="logout" onPress={() => setLogoutOpen(true)} />
         <Text variant="caption" color={semantic.textMuted} align="center">
           BeeSky · {appVersionLabel()}
         </Text>
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
         actions={
           <>
             <Button title="Hủy" variant="ghost" onPress={() => setLogoutOpen(false)} disabled={signingOut} />
-            <Button title="Đăng xuất" variant="danger" leftIcon="log-out-outline" loading={signingOut} onPress={() => void handleSignOut()} />
+            <Button title="Đăng xuất" variant="danger" leftIcon="logout" loading={signingOut} onPress={() => void handleSignOut()} />
           </>
         }>
         <Text variant="body" color={semantic.textSecondary}>
@@ -112,7 +112,7 @@ function MenuItem({ icon, tone, label, value, onPress }: { icon: IconName; tone:
           {value}
         </Text>
       ) : null}
-      <Icon name="chevron-forward" size="sm" color={semantic.iconMuted} />
+      <Icon name="chevronRight" size="sm" color={semantic.iconMuted} />
     </Pressable>
   );
 }

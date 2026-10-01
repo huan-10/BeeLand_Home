@@ -45,7 +45,7 @@ export default function ContractsScreen() {
       <View style={styles.filters}>
         <Input
           label="Tìm theo mã hợp đồng"
-          icon="search-outline"
+          icon="search"
           placeholder="VD: HDMB/2026/001"
           value={search}
           onChangeText={setSearch}
@@ -88,7 +88,7 @@ export default function ContractsScreen() {
       ) : items.length === 0 ? (
         <Card>
           <EmptyState
-            icon="document-text-outline"
+            icon="document"
             title="Không tìm thấy hợp đồng"
             description={
               debouncedSearch

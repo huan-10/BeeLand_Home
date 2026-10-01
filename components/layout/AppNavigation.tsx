@@ -1,15 +1,16 @@
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, Icon, IconButton, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { floatingTabBarBottom } from '@/hooks/useFloatingTabBarSpace';
 import { useHover } from '@/hooks/useHover';
 import {
   borderWidth,
-  colors,
   interactive,
   layout,
   letterSpacing,
@@ -26,7 +27,7 @@ import { primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
 
 /**
  * Thanh điều hướng của ứng dụng, dùng làm `tabBar` cho `<Tabs>`.
- * Dưới 768px: bottom tab 5 mục. Từ 768px: sidebar trái có logo.
+ * Dưới 768px: thanh tab kính mờ nổi 5 mục. Từ 768px: sidebar trái có logo.
  */
 export function AppNavigation({ state, navigation }: BottomTabBarProps) {
   const { isWide } = useBreakpoint();
@@ -58,19 +59,33 @@ interface BarProps {
   onNavigate: (item: NavItem) => void;
 }
 
+/**
+ * Mobile: thanh tab kính mờ nổi (viên thuốc căn giữa, cách đáy một khoảng). Nội dung phía sau
+ * được chừa chỗ bởi `useFloatingTabBarSpace` trong `Screen` / `StickyActionBar`.
+ */
 function BottomBar({ activeName, onNavigate }: BarProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bottomBar, shadows.navTop, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]} accessibilityRole="tablist">
-      {primaryNavItems.map((item) => (
-        <BottomItem key={item.name} item={item} active={activeName === item.name} onPress={() => onNavigate(item)} />
-      ))}
+    <View style={[styles.floatWrap, { bottom: floatingTabBarBottom(insets.bottom) }]}>
+      {/* Hai lớp: lớp ngoài giữ bóng, lớp trong cắt bo tròn cho hiệu ứng kính (iOS mất bóng khi overflow hidden). */}
+      <View style={[styles.floatShadow, shadows.overlay]}>
+        <View style={styles.floatBar}>
+          <BlurView intensity={sizes.tabBar.blur} tint="light" style={StyleSheet.absoluteFill} />
+          <View style={[StyleSheet.absoluteFill, styles.glassTint]} />
+          <View style={styles.floatItems} role="tablist" aria-label="Điều hướng chính">
+            {primaryNavItems.map((item) => (
+              <BottomItem key={item.name} item={item} active={activeName === item.name} onPress={() => onNavigate(item)} />
+            ))}
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
 
 function BottomItem({ item, active, onPress }: { item: NavItem; active: boolean; onPress: () => void }) {
   const { hovered, hoverProps } = useHover();
+  const fg = active ? semantic.onInverse : semantic.textSecondary;
   return (
     <Pressable
       onPress={onPress}
@@ -78,14 +93,14 @@ function BottomItem({ item, active, onPress }: { item: NavItem; active: boolean;
       aria-selected={active}
       accessibilityLabel={item.label}
       {...hoverProps}
-      style={[styles.bottomItem, interactive]}>
-      <View style={[styles.bottomIcon, active && styles.bottomIconActive, hovered && (active ? styles.bottomIconActiveHover : styles.bottomIconActive)]}>
-        <Icon name={active ? item.activeIcon : item.icon} size="lg" color={active ? colors.primary[600] : semantic.iconMuted} />
-      </View>
-      <Text
-        variant="caption"
-        weight={active ? 'semibold' : 'medium'}
-        color={active ? semantic.textBrand : semantic.textMuted}>
+      style={({ pressed }) => [
+        styles.bottomItem,
+        interactive,
+        active && styles.bottomItemActive,
+        (hovered || pressed) && (active ? styles.bottomItemActiveHover : styles.bottomItemHover),
+      ]}>
+      <Icon name={item.icon} color={fg} strong={active} />
+      <Text variant="label" weight={active ? 'semibold' : 'medium'} color={fg} style={styles.bottomLabel}>
         {item.label}
       </Text>
     </Pressable>
@@ -104,7 +119,7 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
       </View>
 
       <View style={styles.sidebarNav} accessibilityRole="tablist">
-        <Text variant="overline" color={semantic.textMuted} style={styles.sidebarSection}>
+        <Text variant="label" color={semantic.textMuted} style={styles.sidebarSection}>
           MENU
         </Text>
         {primaryNavItems.map((item) => (
@@ -120,15 +135,15 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
         <View style={styles.userCard}>
           <Avatar name={user.fullName} size="sm" />
           <View style={styles.userInfo}>
-            <Text variant="smallMedium">
+            <Text variant="captionStrong" weight="semibold">
               {user.fullName}
             </Text>
-            <Text variant="caption" color={semantic.textMuted}>
+            <Text variant="label" weight="medium" color={semantic.textMuted}>
               {user.customerCode}
             </Text>
           </View>
           {/* Đăng xuất tách khỏi menu điều hướng (destructive-nav-separation). */}
-          <IconButton icon="log-out-outline" accessibilityLabel="Đăng xuất" onPress={() => void signOut()} />
+          <IconButton icon="logout" variant="plain" accessibilityLabel="Đăng xuất" onPress={() => void signOut()} />
         </View>
       ) : null}
     </View>
@@ -154,7 +169,7 @@ function SkipLink() {
       onBlur={() => setFocused(false)}
       accessibilityRole="link"
       style={[styles.skipLink, interactive, !focused && styles.skipHidden]}>
-      <Text variant="smallMedium" weight="semibold" color={semantic.textOnBrand}>
+      <Text variant="captionStrong" weight="semibold" color={semantic.textOnAction}>
         Bỏ qua tới nội dung chính
       </Text>
     </Pressable>
@@ -176,8 +191,8 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
         active && styles.sidebarItemActive,
         (pressed || hovered) && (active ? styles.sidebarItemActiveHover : styles.sidebarItemPressed),
       ]}>
-      <Icon name={active ? item.activeIcon : item.icon} color={active ? colors.primary[600] : semantic.textMuted} />
-      <Text variant="smallMedium" weight={active ? 'semibold' : 'medium'} color={active ? semantic.textBrand : semantic.textSecondary}>
+      <Icon name={item.icon} color={active ? semantic.onInverse : semantic.icon} strong={active} />
+      <Text variant="captionStrong" weight={active ? 'semibold' : 'medium'} color={active ? semantic.onInverse : semantic.textSecondary}>
         {item.label}
       </Text>
     </Pressable>
@@ -185,54 +200,67 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
 }
 
 const styles = StyleSheet.create({
-  bottomBar: {
-    flexDirection: 'row',
-    backgroundColor: semantic.surface,
-    borderTopWidth: borderWidth.hairline,
-    borderTopColor: semantic.borderSubtle,
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.xs,
+  floatWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    pointerEvents: 'box-none',
   },
-  bottomItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchTarget },
-  bottomIcon: {
-    width: sizes.tabIndicator.width,
-    height: sizes.tabIndicator.height,
+  floatShadow: { width: '100%', maxWidth: sizes.tabBar.maxWidth, borderRadius: radius.full },
+  floatBar: {
+    height: sizes.tabBar.height,
     borderRadius: radius.full,
+    overflow: 'hidden',
+    borderWidth: borderWidth.hairline,
+    borderColor: semantic.glassBorder,
+  },
+  glassTint: { backgroundColor: semantic.glass },
+  floatItems: { flex: 1, flexDirection: 'row', padding: spacing.xs },
+  bottomItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    minHeight: sizes.touchTarget,
   },
-  bottomIconActive: { backgroundColor: colors.primary[50] },
-  bottomIconActiveHover: { backgroundColor: colors.primary[100] },
+  bottomItemActive: { backgroundColor: semantic.inverse },
+  bottomItemHover: { backgroundColor: semantic.surfaceSunken },
+  bottomItemActiveHover: { backgroundColor: semantic.inverseHover },
+  // Nhãn tab không giãn chữ để "Thanh toán" vừa một dòng ở 375px.
+  bottomLabel: { letterSpacing: letterSpacing.normal },
 
   sidebar: {
     width: layout.sidebarWidth,
     backgroundColor: semantic.surface,
-    borderRightWidth: borderWidth.hairline,
-    borderRightColor: semantic.borderSubtle,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: semantic.border,
     paddingHorizontal: spacing.md,
   },
   sidebarLogo: { paddingHorizontal: spacing.sm, marginBottom: spacing.xl },
   sidebarNav: { flex: 1, gap: spacing.xs },
-  sidebarSection: { paddingHorizontal: spacing.ms, marginBottom: spacing.xs, letterSpacing: letterSpacing.wide },
+  sidebarSection: { paddingHorizontal: spacing.ms, marginBottom: spacing.xs },
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.ms,
     paddingHorizontal: spacing.ms,
-    minHeight: sizes.touchTarget,
-    borderRadius: radius.md,
+    minHeight: sizes.control.md,
+    borderRadius: radius.lg,
   },
-  sidebarItemActive: { backgroundColor: colors.primary[50] },
-  sidebarItemPressed: { backgroundColor: semantic.surfaceMuted },
-  sidebarItemActiveHover: { backgroundColor: colors.primary[100] },
-  sidebarDivider: { height: borderWidth.hairline, backgroundColor: semantic.borderSubtle, marginVertical: spacing.ms, marginHorizontal: spacing.ms },
+  sidebarItemActive: { backgroundColor: semantic.inverse },
+  sidebarItemPressed: { backgroundColor: semantic.surfaceSunken },
+  sidebarItemActiveHover: { backgroundColor: semantic.inverseHover },
+  sidebarDivider: { height: StyleSheet.hairlineWidth, backgroundColor: semantic.border, marginVertical: spacing.ms, marginHorizontal: spacing.ms },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.ms,
-    borderRadius: radius.lg,
-    backgroundColor: semantic.surfaceMuted,
+    borderRadius: radius.xl,
+    backgroundColor: semantic.surfaceSunken,
   },
   userInfo: { flex: 1, minWidth: 0 },
   skipLink: {
@@ -244,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    backgroundColor: semantic.brand,
+    backgroundColor: semantic.action,
   },
   // Ẩn khỏi màn hình nhưng vẫn nhận focus bằng bàn phím.
   skipHidden: { opacity: 0, transform: [{ translateY: -sizes.touchTarget * 2 }] },

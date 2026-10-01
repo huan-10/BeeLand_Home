@@ -74,7 +74,7 @@ export function ChangePasswordDialog({ visible, userId, onClose }: ChangePasswor
       actions={
         <>
           <Button title="Hủy" variant="ghost" onPress={close} disabled={submitting} />
-          <Button title="Lưu mật khẩu" leftIcon="lock-closed-outline" loading={submitting} onPress={() => void handleSubmit()} />
+          <Button title="Lưu mật khẩu" leftIcon="lock" loading={submitting} onPress={() => void handleSubmit()} />
         </>
       }>
       <Text variant="small" color={semantic.textMuted}>

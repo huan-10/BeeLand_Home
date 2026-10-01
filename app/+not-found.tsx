@@ -10,7 +10,7 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: 'Không tìm thấy trang' }} />
       <View style={styles.container}>
         <EmptyState
-          icon="compass-outline"
+          icon="compass"
           title="Không tìm thấy trang"
           description="Đường dẫn bạn truy cập không tồn tại hoặc đã bị thay đổi."
           actionLabel="Về trang chủ"

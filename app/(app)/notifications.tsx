@@ -21,7 +21,7 @@ export default function NotificationsScreen() {
       <ScreenHeader
         title="Thông báo"
         onBack={router.canGoBack() ? () => router.back() : undefined}
-        right={hasUnread ? <Button title="Đọc tất cả" variant="ghost" size="sm" leftIcon="checkmark-done" onPress={() => void markAllRead()} /> : undefined}
+        right={hasUnread ? <Button title="Đọc tất cả" variant="ghost" size="sm" leftIcon="checkDouble" onPress={() => void markAllRead()} /> : undefined}
       />
 
       {loading ? (
@@ -29,7 +29,7 @@ export default function NotificationsScreen() {
       ) : error || !data ? (
         <ErrorState message={error ?? undefined} onRetry={() => void refetch()} />
       ) : data.length === 0 ? (
-        <EmptyState icon="notifications-off-outline" title="Chưa có thông báo" />
+        <EmptyState icon="bellOff" title="Chưa có thông báo" />
       ) : (
         <View className="gap-sm">
           {data.map((n) => (

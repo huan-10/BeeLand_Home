@@ -20,13 +20,13 @@ export function StateView({ icon, tone, title, description, action, role }: Stat
   return (
     <View style={styles.container} role={role}>
       <View style={[styles.iconWrap, { backgroundColor: toneColors[tone].bg }]}>
-        <Icon name={icon} size="xl" color={toneColors[tone].solid} />
+        <Icon name={icon} size="xl" color={toneColors[tone].fg} />
       </View>
-      <Text variant="h3" align="center">
+      <Text variant="heading" align="center">
         {title}
       </Text>
       {description ? (
-        <Text variant="small" color={semantic.textMuted} align="center" style={styles.description}>
+        <Text variant="caption" color={semantic.textMuted} align="center" style={styles.description}>
           {description}
         </Text>
       ) : null}

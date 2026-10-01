@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useFloatingTabBarSpace } from '@/hooks/useFloatingTabBarSpace';
 import { layout, semantic, spacing } from '@/theme';
 
 export interface ScreenProps {
@@ -23,6 +24,10 @@ export interface ScreenProps {
 export function Screen({ children, onRefresh, refreshing = false, scroll = true, footer }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
+  // Thanh tab nổi (mobile) phủ lên đáy màn hình: chừa chỗ để nội dung cuối không bị che.
+  // Khi có `footer` (StickyActionBar), thanh đó tự chừa chỗ nên nội dung cuộn không cần thêm.
+  const floatingSpace = useFloatingTabBarSpace();
+  const tabBarSpace = footer ? 0 : floatingSpace;
 
   const content = (
     // role="main": đích của liên kết "Bỏ qua tới nội dung chính" (web).
@@ -31,6 +36,7 @@ export function Screen({ children, onRefresh, refreshing = false, scroll = true,
       style={[
         styles.container,
         !scroll && styles.fill,
+        !scroll && { paddingBottom: spacing.lg + tabBarSpace },
         {
           paddingHorizontal: isWide ? layout.gutterWide : layout.gutterMobile,
           paddingTop: (isWide ? spacing.xl : spacing.ms) + insets.top,
@@ -51,9 +57,9 @@ export function Screen({ children, onRefresh, refreshing = false, scroll = true,
 
   return (
     <View style={styles.root}>
-    <ScrollView
+      <ScrollView
       style={styles.flex}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xl + tabBarSpace }]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       refreshControl={
@@ -71,7 +77,7 @@ export function Screen({ children, onRefresh, refreshing = false, scroll = true,
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: semantic.bg },
   flex: { flex: 1 },
-  fill: { flex: 1, paddingBottom: spacing.lg },
-  scrollContent: { flexGrow: 1, paddingBottom: spacing.xl },
+  fill: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   container: { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center', gap: spacing.ml },
 });

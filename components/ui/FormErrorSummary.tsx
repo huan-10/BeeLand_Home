@@ -54,8 +54,8 @@ export const FormErrorSummary = forwardRef<FormErrorSummaryHandle, FormErrorSumm
   return (
     <View ref={containerRef} style={styles.box} role="alert" tabIndex={-1} accessible={Platform.OS !== 'web'}>
       <View style={styles.header}>
-        <Icon name="alert-circle" color={toneColors.danger.fg} />
-        <Text variant="smallMedium" weight="semibold" color={toneColors.danger.fg} style={styles.flex}>
+        <Icon name="alertCircle" color={toneColors.danger.fg} />
+        <Text variant="captionStrong" weight="semibold" color={toneColors.danger.fg} style={styles.flex}>
           {title}
         </Text>
       </View>
@@ -66,7 +66,7 @@ export const FormErrorSummary = forwardRef<FormErrorSummaryHandle, FormErrorSumm
           accessibilityRole="link"
           accessibilityLabel={`${e.message}. Chuyển tới ô nhập`}
           style={[styles.item, interactive]}>
-          <Text variant="small" color={colors.danger[700]} style={styles.underline}>
+          <Text variant="caption" color={colors.danger[700]} style={styles.underline}>
             {e.message}
           </Text>
         </Pressable>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   box: {
     gap: spacing.xs,
     padding: spacing.ms,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     backgroundColor: toneColors.danger.bg,
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.danger.border,

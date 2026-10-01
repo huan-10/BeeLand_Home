@@ -32,15 +32,15 @@ export function Dialog({ visible, title, onClose, children, actions }: DialogPro
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={onClose} {...webLabel}>
       <View style={styles.backdrop}>
         <View
-          style={[styles.dialog, shadows.lg]}
+          style={[styles.dialog, shadows.modal]}
           role={isWeb ? undefined : 'dialog'}
           aria-modal={isWeb ? undefined : true}
           aria-labelledby={isWeb ? undefined : titleId}>
           <View style={styles.header}>
-            <Text variant="h3" nativeID={titleId} accessibilityRole="header" style={styles.title}>
+            <Text variant="heading" nativeID={titleId} accessibilityRole="header" style={styles.title}>
               {title}
             </Text>
-            <IconButton icon="close" accessibilityLabel="Đóng" onPress={onClose} />
+            <IconButton icon="close" variant="plain" accessibilityLabel="Đóng" onPress={onClose} />
           </View>
           <View style={styles.body}>{children}</View>
           {actions ? <View style={styles.actions}>{actions}</View> : null}
@@ -59,9 +59,9 @@ const styles = StyleSheet.create({
     zIndex: zIndex.overlay,
     width: '100%',
     maxWidth: layout.formMaxWidth,
-    borderRadius: radius.xl,
+    borderRadius: radius['3xl'],
     backgroundColor: semantic.surface,
-    padding: spacing.ml,
+    padding: spacing.lg,
     gap: spacing.md,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },

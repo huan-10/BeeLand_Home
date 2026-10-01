@@ -12,8 +12,8 @@ export interface TextLinkProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Liên kết dạng chữ màu cam (primary-700, 4.95:1); vùng chạm cao ≥ 44; hover gạch chân. */
-export function TextLink({ label, onPress, variant = 'smallMedium', style }: TextLinkProps) {
+/** Liên kết dạng chữ cam đậm (primary-700, 5.4:1); vùng chạm cao ≥ 44; hover gạch chân. */
+export function TextLink({ label, onPress, variant = 'captionStrong', style }: TextLinkProps) {
   const { hovered, hoverProps } = useHover();
   return (
     <Pressable

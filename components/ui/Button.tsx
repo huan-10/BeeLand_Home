@@ -25,10 +25,11 @@ import {
 
 import { useHover } from '@/hooks/useHover';
 
+import { BrandMark, type BrandName } from './BrandMark';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'inverse';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
@@ -38,25 +39,29 @@ export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> 
   loading?: boolean;
   leftIcon?: IconName;
   rightIcon?: IconName;
+  /** Logo dịch vụ bên thứ ba bên trái nhãn (đăng nhập Google / Apple). */
+  brand?: BrandName;
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-const variantStyles: Record<ButtonVariant, { bg: string; pressedBg: string; fg: string; border: string }> = {
-  // Nền cam theo mockup; chữ gray-900 để đạt 7:1 (MASTER.md §1.4).
-  primary: { bg: semantic.brand, pressedBg: semantic.brandPressed, fg: semantic.textOnBrand, border: semantic.brand },
-  secondary: { bg: toneColors.primary.bg, pressedBg: colors.primary[100], fg: semantic.textBrand, border: toneColors.primary.border },
-  // Nút trung tính nền trắng viền xám (đăng nhập Google/Apple...).
-  outline: { bg: semantic.surface, pressedBg: colors.gray[50], fg: semantic.text, border: semantic.border },
-  ghost: { bg: colors.transparent, pressedBg: colors.gray[100], fg: semantic.textSecondary, border: colors.transparent },
+const variantStyles: Record<ButtonVariant, { bg: string; hoverBg: string; pressedBg: string; fg: string; border: string }> = {
+  // Nút chính: cam mật ong đậm, chữ trắng 5.4:1 (cam sáng primary-500 chỉ để trang trí).
+  primary: { bg: semantic.action, hoverBg: semantic.actionHover, pressedBg: semantic.actionPressed, fg: semantic.textOnAction, border: semantic.action },
+  secondary: { bg: toneColors.primary.bg, hoverBg: colors.primary[100], pressedBg: colors.primary[200], fg: semantic.textBrand, border: toneColors.primary.bg },
+  // Nút trung tính nền trắng viền cát (đăng nhập Google/Apple, hành động phụ).
+  outline: { bg: semantic.surface, hoverBg: semantic.surfaceSunken, pressedBg: semantic.border, fg: semantic.text, border: semantic.borderStrong },
+  ghost: { bg: colors.transparent, hoverBg: semantic.surfaceSunken, pressedBg: semantic.border, fg: semantic.textSecondary, border: colors.transparent },
   // danger-700: ≥ 4.5:1 cả trên nền trắng và nền hồng nhạt khi hover/nhấn.
-  danger: { bg: semantic.surface, pressedBg: toneColors.danger.bg, fg: colors.danger[700], border: toneColors.danger.border },
+  danger: { bg: semantic.surface, hoverBg: toneColors.danger.bg, pressedBg: toneColors.danger.border, fg: toneColors.danger.fg, border: toneColors.danger.border },
+  // Nền tối ink: hành động phụ đặt cạnh thẻ sáng hoặc trên thẻ tổng tiền.
+  inverse: { bg: semantic.inverse, hoverBg: semantic.inverseHover, pressedBg: semantic.inverseStrong, fg: semantic.onInverse, border: semantic.inverse },
 };
 
-const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number; icon: IconSize; text: 'smallMedium' | 'bodyMedium' }> = {
-  sm: { height: sizes.control.sm, paddingHorizontal: spacing.ms, icon: 'sm', text: 'smallMedium' },
-  md: { height: sizes.control.md, paddingHorizontal: spacing.md, icon: 'md', text: 'bodyMedium' },
-  lg: { height: sizes.control.lg, paddingHorizontal: spacing.ml, icon: 'md', text: 'bodyMedium' },
+const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number; icon: IconSize; text: 'captionStrong' | 'subhead' }> = {
+  sm: { height: sizes.control.sm, paddingHorizontal: spacing.md, icon: 'sm', text: 'captionStrong' },
+  md: { height: sizes.control.md, paddingHorizontal: spacing.ml, icon: 'md', text: 'subhead' },
+  lg: { height: sizes.control.lg, paddingHorizontal: spacing.lg, icon: 'md', text: 'subhead' },
 };
 
 export const Button = forwardRef<View, ButtonProps>(function Button({
@@ -67,6 +72,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
   disabled,
   leftIcon,
   rightIcon,
+  brand,
   fullWidth,
   style,
   ...rest
@@ -91,7 +97,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
         {
           height: s.height,
           paddingHorizontal: s.paddingHorizontal,
-          backgroundColor: pressed || (hovered && !isDisabled) ? v.pressedBg : v.bg,
+          backgroundColor: pressed ? v.pressedBg : hovered && !isDisabled ? v.hoverBg : v.bg,
           borderColor: v.border,
         },
         fullWidth && styles.fullWidth,
@@ -103,8 +109,9 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
         <ActivityIndicator size="small" color={v.fg} />
       ) : (
         <View style={styles.content}>
+          {brand ? <BrandMark name={brand} size={s.icon} color={v.fg} /> : null}
           {leftIcon ? <Icon name={leftIcon} size={s.icon} color={v.fg} /> : null}
-          <Text variant={s.text} weight="semibold" color={v.fg}>
+          <Text variant={s.text} weight="semibold" color={v.fg} align="center">
             {title}
           </Text>
           {rightIcon ? <Icon name={rightIcon} size={s.icon} color={v.fg} /> : null}
@@ -116,7 +123,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: borderWidth.hairline,
     alignItems: 'center',
     justifyContent: 'center',

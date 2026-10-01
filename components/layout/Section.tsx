@@ -29,7 +29,7 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
             <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={hovered && styles.underline}>
               {actionLabel}
             </Text>
-            <Icon name="chevron-forward" size="sm" color={semantic.textBrand} />
+            <Icon name="chevronRight" size="sm" color={semantic.textBrand} />
           </Pressable>
         ) : null}
       </View>

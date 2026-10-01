@@ -66,7 +66,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
               <View style={styles.features}>
                 {features.map((f) => (
                   <View key={f} style={styles.feature}>
-                    <Icon name="checkmark-circle" color={semantic.textInverse} />
+                    <Icon name="checkCircle" color={semantic.textInverse} />
                     <Text variant="bodyMedium" color={semantic.textInverse}>
                       {f}
                     </Text>

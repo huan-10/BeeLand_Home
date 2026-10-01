@@ -19,7 +19,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
     <View style={styles.row} role="navigation" aria-label="Đường dẫn">
       {items.map((item, i) => (
         <Fragment key={`${item.label}-${i}`}>
-          {i > 0 ? <Icon name="chevron-forward" size="xs" color={semantic.iconMuted} /> : null}
+          {i > 0 ? <Icon name="chevronRight" size="xs" color={semantic.iconMuted} /> : null}
           {item.onPress ? (
             <TextLink label={item.label} onPress={item.onPress} />
           ) : (

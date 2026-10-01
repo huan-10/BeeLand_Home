@@ -14,14 +14,14 @@ export interface BadgeProps {
   size?: 'sm' | 'md';
 }
 
-/** Badge pastel: nền nhạt + chữ đậm cùng tông (theo mockup). */
+/** Badge viên thuốc pastel: nền nhạt + chữ đậm cùng tông, luôn có chữ (màu không là tín hiệu duy nhất). */
 export function Badge({ label, tone = 'neutral', icon, dot, size = 'sm' }: BadgeProps) {
   const c = toneColors[tone];
   return (
     <View style={[styles.badge, { backgroundColor: c.bg }, size === 'md' && styles.md]} accessibilityRole="text" accessibilityLabel={label}>
       {dot ? <View style={[styles.dot, { backgroundColor: c.solid }]} /> : null}
       {icon ? <Icon name={icon} size="xs" color={c.fg} /> : null}
-      <Text variant="caption" weight="semibold" color={c.fg} numberOfLines={1}>
+      <Text variant="label" color={c.fg} numberOfLines={1}>
         {label}
       </Text>
     </View>

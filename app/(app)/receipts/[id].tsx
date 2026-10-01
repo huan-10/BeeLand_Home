@@ -94,7 +94,7 @@ export default function ReceiptDetailScreen() {
             <Button
               title="Tải PDF"
               variant="secondary"
-              leftIcon="download-outline"
+              leftIcon="download"
               loading={pdf.submitting}
               onPress={() => void handleExport(pdf.submit, `Phiếu thu ${receipt.code}`)}
               style={styles.action}
@@ -102,7 +102,7 @@ export default function ReceiptDetailScreen() {
             <Button
               title="Chia sẻ"
               variant="outline"
-              leftIcon="share-social-outline"
+              leftIcon="share"
               loading={share.submitting}
               onPress={() => void handleExport(share.submit, `Phiếu thu ${receipt.code}`)}
               style={styles.action}

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { borderWidth, colors, interactive, letterSpacing, radius, semantic, sizes, spacing } from '@/theme';
+import { colors, interactive, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -39,7 +39,7 @@ export function DataTable<K extends string>({ accessibilityLabel, columns, rows 
       <View role="row" style={[styles.row, styles.headerRow]}>
         {columns.map((c) => (
           <View key={c.key} role="columnheader" style={[styles.cell, { flex: c.flex }, c.align === 'right' && styles.right]}>
-            <Text variant="overline" color={semantic.textMuted} style={styles.headerText} align={c.align ?? 'left'}>
+            <Text variant="label" color={semantic.textMuted} align={c.align ?? 'left'}>
               {c.title}
             </Text>
           </View>
@@ -81,17 +81,10 @@ function TableRow<K extends string>({ row, columns, last }: { row: DataTableRow<
 }
 
 const styles = StyleSheet.create({
-  table: {
-    backgroundColor: semantic.surface,
-    borderRadius: radius.lg,
-    borderWidth: borderWidth.hairline,
-    borderColor: semantic.borderSubtle,
-    overflow: 'hidden',
-  },
-  row: { flexDirection: 'row', alignItems: 'center', minHeight: sizes.touchTarget + spacing.ms, paddingHorizontal: spacing.md },
-  headerRow: { minHeight: sizes.touchTarget, backgroundColor: semantic.surfaceMuted, borderBottomWidth: borderWidth.hairline, borderBottomColor: semantic.border },
-  headerText: { letterSpacing: letterSpacing.wide },
-  divider: { borderBottomWidth: borderWidth.hairline, borderBottomColor: semantic.borderSubtle },
+  table: { backgroundColor: semantic.surface, borderRadius: radius['2xl'], overflow: 'hidden', ...shadows.soft },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: sizes.touchTarget + spacing.ms, paddingHorizontal: spacing.ml },
+  headerRow: { minHeight: sizes.touchTarget, backgroundColor: semantic.surfaceMuted },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.border },
   rowActive: { backgroundColor: colors.primary[50] },
   cell: { paddingVertical: spacing.ms, paddingHorizontal: spacing.sm, minWidth: 0, justifyContent: 'center' },
   right: { alignItems: 'flex-end' },

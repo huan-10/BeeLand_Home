@@ -21,7 +21,7 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
   return (
     <Card onPress={onPress} accessibilityLabel={`${installment.name}, ${formatCurrency(installment.amount)}, ${meta.label}`}>
       <View style={styles.row}>
-        <IconCircle name={isPaid ? 'checkmark-circle' : 'calendar'} tone={meta.tone} />
+        <IconCircle name={isPaid ? 'checkCircle' : 'calendar'} tone={meta.tone} />
         <View style={styles.main}>
           <Text variant="bodyMedium" weight="semibold">
             {installment.name}

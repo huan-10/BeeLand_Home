@@ -111,7 +111,7 @@ export default function ContractDetailScreen() {
     <Button
       ref={payButtonRef}
       title="Thanh toán ngay"
-      leftIcon="card-outline"
+      leftIcon="card"
       size="lg"
       fullWidth
       onPress={() => setConfirmOpen(true)}
@@ -143,7 +143,7 @@ export default function ContractDetailScreen() {
             {installments.length > 0 ? (
               <InstallmentTimeline installments={installments} />
             ) : (
-              <EmptyState icon="calendar-outline" title="Chưa có lịch thanh toán" />
+              <EmptyState icon="calendar" title="Chưa có lịch thanh toán" />
             )}
           </Card>
         ) : tab === 'receipts' ? (
@@ -218,7 +218,7 @@ function ReceiptsPanel({ state }: { state: ReturnType<typeof useReceipts> }) {
   if (!state.data || state.data.length === 0) {
     return (
       <Card>
-        <EmptyState icon="receipt-outline" title="Chưa có phiếu thu" description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được xác nhận." />
+        <EmptyState icon="receipt" title="Chưa có phiếu thu" description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được xác nhận." />
       </Card>
     );
   }
