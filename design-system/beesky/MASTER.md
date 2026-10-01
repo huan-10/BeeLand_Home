@@ -47,7 +47,7 @@
 | Chữ trên nền cam | `semantic.textOnPrimary` | `#FFFFFF` |
 | Icon trang trí | `semantic.iconMuted` | `#9CA3AF` (không dùng cho chữ) |
 
-**Lớp phủ** (`colors.overlay`): `onPrimarySubtle` / `onPrimaryMuted` (trắng 15% / 30% trên nền cam) · `heroScrim` (tối 45% phía trên ảnh) · `authFadeStart` / `authFadeMid` (nền trang 0% / 55%, mờ ảnh vào nền) · `brandTint` / `brandTintStrong` (cam phủ ảnh panel thương hiệu) · `scrim` (modal).
+**Lớp phủ** (`colors.overlay`): `onPrimarySubtle` / `onPrimaryMuted` (trắng 15% / 30% trên nền cam) · `heroScrim` (tối 45% phía trên ảnh) · `authFadeStart` / `authFadeMid` (nền trang 0% / 55%, mờ ảnh vào nền) · `brandTint` / `brandTintStrong` / `brandTintSoft` (cam phủ ảnh panel/banner thương hiệu) · `scrim` (modal).
 
 ### 1.3 Màu trạng thái — badge pastel [Mockup]
 
@@ -165,6 +165,8 @@ Thẻ = nền trắng + viền `borderSubtle` 1px + `shadows.sm`. Không dùng g
 | `sizes.avatar` | sm 36 · md 44 · lg 64 | Avatar chữ cái đầu |
 | `sizes.checkbox` | 22 | Ô checkbox (vùng chạm vẫn ≥ 44 nhờ cả hàng nhãn) |
 | `sizes.authHero.mobile` | 260 | Chiều cao ảnh hero màn xác thực trên mobile |
+| `sizes.banner` | mobile 168 · wide 208 | Chiều cao tối thiểu banner thương hiệu |
+| `sizes.actionTile.minHeight` | 96 | Ô chức năng |
 | `layout.contentMaxWidth` | 1100 | Nội dung desktop căn giữa [Dự án] |
 | `layout.sidebarWidth` | 248 | Sidebar desktop [Dự án] |
 
@@ -185,6 +187,8 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 |---------|------------|----------|
 | < 768px | Bottom tab 5 mục: Trang chủ, Hợp đồng, Thanh toán, Phiếu thu, Cá nhân (icon + nhãn) | Lề `layout.gutterMobile` (16), 1 cột |
 | ≥ 768px | Sidebar trái: logo BeeSky, MENU 5 mục, Thông báo, thẻ người dùng + đăng xuất ở đáy | Lề `layout.gutterWide` (32), tối đa 1100px căn giữa, lưới 2–3 cột (`ResponsiveGrid`) |
+
+Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang chủ: 7 + 5 ở desktop) thay vì kéo giãn bố cục mobile.
 
 [Skill]: bottom nav ≤ 5 mục, có nhãn; mục hiện tại được tô (nền `primary.50` + icon filled + chữ `textBrand`); đăng xuất tách khỏi mục điều hướng; nội dung không bị che bởi thanh cố định (safe area); không cuộn ngang trên mobile (chip lọc cuộn ngang trong vùng riêng là ngoại lệ có chủ đích).
 
@@ -212,6 +216,10 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 | **FormErrorSummary** | Hộp `danger` pastel đầu form, tiêu đề "Vui lòng kiểm tra lại thông tin" + danh sách lỗi dạng link tới ô; nhận focus sau khi gửi thất bại với **≥ 2 lỗi** (1 lỗi → focus thẳng vào ô); lỗi chi tiết vẫn hiện dưới từng ô. | [Skill] `error-summary`, `focus-management` |
 | **Toast** | `ToastProvider` ở root + `useToast().show(msg, tone)`. Nền `gray.900`, chữ trắng, icon theo tông, tối đa `sizes.toastMaxWidth`, dưới cùng màn hình (trên safe area), tự ẩn sau `motion.toast` (3.5s), `role="status"`, không lấy focus. | [Skill] `toast-dismiss`, `toast-accessibility` |
 | **FadeIn** | Bọc nội dung để mờ dần + trượt lên (`motion.enter`, trễ `motion.stagger` × index), `ReduceMotion.System`. Chỉ dùng ở màn xác thực. | [Skill] |
+| **ActionTile** | Ô chức năng: `IconCircle` pastel + nhãn semibold, nền trắng, viền `borderSubtle`, bo `lg`, cao tối thiểu `sizes.actionTile.minHeight`. Web hover: nền + viền theo tông pastel; nhấn: opacity 0.85; `compact` cho màn hẹp. | [Mockup] + [Skill] hover |
+| **IconButton** | Nút 44×44 chỉ có icon, viền mảnh; hover/nhấn nền `gray.100`. Tùy chọn **chấm đỏ** (`dot`) + `dotLabel` ghép vào tên truy cập (màu không là tín hiệu duy nhất). | [Skill] |
+| **BrandBanner** | Ảnh khu đô thị + gradient cam ngang, bo `xl`, logo inverted, chữ trắng. Trang trí. | [Mockup] |
+| **Grid / Col** | Lưới 12 cột (`layout.gridColumns`), `Col span={{ mobile, tablet?, desktop? }}`, gutter theo token spacing. | [Dự án] |
 | **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
 | **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
@@ -241,7 +249,8 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 - ❌ Placeholder thay cho nhãn; lỗi chỉ hiện ở đầu form — [Skill]
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
-- ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực — [Mockup]
+- ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
+- ❌ Hiển thị số chưa đọc chỉ bằng màu/số trần cho trình đọc màn hình (dùng cụm từ đầy đủ) — [Skill]
 - ❌ Hơn một nút primary trên một màn hình — [Skill]
 - ❌ Màn hình import trực tiếp `data/mock/` — [Dự án]
 

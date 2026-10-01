@@ -1,194 +1,195 @@
 import { router, type Href } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ContractCard, NextPaymentCard, NotificationItem, PaymentOverviewCard } from '@/components/domain';
-import { ResponsiveGrid, Screen, Section } from '@/components/layout';
-import { Avatar, Card, EmptyState, ErrorState, Icon, IconButton, IconCircle, Skeleton, SkeletonList, Text } from '@/components/ui';
+import { BrandBanner, NextPaymentCard, NotificationItem } from '@/components/domain';
+import { Col, Grid, Screen, Section } from '@/components/layout';
+import {
+  ActionTile,
+  Avatar,
+  Card,
+  EmptyState,
+  ErrorState,
+  Icon,
+  IconButton,
+  IconCircle,
+  Skeleton,
+  SkeletonCard,
+  Text,
+} from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { useContracts } from '@/hooks/useContracts';
 import { useDashboard } from '@/hooks/useDashboard';
-import { formatCurrency, formatDate } from '@/lib/format';
-import {
-  borderWidth,
-  colors,
-  interactive,
-  opacity,
-  radius,
-  semantic,
-  sizes,
-  spacing,
-  toneColors,
-  type IconName,
-  type Tone,
-} from '@/theme';
+import { useLatestNotifications } from '@/hooks/useNotifications';
+import { formatCurrency, formatDate, formatDaysLeft, formatWeekdayDate } from '@/lib/format';
+import { unreadLabel } from '@/lib/notification';
+import { colors, radius, semantic, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
+import type { AppNotification } from '@/types';
+
+const NOTIFICATION_LIMIT = 3;
+
+const actions: { label: string; icon: IconName; tone: Tone; href: Href }[] = [
+  { label: 'Hợp đồng', icon: 'document-text', tone: 'primary', href: '/contracts' },
+  { label: 'Thanh toán', icon: 'calendar', tone: 'info', href: '/payments' },
+  { label: 'Phiếu thu', icon: 'receipt', tone: 'success', href: '/receipts' },
+  { label: 'Hồ sơ', icon: 'person', tone: 'warning', href: '/profile' },
+];
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { isWide } = useBreakpoint();
+  const { isDesktop, isWide } = useBreakpoint();
   const dashboard = useDashboard();
-  const contracts = useContracts();
+  const notifications = useLatestNotifications(NOTIFICATION_LIMIT);
 
   const refresh = () => {
     void dashboard.refetch();
-    void contracts.refetch();
+    void notifications.refetch();
   };
 
-  const data = dashboard.data;
+  const openNotification = async (n: AppNotification) => {
+    if (!n.read) await notifications.markRead(n.id);
+    router.push(n.link ? (n.link as Href) : '/notifications');
+  };
 
   return (
-    <Screen onRefresh={refresh} refreshing={dashboard.refreshing || contracts.refreshing}>
-      {/* Lời chào + chuông thông báo */}
-      <View className="flex-row items-center gap-ms">
-        {!isWide && user ? <Avatar name={user.fullName} /> : null}
-        <View className="flex-1">
-          <Text variant="small" color={semantic.textMuted}>
-            Xin chào,
-          </Text>
-          <Text variant="h2" numberOfLines={1}>
-            {user?.fullName ?? 'Quý khách'}
-          </Text>
-        </View>
-        <IconButton
-          icon="notifications-outline"
-          accessibilityLabel="Thông báo"
-          badgeCount={data?.unreadNotificationCount}
-          onPress={() => router.push('/notifications')}
-        />
-      </View>
-
-      {dashboard.loading ? (
-        <View className="gap-md">
-          <Skeleton height={sizes.skeleton.hero} radius={radius.xl} />
-          <Skeleton height={sizes.skeleton.card} radius={radius.lg} />
-        </View>
-      ) : dashboard.error || !data ? (
-        <ErrorState message={dashboard.error ?? undefined} onRetry={() => void dashboard.refetch()} />
-      ) : (
-        <>
-          <ResponsiveGrid columns={2} gap={spacing.md}>
-            <PaymentOverviewCard
-              title={`Tổng giá trị ${data.contractCount} hợp đồng`}
-              totalValue={data.totalValue}
-              paidAmount={data.paidAmount}
-              remainingAmount={data.remainingAmount}
-              paidPercent={data.paidPercent}
-            />
-            {data.nextInstallment ? (
-              <NextPaymentCard
-                installment={data.nextInstallment}
-                onViewContract={() =>
-                  router.push({ pathname: '/contracts/[id]', params: { id: data.nextInstallment?.contractId ?? '' } })
-                }
-              />
-            ) : (
-              <Card>
-                <EmptyState icon="checkmark-done-outline" title="Không có khoản sắp đến hạn" />
-              </Card>
-            )}
-          </ResponsiveGrid>
-
-          {data.overdueInstallments.map((item) => (
-            <Card
-              key={item.id}
-              onPress={() => router.push({ pathname: '/contracts/[id]', params: { id: item.contractId } })}
-              style={styles.overdueCard}
-              shadow="none">
-              <View className="flex-row items-center gap-ms">
-                <IconCircle name="warning" tone="danger" size="md" />
-                <View className="flex-1">
-                  <Text variant="smallMedium" weight="semibold" color={colors.danger[700]}>
-                    {item.contractCode}: {item.name} đã quá hạn
+    <Screen onRefresh={refresh} refreshing={dashboard.refreshing || notifications.refreshing}>
+      <Grid gutter={isDesktop ? 'lg' : 'md'}>
+        {/* Header */}
+        <Col span={{ mobile: 12 }}>
+          <View style={styles.header}>
+            {user ? <Avatar name={user.fullName} /> : null}
+            <View style={styles.flex}>
+              {isWide ? (
+                <Text variant="h2" numberOfLines={2} accessibilityRole="header">
+                  Xin chào, {user?.fullName ?? 'Quý khách'}
+                </Text>
+              ) : (
+                // Mobile: tách lời chào để tên không bị ngắt giữa chừng; vẫn đọc liền "Xin chào, {tên}".
+                <View accessible accessibilityRole="header" accessibilityLabel={`Xin chào, ${user?.fullName ?? 'Quý khách'}`}>
+                  <Text variant="small" color={semantic.textMuted}>
+                    Xin chào,
                   </Text>
-                  <Text variant="caption" color={colors.danger[700]}>
-                    {formatCurrency(item.remainingAmount)} · hạn {formatDate(item.dueDate)}
+                  <Text variant="h2" numberOfLines={2}>
+                    {user?.fullName ?? 'Quý khách'}
                   </Text>
                 </View>
-                <Icon name="chevron-forward" size="sm" color={colors.danger[600]} />
-              </View>
-            </Card>
-          ))}
-
-          <QuickActions />
-        </>
-      )}
-
-      <Section title="Hợp đồng của tôi" actionLabel="Xem tất cả" onAction={() => router.push('/contracts')}>
-        {contracts.loading ? (
-          <SkeletonList count={2} />
-        ) : contracts.error ? (
-          <ErrorState message={contracts.error} onRetry={() => void contracts.refetch()} />
-        ) : contracts.data && contracts.data.length > 0 ? (
-          <ResponsiveGrid columns={2}>
-            {contracts.data.slice(0, isWide ? 4 : 2).map((c) => (
-              <ContractCard
-                key={c.id}
-                contract={c}
-                onPress={() => router.push({ pathname: '/contracts/[id]', params: { id: c.id } })}
-              />
-            ))}
-          </ResponsiveGrid>
-        ) : (
-          <EmptyState title="Chưa có hợp đồng" description="Hợp đồng của bạn sẽ hiển thị tại đây." />
-        )}
-      </Section>
-
-      {data && data.latestNotifications.length > 0 ? (
-        <Section title="Thông báo mới" actionLabel="Tất cả" onAction={() => router.push('/notifications')}>
-          <View className="gap-sm">
-            {data.latestNotifications.map((n) => (
-              <NotificationItem
-                key={n.id}
-                notification={n}
-                onPress={() => (n.link ? router.push(n.link as Href) : router.push('/notifications'))}
-              />
-            ))}
+              )}
+              <Text variant="caption" color={semantic.textMuted}>
+                {formatWeekdayDate()}
+              </Text>
+            </View>
+            <IconButton
+              icon="notifications-outline"
+              accessibilityLabel="Thông báo"
+              dot={notifications.unreadCount > 0}
+              dotLabel={unreadLabel(notifications.unreadCount)}
+              onPress={() => router.push('/notifications')}
+            />
           </View>
-        </Section>
-      ) : null}
+        </Col>
+
+        {/* Banner thương hiệu */}
+        <Col span={{ mobile: 12 }}>
+          <BrandBanner
+            title="An cư vững tâm"
+            subtitle="Theo dõi hợp đồng, lịch thanh toán và phiếu thu của bạn tại một nơi."
+          />
+        </Col>
+
+        {/* 4 ô chức năng */}
+        <Col span={{ mobile: 12 }}>
+          <Grid gutter={isWide ? 'md' : 'sm'}>
+            {actions.map((a) => (
+              <Col key={a.label} span={{ mobile: 3 }}>
+                <ActionTile label={a.label} icon={a.icon} tone={a.tone} compact={!isWide} onPress={() => router.push(a.href)} />
+              </Col>
+            ))}
+          </Grid>
+        </Col>
+
+        {/* Thông báo */}
+        <Col span={{ mobile: 12, desktop: 7 }}>
+          <Section title="Thông báo" actionLabel="Xem tất cả" onAction={() => router.push('/notifications')}>
+            {notifications.loading ? (
+              <View style={styles.list}>
+                {Array.from({ length: NOTIFICATION_LIMIT }).map((_, i) => (
+                  <Skeleton key={i} height={sizes.skeleton.row} radius={radius.lg} />
+                ))}
+              </View>
+            ) : notifications.error ? (
+              <Card>
+                <ErrorState message={notifications.error} onRetry={() => void notifications.refetch()} />
+              </Card>
+            ) : notifications.items.length === 0 ? (
+              <Card>
+                <EmptyState icon="notifications-off-outline" title="Chưa có thông báo" description="Nhắc lịch thanh toán và cập nhật dự án sẽ hiển thị tại đây." />
+              </Card>
+            ) : (
+              <View style={styles.list}>
+                {notifications.items.map((n) => (
+                  <NotificationItem key={n.id} notification={n} onPress={() => void openNotification(n)} />
+                ))}
+              </View>
+            )}
+          </Section>
+        </Col>
+
+        {/* Khoản thanh toán sắp đến hạn */}
+        <Col span={{ mobile: 12, desktop: 5 }}>
+          <Section title="Thanh toán sắp tới" actionLabel="Lịch thanh toán" onAction={() => router.push('/payments')}>
+            {dashboard.loading ? (
+              <SkeletonCard lines={5} />
+            ) : dashboard.error || !dashboard.data ? (
+              <Card>
+                <ErrorState message={dashboard.error ?? undefined} onRetry={() => void dashboard.refetch()} />
+              </Card>
+            ) : (
+              <View style={styles.list}>
+                {dashboard.data.overdueInstallments.map((item) => (
+                  <Card
+                    key={item.id}
+                    shadow="none"
+                    style={styles.overdue}
+                    onPress={() => router.push({ pathname: '/contracts/[id]', params: { id: item.contractId } })}
+                    accessibilityLabel={`Quá hạn: ${item.contractCode}, ${item.name}, ${formatCurrency(item.remainingAmount)}`}>
+                    <View style={styles.row}>
+                      <IconCircle name="warning" tone="danger" size="md" />
+                      <View style={styles.flex}>
+                        <Text variant="smallMedium" weight="semibold" color={colors.danger[700]}>
+                          {item.name} · {formatDaysLeft(item.daysUntilDue)}
+                        </Text>
+                        <Text variant="caption" color={colors.danger[700]}>
+                          {item.contractCode} · {formatCurrency(item.remainingAmount)} · hạn {formatDate(item.dueDate)}
+                        </Text>
+                      </View>
+                      <Icon name="chevron-forward" size="sm" color={colors.danger[600]} />
+                    </View>
+                  </Card>
+                ))}
+                {dashboard.data.nextInstallment ? (
+                  <NextPaymentCard
+                    installment={dashboard.data.nextInstallment}
+                    onViewContract={() =>
+                      router.push({ pathname: '/contracts/[id]', params: { id: dashboard.data?.nextInstallment?.contractId ?? '' } })
+                    }
+                  />
+                ) : dashboard.data.overdueInstallments.length === 0 ? (
+                  <Card>
+                    <EmptyState icon="checkmark-done-outline" title="Không có khoản sắp đến hạn" description="Bạn đã thanh toán đầy đủ các đợt hiện tại." />
+                  </Card>
+                ) : null}
+              </View>
+            )}
+          </Section>
+        </Col>
+      </Grid>
     </Screen>
   );
 }
 
-const quickActions: { label: string; icon: IconName; tone: Tone; href: Href }[] = [
-  { label: 'Hợp đồng', icon: 'document-text', tone: 'primary', href: '/contracts' },
-  { label: 'Lịch thanh toán', icon: 'calendar', tone: 'info', href: '/payments' },
-  { label: 'Phiếu thu', icon: 'receipt', tone: 'success', href: '/receipts' },
-  { label: 'Thông báo', icon: 'notifications', tone: 'warning', href: '/notifications' },
-];
-
-function QuickActions() {
-  return (
-    <View className="flex-row gap-ms">
-      {quickActions.map((a) => (
-        <Pressable
-          key={a.label}
-          onPress={() => router.push(a.href)}
-          accessibilityRole="button"
-          accessibilityLabel={a.label}
-          style={({ pressed }) => [styles.quickAction, interactive, pressed && styles.pressed]}>
-          <IconCircle name={a.icon} tone={a.tone} size="md" />
-          <Text variant="caption" weight="medium" align="center" numberOfLines={2}>
-            {a.label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  overdueCard: { backgroundColor: toneColors.danger.bg, borderColor: toneColors.danger.border },
-  quickAction: {
-    flex: 1,
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.lg,
-    backgroundColor: semantic.surface,
-    borderWidth: borderWidth.hairline,
-    borderColor: semantic.borderSubtle,
-  },
-  pressed: { opacity: opacity.pressed },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  flex: { flex: 1 },
+  list: { gap: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  overdue: { backgroundColor: toneColors.danger.bg, borderColor: toneColors.danger.border },
 });

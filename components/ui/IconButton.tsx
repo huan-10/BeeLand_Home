@@ -1,36 +1,37 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { borderWidth, colors, interactive, radius, semantic, sizes, spacing, type IconName } from '@/theme';
+import { borderWidth, colors, interactive, radius, semantic, sizes, type IconName } from '@/theme';
 
 import { Icon } from './Icon';
-import { Text } from './Text';
 
 export interface IconButtonProps {
   icon: IconName;
   /** Bắt buộc: tên truy cập cho nút chỉ có icon. */
   accessibilityLabel: string;
   onPress: () => void;
-  /** Số đếm hiển thị góc trên (ví dụ thông báo chưa đọc). */
-  badgeCount?: number;
+  /**
+   * Hiển thị chấm đỏ góc trên. Màu không phải tín hiệu duy nhất: `dotLabel` được ghép vào
+   * tên truy cập (ví dụ "Thông báo, 2 thông báo chưa đọc").
+   */
+  dot?: boolean;
+  dotLabel?: string;
 }
 
-/** Nút vuông 44×44 chỉ có icon, viền mảnh. */
-export function IconButton({ icon, accessibilityLabel, onPress, badgeCount }: IconButtonProps) {
-  const label = badgeCount ? `${accessibilityLabel}, ${badgeCount} chưa đọc` : accessibilityLabel;
+/** Nút vuông 44×44 chỉ có icon, viền mảnh; hover/nhấn đổi nền. */
+export function IconButton({ icon, accessibilityLabel, onPress, dot, dotLabel }: IconButtonProps) {
+  const [hovered, setHovered] = useState(false);
+  const label = dot && dotLabel ? `${accessibilityLabel}, ${dotLabel}` : accessibilityLabel;
   return (
     <Pressable
       onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.button, interactive, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.button, interactive, (hovered || pressed) && styles.active]}>
       <Icon name={icon} size="lg" color={semantic.icon} />
-      {badgeCount ? (
-        <View style={styles.badge}>
-          <Text variant="caption" weight="bold" color={semantic.textOnPrimary}>
-            {badgeCount > 9 ? '9+' : badgeCount}
-          </Text>
-        </View>
-      ) : null}
+      {dot ? <View style={styles.dot} /> : null}
     </Pressable>
   );
 }
@@ -46,18 +47,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pressed: { backgroundColor: colors.gray[100] },
-  badge: {
+  active: { backgroundColor: colors.gray[100] },
+  dot: {
     position: 'absolute',
-    top: -spacing.xs,
-    right: -spacing.xs,
-    minWidth: sizes.countBadge,
-    height: sizes.countBadge,
-    paddingHorizontal: spacing.xs,
+    top: sizes.dot.md,
+    right: sizes.dot.md,
+    width: sizes.dot.md + borderWidth.strong * 2,
+    height: sizes.dot.md + borderWidth.strong * 2,
     borderRadius: radius.full,
     backgroundColor: colors.danger[600],
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: borderWidth.strong,
     borderColor: semantic.surface,
   },

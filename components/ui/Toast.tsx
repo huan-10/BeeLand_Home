@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <View pointerEvents="box-none" style={[styles.host, { bottom: insets.bottom + spacing.lg }]}>
+      <View style={[styles.host, { bottom: insets.bottom + spacing.lg }]}>
         {toast ? (
           <Animated.View
             key={toast.id}
@@ -77,7 +77,7 @@ export function useToast(): ToastContextValue {
 }
 
 const styles = StyleSheet.create({
-  host: { position: 'absolute', left: layout.gutterMobile, right: layout.gutterMobile, alignItems: 'center', zIndex: zIndex.toast },
+  host: { pointerEvents: 'box-none', position: 'absolute', left: layout.gutterMobile, right: layout.gutterMobile, alignItems: 'center', zIndex: zIndex.toast },
   toast: {
     flexDirection: 'row',
     alignItems: 'center',

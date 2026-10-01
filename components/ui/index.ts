@@ -21,3 +21,4 @@ export * from './StateView';
 export * from './Text';
 export * from './TextLink';
 export * from './Toast';
+export * from './ActionTile';

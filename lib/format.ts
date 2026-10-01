@@ -67,3 +67,11 @@ export function getInitials(fullName: string): string {
   const last = parts.length > 1 ? (parts[parts.length - 1][0] ?? '') : '';
   return (first + last).toUpperCase();
 }
+
+const WEEKDAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+/** "Thứ Tư, 01/10/2026". */
+export function formatWeekdayDate(value: string | Date = new Date()): string {
+  const date = parseDate(value);
+  return `${WEEKDAYS[date.getDay()]}, ${formatDate(date)}`;
+}

@@ -4,3 +4,4 @@ export * from './ResponsiveGrid';
 export * from './Screen';
 export * from './Section';
 export * from './AuthLayout';
+export * from './Grid';

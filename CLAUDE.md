@@ -49,7 +49,7 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 - Kiểm tra nhanh trước khi commit:
   ```bash
   grep -rnE "#[0-9A-Fa-f]{3,8}\b|rgba?\(" app components hooks lib contexts services --include=*.ts --include=*.tsx
-  grep -rnE "(width|height|padding\w*|margin\w*|gap|borderRadius|fontSize|top|right|bottom|left|size)(=\{|: )-?[1-9]" app components --include=*.tsx
+  grep -rnE "\b(width|height|padding\w*|margin\w*|gap|borderRadius|fontSize|top|right|bottom|left|size)(=\{|: )-?[1-9]" app components --include=*.tsx
   grep -rn "data/mock" app components hooks contexts lib
   ```
   Cả ba lệnh phải không trả về kết quả.
