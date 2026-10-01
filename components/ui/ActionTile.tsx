@@ -38,7 +38,7 @@ export function ActionTile({ label, icon, tone, onPress, accessibilityHint, comp
         pressed && styles.pressed,
       ]}>
       <IconCircle name={icon} tone={tone} size={compact ? 'lg' : 'xl'} />
-      <Text variant={compact ? 'caption' : 'smallMedium'} weight="semibold" align="center" numberOfLines={1}>
+      <Text variant={compact ? 'caption' : 'smallMedium'} weight="semibold" align="center">
         {label}
       </Text>
     </Pressable>

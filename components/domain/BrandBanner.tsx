@@ -24,18 +24,17 @@ export function BrandBanner({ title, subtitle }: BrandBannerProps) {
       imageStyle={styles.image}
       accessibilityIgnoresInvertColors>
       <LinearGradient
-        // Trái đậm để chữ trắng dễ đọc, phải nhạt dần để thấy ảnh khu đô thị.
-        colors={[colors.overlay.brandTintStrong, colors.overlay.brandTint, colors.overlay.brandTintSoft]}
-        locations={[0, 0.55, 1]}
+        // Lớp phủ cam đậm trên toàn banner để chữ trắng luôn ≥ 4.5:1 (kể cả trên vùng sáng của ảnh).
+        colors={[colors.overlay.brandTintStrong, colors.overlay.brandTint]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[styles.content, { minHeight: isWide ? sizes.banner.wide : sizes.banner.mobile }]}>
         <Logo size="sm" inverted />
         <View style={styles.text}>
-          <Text variant={isWide ? 'h1' : 'h2'} color={semantic.textOnPrimary}>
+          <Text variant={isWide ? 'h1' : 'h2'} color={semantic.textInverse}>
             {title}
           </Text>
-          <Text variant="small" color={semantic.textOnPrimary}>
+          <Text variant="small" color={semantic.textInverse}>
             {subtitle}
           </Text>
         </View>

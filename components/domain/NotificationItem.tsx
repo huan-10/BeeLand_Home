@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { IconCircle, Text } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/format';
 import { notificationTypeMeta } from '@/lib/labels';
-import { colors, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
+import { useHover } from '@/hooks/useHover';
+import { borderWidth, colors, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
 import type { AppNotification } from '@/types';
 
 export function NotificationItem({ notification, onPress }: { notification: AppNotification; onPress?: () => void }) {
+  const { hovered, hoverProps } = useHover();
   const meta = notificationTypeMeta[notification.type];
   return (
     <Pressable
@@ -14,16 +16,23 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
       accessibilityRole="button"
       accessibilityLabel={`${notification.read ? '' : 'Chưa đọc. '}${notification.title}`}
       accessibilityHint={notification.message}
-      style={({ pressed }) => [styles.item, interactive, !notification.read && styles.unread, pressed && styles.pressed]}>
+      {...hoverProps}
+      style={({ pressed }) => [
+        styles.item,
+        interactive,
+        !notification.read && styles.unread,
+        hovered && (notification.read ? styles.hover : styles.unreadHover),
+        pressed && styles.pressed,
+      ]}>
       <IconCircle name={meta.icon} tone={meta.tone} size="md" />
       <View style={styles.main}>
         <View style={styles.titleRow}>
-          <Text variant="smallMedium" weight="semibold" style={styles.flex} numberOfLines={2}>
+          <Text variant="smallMedium" weight="semibold" style={styles.flex}>
             {notification.title}
           </Text>
           {!notification.read ? <View style={styles.dot} /> : null}
         </View>
-        <Text variant="small" color={semantic.textSecondary} numberOfLines={3}>
+        <Text variant="small" color={semantic.textSecondary}>
           {notification.message}
         </Text>
         <Text variant="caption" color={semantic.textMuted}>
@@ -35,8 +44,18 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', gap: spacing.ms, padding: spacing.md, borderRadius: radius.lg, backgroundColor: semantic.surface },
+  item: {
+    flexDirection: 'row',
+    gap: spacing.ms,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: semantic.surface,
+    borderWidth: borderWidth.hairline,
+    borderColor: colors.transparent,
+  },
   unread: { backgroundColor: colors.primary[50] },
+  hover: { backgroundColor: semantic.surfaceMuted, borderColor: semantic.borderHover },
+  unreadHover: { backgroundColor: colors.primary[100] },
   pressed: { opacity: opacity.pressed },
   main: { flex: 1, gap: spacing.xs },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },

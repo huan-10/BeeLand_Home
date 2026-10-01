@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import 'react-native-reanimated';
+import { useReducedMotion } from 'react-native-reanimated';
 
 import { Logo } from '@/components/layout';
 import { ToastProvider } from '@/components/ui';
@@ -59,6 +59,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { status } = useAuth();
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (status !== 'loading') void SplashScreen.hideAsync();
@@ -76,7 +77,8 @@ function RootNavigator() {
   const isAuthenticated = status === 'authenticated';
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: semantic.bg } }}>
+    <Stack
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: semantic.bg }, animation: reduceMotion ? 'none' : 'default' }}>
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>

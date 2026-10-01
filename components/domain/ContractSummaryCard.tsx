@@ -8,6 +8,8 @@ import { isFullyPaid } from '@/lib/payment';
 import { borderWidth, interactive, opacity, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 import type { ContractListItem } from '@/types';
 
+import { useHover } from '@/hooks/useHover';
+
 import { ProjectImage } from './ProjectImage';
 
 export interface ContractSummaryCardProps {
@@ -19,6 +21,7 @@ export interface ContractSummaryCardProps {
 
 /** Phần đầu màn Chi tiết hợp đồng: ảnh, mã, trạng thái, căn hộ, số tiền, tiến độ, link PDF. */
 export function ContractSummaryCard({ contract, onOpenDocument, footer }: ContractSummaryCardProps) {
+  const docHover = useHover();
   const status = contractStatusMeta[contract.status];
   const { summary } = contract;
   const done = isFullyPaid(summary.paidPercent);
@@ -68,7 +71,8 @@ export function ContractSummaryCard({ contract, onOpenDocument, footer }: Contra
           accessibilityRole="link"
           accessibilityLabel="Xem hợp đồng (PDF)"
           accessibilityHint="Mở tệp hợp đồng PDF"
-          style={({ pressed }) => [styles.docRow, interactive, pressed && styles.pressed]}>
+          {...docHover.hoverProps}
+          style={({ pressed }) => [styles.docRow, interactive, docHover.hovered && styles.docHover, pressed && styles.pressed]}>
           <Icon name="document-text-outline" color={toneColors.primary.fg} />
           <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={styles.flex}>
             Xem hợp đồng (PDF)
@@ -124,5 +128,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: toneColors.primary.bg,
   },
+  docHover: { backgroundColor: toneColors.primary.border },
   pressed: { opacity: opacity.pressed },
 });

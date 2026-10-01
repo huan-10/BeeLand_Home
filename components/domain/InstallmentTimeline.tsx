@@ -37,7 +37,7 @@ export function InstallmentTimeline({ installments }: { installments: PaymentIns
                   styles.node,
                   { backgroundColor: filled ? tone.solid : semantic.surface, borderColor: filled ? tone.solid : colors.gray[300] },
                 ]}>
-                <Icon name={meta.icon} size="sm" color={filled ? semantic.textOnPrimary : semantic.textMuted} />
+                <Icon name={meta.icon} size="sm" color={filled ? tone.onSolid : semantic.textMuted} />
               </View>
               {!isLast ? <View style={[styles.line, isPaid && { backgroundColor: tone.solid }]} /> : null}
             </View>

@@ -75,3 +75,9 @@ export function formatWeekdayDate(value: string | Date = new Date()): string {
   const date = parseDate(value);
   return `${WEEKDAYS[date.getDay()]}, ${formatDate(date)}`;
 }
+
+/** "Tháng 10/2026". */
+export function formatMonthYear(value: string | Date): string {
+  const date = parseDate(value);
+  return `Tháng ${date.getMonth() + 1}/${date.getFullYear()}`;
+}

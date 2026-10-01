@@ -1,14 +1,15 @@
 import type { BottomTabBarProps } from 'expo-router/tabs';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Icon, Text } from '@/components/ui';
+import { Avatar, Icon, IconButton, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useHover } from '@/hooks/useHover';
 import {
   borderWidth,
   colors,
-  hitSlop,
   interactive,
   layout,
   letterSpacing,
@@ -17,6 +18,7 @@ import {
   shadows,
   sizes,
   spacing,
+  zIndex,
 } from '@/theme';
 
 import { Logo } from './Logo';
@@ -60,30 +62,33 @@ function BottomBar({ activeName, onNavigate }: BarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bottomBar, shadows.navTop, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]} accessibilityRole="tablist">
-      {primaryNavItems.map((item) => {
-        const active = activeName === item.name;
-        return (
-          <Pressable
-            key={item.name}
-            onPress={() => onNavigate(item)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={item.label}
-            style={[styles.bottomItem, interactive]}>
-            <View style={[styles.bottomIcon, active && styles.bottomIconActive]}>
-              <Icon name={active ? item.activeIcon : item.icon} size="lg" color={active ? colors.primary[600] : semantic.iconMuted} />
-            </View>
-            <Text
-              variant="caption"
-              weight={active ? 'semibold' : 'medium'}
-              color={active ? semantic.textBrand : semantic.textMuted}
-              numberOfLines={1}>
-              {item.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+      {primaryNavItems.map((item) => (
+        <BottomItem key={item.name} item={item} active={activeName === item.name} onPress={() => onNavigate(item)} />
+      ))}
     </View>
+  );
+}
+
+function BottomItem({ item, active, onPress }: { item: NavItem; active: boolean; onPress: () => void }) {
+  const { hovered, hoverProps } = useHover();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      aria-selected={active}
+      accessibilityLabel={item.label}
+      {...hoverProps}
+      style={[styles.bottomItem, interactive]}>
+      <View style={[styles.bottomIcon, active && styles.bottomIconActive, hovered && (active ? styles.bottomIconActiveHover : styles.bottomIconActive)]}>
+        <Icon name={active ? item.activeIcon : item.icon} size="lg" color={active ? colors.primary[600] : semantic.iconMuted} />
+      </View>
+      <Text
+        variant="caption"
+        weight={active ? 'semibold' : 'medium'}
+        color={active ? semantic.textBrand : semantic.textMuted}>
+        {item.label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -93,6 +98,7 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
 
   return (
     <View style={[styles.sidebar, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.md }]}>
+      {Platform.OS === 'web' ? <SkipLink /> : null}
       <View style={styles.sidebarLogo}>
         <Logo size="md" />
       </View>
@@ -114,36 +120,62 @@ function Sidebar({ activeName, onNavigate }: BarProps) {
         <View style={styles.userCard}>
           <Avatar name={user.fullName} size="sm" />
           <View style={styles.userInfo}>
-            <Text variant="smallMedium" numberOfLines={1}>
+            <Text variant="smallMedium">
               {user.fullName}
             </Text>
-            <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
+            <Text variant="caption" color={semantic.textMuted}>
               {user.customerCode}
             </Text>
           </View>
           {/* Đăng xuất tách khỏi menu điều hướng (destructive-nav-separation). */}
-          <Pressable
-            onPress={() => void signOut()}
-            accessibilityRole="button"
-            accessibilityLabel="Đăng xuất"
-            hitSlop={hitSlop}
-            style={interactive}>
-            <Icon name="log-out-outline" color={semantic.textMuted} />
-          </Pressable>
+          <IconButton icon="log-out-outline" accessibilityLabel="Đăng xuất" onPress={() => void signOut()} />
         </View>
       ) : null}
     </View>
   );
 }
 
-function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean; onPress: () => void }) {
+/**
+ * "Bỏ qua tới nội dung chính" (web): phần tử focus đầu tiên của trang, chỉ hiện khi được focus,
+ * chuyển focus tới vùng `role="main"` đang hiển thị (skill: skip-links).
+ */
+function SkipLink() {
+  const [focused, setFocused] = useState(false);
+  const skip = () => {
+    const main = [...document.querySelectorAll<HTMLElement>('[role="main"]')].find((el) => el.offsetParent !== null);
+    if (!main) return;
+    main.setAttribute('tabindex', '-1');
+    main.focus();
+  };
   return (
     <Pressable
+      onPress={skip}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      accessibilityRole="link"
+      style={[styles.skipLink, interactive, !focused && styles.skipHidden]}>
+      <Text variant="smallMedium" weight="semibold" color={semantic.textOnBrand}>
+        Bỏ qua tới nội dung chính
+      </Text>
+    </Pressable>
+  );
+}
+
+function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean; onPress: () => void }) {
+  const { hovered, hoverProps } = useHover();
+  return (
+    <Pressable
+      {...hoverProps}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityLabel={item.label}
-      accessibilityState={{ selected: active }}
-      style={({ pressed }) => [styles.sidebarItem, interactive, active && styles.sidebarItemActive, pressed && !active && styles.sidebarItemPressed]}>
+      aria-selected={active}
+      style={({ pressed }) => [
+        styles.sidebarItem,
+        interactive,
+        active && styles.sidebarItemActive,
+        (pressed || hovered) && (active ? styles.sidebarItemActiveHover : styles.sidebarItemPressed),
+      ]}>
       <Icon name={active ? item.activeIcon : item.icon} color={active ? colors.primary[600] : semantic.textMuted} />
       <Text variant="smallMedium" weight={active ? 'semibold' : 'medium'} color={active ? semantic.textBrand : semantic.textSecondary}>
         {item.label}
@@ -170,6 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bottomIconActive: { backgroundColor: colors.primary[50] },
+  bottomIconActiveHover: { backgroundColor: colors.primary[100] },
 
   sidebar: {
     width: layout.sidebarWidth,
@@ -191,6 +224,7 @@ const styles = StyleSheet.create({
   },
   sidebarItemActive: { backgroundColor: colors.primary[50] },
   sidebarItemPressed: { backgroundColor: semantic.surfaceMuted },
+  sidebarItemActiveHover: { backgroundColor: colors.primary[100] },
   sidebarDivider: { height: borderWidth.hairline, backgroundColor: semantic.borderSubtle, marginVertical: spacing.ms, marginHorizontal: spacing.ms },
   userCard: {
     flexDirection: 'row',
@@ -200,5 +234,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: semantic.surfaceMuted,
   },
-  userInfo: { flex: 1 },
+  userInfo: { flex: 1, minWidth: 0 },
+  skipLink: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    zIndex: zIndex.toast,
+    minHeight: sizes.touchTarget,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: semantic.brand,
+  },
+  // Ẩn khỏi màn hình nhưng vẫn nhận focus bằng bàn phím.
+  skipHidden: { opacity: 0, transform: [{ translateY: -sizes.touchTarget * 2 }] },
 });

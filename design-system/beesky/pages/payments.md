@@ -1,27 +1,26 @@
 # Trang: Thanh toán (`app/(app)/payments.tsx`)
 
-> Chỉ ghi điểm **khác** `MASTER.md`.
+> Chỉ ghi điểm **khác** `MASTER.md`. Tra skill (`--domain ux`): `"color contrast text"`, `"text reflow truncation"` (không cắt chữ thiết yếu — cho xuống dòng), `"touch target size"`, `"focus states keyboard"`.
 
 ## Khác Master
-- **3 thẻ thống kê** đầu trang (`IconCircle md` + nhãn · số đợt + số tiền đậm): Cần thanh toán (primary), Quá hạn (danger), Đã thanh toán (success).
-- Chip lọc mặc định là **"Cần thanh toán"** (không phải "Tất cả"): Cần thanh toán · Đã thanh toán · Tất cả.
-- Danh sách gộp mọi hợp đồng nên `InstallmentCard` hiển thị thêm dòng "mã HĐ · Căn".
-- Thứ tự: chưa thanh toán theo hạn gần nhất trước, sau đó đã thanh toán mới nhất trước (do `lib/payment.ts`).
+- Tiêu đề "Thanh toán" · phụ đề "Các đợt thanh toán trên tất cả hợp đồng, sắp theo ngày".
+- **Cảnh báo quá hạn** (chỉ khi có): khối nền `danger` pastel, `role="alert"`, icon cảnh báo (có nhãn) + chữ "N đợt quá hạn · tổng tiền" + câu nhắc; mỗi đợt quá hạn là một dòng trắng bấm được ("tên đợt · mã HĐ", "Hạn … · Quá hạn N ngày", số tiền, mũi tên) → mở hợp đồng. Màu không phải tín hiệu duy nhất.
+- **3 thẻ số liệu**: Cần thanh toán (primary) · Quá hạn (danger) · Đã thanh toán (success) — `IconCircle md` + "nhãn · N đợt" + số tiền `tabular-nums`.
+- **Tab lọc** (`Chip role="tab"`, `chipRow`): **Sắp đến hạn** (mặc định = mọi đợt chưa trả, kể cả quá hạn) · Đã thanh toán · Tất cả.
+- **Nhóm theo tháng** ("Tháng 10/2026" `h3` role header + "N đợt · tổng"): chưa trả xếp theo hạn gần nhất trước; đã trả xếp ngày trả mới nhất trước (`lib/payment.ts`: `sortInstallmentsForDisplay`, `groupInstallmentsByMonth`, `overdueInstallments`).
 
 ## Bố cục
-| | Mobile | Desktop |
+| | Mobile & tablet (< 1024px) | Desktop (≥ 1024px) |
 |---|---|---|
-| Thẻ thống kê | Xếp dọc 3 thẻ | 1 hàng 3 cột |
-| Danh sách đợt | 1 cột | 1 cột |
+| Thẻ số liệu | 1 cột | 3 cột (span 4) |
+| Danh sách đợt | `InstallmentCard` (không cắt chữ: tên đợt, "mã HĐ · căn", ngày đều xuống dòng) | `DataTable`: Đợt thanh toán (tên + mã HĐ · căn) · Hạn / ngày trả (+ "Còn N ngày"/"Quá hạn N ngày") · Số tiền (phải) · Trạng thái (Badge chữ + icon) |
 
-## Thành phần chính
-`InstallmentCard`: hàng trên (ô icon trạng thái, tên đợt, mã HĐ · căn, số tiền đậm bên phải) + hàng dưới có đường kẻ (ngày hạn / ngày đã trả + "Còn N ngày" hoặc "Quá hạn N ngày" màu đỏ, badge trạng thái). Bấm → chi tiết hợp đồng.
+Bấm thẻ / dòng / dòng quá hạn → `/contracts/[id]`.
 
 ## Trạng thái
 | Trạng thái | Hiển thị |
 |-----------|----------|
-| Đang tải | `SkeletonList` 4 thẻ (thẻ thống kê ẩn cho tới khi có dữ liệu) |
-| Lỗi | `ErrorState` + Thử lại |
-| Rỗng — Cần thanh toán | `EmptyState` "Bạn không có khoản cần thanh toán" |
-| Rỗng — Đã thanh toán | `EmptyState` "Chưa có đợt nào được thanh toán" |
+| Đang tải | `SkeletonList` 4 thẻ (cảnh báo + thẻ số liệu ẩn cho tới khi có dữ liệu) |
+| Lỗi | `ErrorState` + "Thử lại" trong `Card` |
+| Rỗng | `EmptyState`: "Bạn không có khoản cần thanh toán" / "Chưa có đợt nào được thanh toán" + hành động "Xem phiếu thu" |
 | Làm mới | Kéo để làm mới |

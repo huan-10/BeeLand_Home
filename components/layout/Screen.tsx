@@ -25,7 +25,9 @@ export function Screen({ children, onRefresh, refreshing = false, scroll = true,
   const { isWide } = useBreakpoint();
 
   const content = (
+    // role="main": đích của liên kết "Bỏ qua tới nội dung chính" (web).
     <View
+      role="main"
       style={[
         styles.container,
         !scroll && styles.fill,

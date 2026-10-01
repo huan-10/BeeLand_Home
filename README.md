@@ -18,9 +18,25 @@ npm start         # dev server, quét QR bằng Expo Go trên điện thoại
 
 npm run lint       # ESLint
 npm run typecheck  # tsc --noEmit
+npm run audit:ui   # kiểm định giao diện web (xem mục "Kiểm định")
+npx expo-doctor    # kiểm tra phiên bản thư viện / cấu hình Expo
 ```
 
 Build web tĩnh: `npx expo export --platform web` (kết quả nằm trong `dist/`).
+
+## Màn hình
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `/login`, `/register`, `/forgot-password` | Đăng nhập (ghi nhớ phiên), đăng ký, quên mật khẩu — chỉ khi chưa đăng nhập |
+| `/` | Trang chủ: lời chào, banner, 4 lối tắt, đợt thanh toán gần nhất, thông báo mới |
+| `/contracts`, `/contracts/[id]` | Danh sách hợp đồng (lọc + tìm theo mã) và chi tiết (lịch thanh toán, phiếu thu, thông tin khác, xem PDF mẫu, "Thanh toán ngay") |
+| `/payments` | Các đợt thanh toán của **mọi hợp đồng**, nhóm theo tháng, sắp theo ngày; cảnh báo đợt quá hạn (chữ + icon); lọc Sắp đến hạn / Đã thanh toán / Tất cả |
+| `/receipts`, `/receipts/[id]` | Phiếu thu (lọc theo trạng thái / hợp đồng), chi tiết + tải PDF / chia sẻ (giao diện) |
+| `/profile` | Thông tin tài khoản, đổi mật khẩu (giao diện), lối tắt, đăng xuất (có xác nhận), phiên bản ứng dụng |
+| `/notifications` | Thông báo, đánh dấu đã đọc |
+
+Mọi danh sách đều có 3 trạng thái **đang tải (skeleton) / rỗng / lỗi + "Thử lại"**; màn hình chính hỗ trợ kéo để làm mới.
 
 ## Cấu trúc thư mục
 
@@ -30,15 +46,17 @@ app/                 Màn hình (Expo Router)
   login.tsx
   (app)/_layout.tsx  Tabs: bottom tab < 768px, sidebar ≥ 768px
   (app)/…            Trang chủ, Hợp đồng, Thanh toán, Phiếu thu, Cá nhân, Thông báo
-components/ui/       Button, Input, Card, Badge, ProgressBar, Skeleton, EmptyState, ErrorState, ScreenHeader…
-components/layout/   Screen (container tối đa 1100px), AppNavigation, Logo, ResponsiveGrid
+components/ui/       Button, Input, Card, Badge, Chip, Tabs, DataTable, Dialog, Toast, ProgressBar, Skeleton, EmptyState, ErrorState…
+components/layout/   Screen (container tối đa 1100px), AppNavigation (bottom tab / sidebar + skip link), AuthLayout, Grid/Col
 components/domain/   Thẻ hợp đồng, đợt thanh toán, phiếu thu, thông báo…
 theme/               Design system: tokens.json (màu, bo góc, cỡ chữ), shadows, typography, fonts
 types/               Interface: User, Contract, PaymentInstallment, Receipt, AppNotification
 data/mock/           Dữ liệu giả – CHỈ được đọc bởi services/
 services/            Lớp truy cập dữ liệu (hàm async)
-hooks/               useContracts, useContract, usePaymentSchedule, useReceipts, useBreakpoint…
-lib/                 format.ts (tiền, ngày), payment.ts (tổng đã trả, %, số ngày còn lại), labels…
+hooks/               useContracts, useContract, usePaymentSchedule, useReceipts, useBreakpoint, useHover…
+lib/                 format.ts (tiền, ngày), payment.ts (tổng đã trả, %, số ngày, nhóm theo tháng), validation.ts, labels…
+scripts/ui-audit.js  Kiểm định giao diện web tự động (Playwright)
+design-system/       Quy chuẩn giao diện: beesky/MASTER.md + pages/<màn hình>.md
 contexts/            AuthContext (phiên lưu bằng AsyncStorage)
 ```
 
@@ -65,15 +83,42 @@ Chỉ cần sửa thư mục **`services/`** — giao diện, hooks và types gi
 
 3. Nếu backend chỉ trả về dữ liệu thô, tiếp tục dùng các hàm trong `lib/payment.ts`
    (`toInstallmentView`, `summarizeContractPayments`) để tính trạng thái, % đã thanh toán, số ngày còn lại.
-4. Trong `services/authService.ts`: thay `login`, `logout`, `getCurrentUser` bằng API xác thực và đặt
-   `demoAccountHint = null` để ẩn gợi ý tài khoản demo ở màn đăng nhập.
-5. Khi không còn dùng mock: xóa `data/mock/` và `services/mockLatency.ts`.
+4. Trong `services/authService.ts`: thay `login`, `register`, `requestPasswordReset`, `changePassword`,
+   `logout`, `getCurrentUser` bằng API xác thực và đặt `demoAccountHint = null` để ẩn gợi ý tài khoản demo.
+   `changePassword` hiện chỉ kiểm tra mật khẩu hiện tại rồi trả `unavailable` (giao diện đã sẵn sàng).
+5. Các chức năng mới có giao diện, chờ nối backend: `startPayment` (cổng thanh toán),
+   `exportReceiptPdf` / `shareReceipt` (xuất phiếu thu) — trả về `checkoutUrl` / `url` là màn hình tự mở.
+6. Khi không còn dùng mock: xóa `data/mock/` và `services/mockLatency.ts`.
 
 Khi có lỗi, ném `ServiceError` với thông điệp tiếng Việt — màn hình sẽ tự hiển thị `ErrorState` kèm nút “Thử lại”.
 
 ## Giao diện
 
 - Màu chủ đạo cam `#F08A24` (thang 50–900), xanh lá (thành công), xanh dương (thông tin), đỏ (cảnh báo), thang xám.
+  Chữ trên nền cam dùng `gray.900` (7:1) — chữ trắng trên `#F08A24` chỉ đạt 2.5:1 nên không dùng.
 - Bo góc 12 / 16 / 24, đổ bóng nhẹ, font Be Vietnam Pro + Noto Sans (đủ dấu tiếng Việt, qua `expo-font`), light mode.
 - Quy chuẩn đầy đủ: `design-system/beesky/MASTER.md` và `design-system/beesky/pages/`.
 - Token khai báo một lần trong `theme/tokens.json`, dùng chung cho `tailwind.config.js` (NativeWind) và style TypeScript.
+- Không hard-code màu / kích thước ngoài `theme/`; icon dùng Ionicons (`@expo/vector-icons`), không dùng emoji.
+
+## Kiểm định (accessibility & responsive)
+
+Quy chuẩn và checklist: `design-system/beesky/MASTER.md` §10–§13. Đã áp dụng:
+
+- Vùng chạm tối thiểu 44×44 (`sizes.touchTarget`, `sizes.control.sm`) — không dựa vào `hitSlop`.
+- Tương phản chữ ≥ 4.5:1 (bảng tương phản trong MASTER §1.4), trạng thái không chỉ dựa vào màu (luôn có chữ + icon).
+- Web: hover / pressed / focus-visible cho mọi phần tử bấm được (`useHover`), duyệt bàn phím đầy đủ
+  (Tab, Enter, mũi tên trong nhóm tab, Esc đóng hộp thoại, giữ focus trong hộp thoại), link "Bỏ qua tới nội dung chính".
+- Tôn trọng "giảm chuyển động" (`prefers-reduced-motion` / Reduce Motion của hệ điều hành): tắt hiệu ứng vào màn,
+  chuyển trang và hộp thoại.
+- Chữ và badge xuống dòng thay vì bị cắt ở 375 / 768 / 1024 / 1440px.
+
+Chạy kiểm định tự động (cần Playwright + Chromium):
+
+```bash
+npx expo start --web --port 8081   # cửa sổ 1
+npm run audit:ui                   # cửa sổ 2 — BASE_URL, WIDTHS để tùy chỉnh
+```
+
+Script đăng nhập bằng tài khoản demo, duyệt mọi màn hình ở 4 độ rộng và báo: vùng chạm < 44px, tương phản < 4.5:1,
+chữ bị cắt, tràn ngang, thiếu con trỏ / hover / vòng focus, lỗi console. Thoát với mã 1 khi còn lỗi.

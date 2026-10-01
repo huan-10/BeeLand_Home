@@ -93,6 +93,23 @@ export async function requestPasswordReset(identifier: string): Promise<{ channe
   return { channel: isEmail(identifier) ? 'email' : 'sms' };
 }
 
+export interface ChangePasswordResult {
+  status: 'changed' | 'unavailable';
+  message: string;
+}
+
+/**
+ * Đổi mật khẩu (hiện chỉ có giao diện): kiểm tra mật khẩu hiện tại trên dữ liệu mock, không lưu mật khẩu mới.
+ * TODO: thay bằng gọi API/database thật (ví dụ POST /auth/change-password) và trả `status: 'changed'`.
+ */
+export async function changePassword(userId: string, currentPassword: string, _newPassword: string): Promise<ChangePasswordResult> {
+  await simulateLatency();
+  if (mockPasswords.get(userId) !== currentPassword) {
+    throw new ServiceError('Mật khẩu hiện tại không đúng.', 'UNAUTHORIZED', 'currentPassword');
+  }
+  return { status: 'unavailable', message: 'Đổi mật khẩu sẽ hoạt động khi ứng dụng kết nối hệ thống. Mật khẩu của bạn chưa thay đổi.' };
+}
+
 export async function logout(_session: AuthSession | null): Promise<void> {
   // TODO: thay bằng gọi API/database thật (ví dụ POST /auth/logout để hủy token)
   await simulateLatency(150, 300);

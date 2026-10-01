@@ -4,10 +4,10 @@
 
 ## Khác Master
 - **Không có điều hướng** (bottom tab / sidebar) — nằm ngoài nhóm `(app)`; được bảo vệ bởi `Stack.Protected guard={!isAuthenticated}`.
-- **Ảnh nền khu đô thị** (`assets/images/auth-city.jpg`) + **gradient overlay** — ngoại lệ của anti-pattern "gradient ngoài thẻ tổng quan":
+- **Ảnh nền khu đô thị** (`assets/images/auth-city.jpg`) + **gradient overlay** — ngoại lệ của anti-pattern "gradient trang trí":
   - Mobile: ảnh cao `sizes.authHero.mobile` + safe area; overlay `overlay.heroScrim` (tối nhẹ phía trên cho chữ trắng) → trong suốt → `overlay.authFadeMid` → `semantic.bg` (mờ dần vào nền).
   - Desktop: panel trái phủ `overlay.brandTint` → `overlay.brandTintStrong` (cam thương hiệu), `overflow: hidden`.
-- Chữ trên ảnh luôn `textOnPrimary` (trắng), logo `inverted`.
+- Chữ trên ảnh luôn `textInverse` (trắng, trên lớp phủ tối/cam đậm ≥ 4.5:1), logo `inverted`.
 - Animation vào màn hình (`FadeIn`, `motion.enter` + `motion.stagger`) — chỉ ở các màn xác thực, tự tắt khi giảm chuyển động.
 
 ## Bố cục

@@ -7,7 +7,7 @@
   - Mobile (< 768px): "Xin chào," (`small`, `textMuted`) ở dòng trên, tên `h2` dòng dưới (không ngắt giữa tên); cả khối là một header đọc liền "Xin chào, {tên}".
   - ≥ 768px: một dòng `h2` "Xin chào, {tên}" (tối đa 2 dòng, không cắt).
 - Chuông: **chấm đỏ** (`danger.600`, viền trắng) khi có thông báo chưa đọc — **không hiển thị số**; tên truy cập là cụm từ đầy đủ: "Thông báo, 2 thông báo chưa đọc" (`lib/notification.ts` → `unreadLabel`).
-- **Banner thương hiệu** (`BrandBanner`): ảnh khu đô thị + gradient cam ngang (`brandTintStrong` → `brandTint` → `brandTintSoft`), bo `xl`, logo `sm` inverted, tiêu đề + mô tả trắng. Chỉ trang trí, không bấm được.
+- **Banner thương hiệu** (`BrandBanner`): ảnh khu đô thị + gradient cam ngang (`brandTintStrong` → `brandTint`, đủ đậm cho chữ trắng ≥ 4.5:1), bo `xl`, logo `sm` inverted, tiêu đề + mô tả trắng. Chỉ trang trí, không bấm được.
 - Không còn thẻ tổng quan gradient và danh sách hợp đồng trên Trang chủ (đã có ở Hợp đồng / Thanh toán).
 
 ## Bố cục — lưới 12 cột (`Grid` / `Col`) trong container tối đa 1100px

@@ -23,11 +23,11 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
       <View style={styles.row}>
         <IconCircle name={isPaid ? 'checkmark-circle' : 'calendar'} tone={meta.tone} />
         <View style={styles.main}>
-          <Text variant="bodyMedium" weight="semibold" numberOfLines={1}>
+          <Text variant="bodyMedium" weight="semibold">
             {installment.name}
           </Text>
           {showContract ? (
-            <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
+            <Text variant="caption" color={semantic.textMuted}>
               {installment.contractCode} · Căn {installment.unitCode}
             </Text>
           ) : null}
@@ -37,7 +37,7 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
         </Text>
       </View>
       <View style={styles.footer}>
-        <Text variant="caption" weight="medium" color={dateColor} style={styles.date} numberOfLines={1}>
+        <Text variant="caption" weight="medium" color={dateColor} style={styles.date}>
           {isPaid && installment.paidDate
             ? `Đã thanh toán ${formatDate(installment.paidDate)}`
             : `Hạn ${formatDate(installment.dueDate)} · ${formatDaysLeft(installment.daysUntilDue)}`}

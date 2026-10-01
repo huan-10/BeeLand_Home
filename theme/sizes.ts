@@ -7,10 +7,3 @@ export const opacity = tokens.opacity;
 
 export type IconSize = keyof typeof sizes.icon;
 
-/** Mở rộng vùng chạm cho phần tử nhỏ để đạt tối thiểu 44×44. */
-export const hitSlop = {
-  top: sizes.hitSlop,
-  bottom: sizes.hitSlop,
-  left: sizes.hitSlop,
-  right: sizes.hitSlop,
-};

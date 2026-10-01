@@ -1,9 +1,10 @@
 import { Fragment } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { hitSlop, interactive, semantic, spacing } from '@/theme';
+import { semantic, spacing } from '@/theme';
 
 import { Icon } from './Icon';
+import { TextLink } from './TextLink';
 import { Text } from './Text';
 
 export interface BreadcrumbItem {
@@ -20,11 +21,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
         <Fragment key={`${item.label}-${i}`}>
           {i > 0 ? <Icon name="chevron-forward" size="xs" color={semantic.iconMuted} /> : null}
           {item.onPress ? (
-            <Pressable onPress={item.onPress} accessibilityRole="link" hitSlop={hitSlop} style={interactive}>
-              <Text variant="smallMedium" color={semantic.textBrand}>
-                {item.label}
-              </Text>
-            </Pressable>
+            <TextLink label={item.label} onPress={item.onPress} />
           ) : (
             <Text variant="smallMedium" color={semantic.textMuted} aria-current="page">
               {item.label}

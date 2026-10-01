@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             role="status"
             accessibilityLiveRegion="polite">
             <Icon name={toneIcon[toast.tone]} color={toneColors[toast.tone].solid} />
-            <Text variant="smallMedium" color={semantic.textOnPrimary} style={styles.text}>
+            <Text variant="smallMedium" color={semantic.textInverse} style={styles.text}>
               {toast.message}
             </Text>
           </Animated.View>

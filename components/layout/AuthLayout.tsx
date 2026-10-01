@@ -57,24 +57,24 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
             style={[StyleSheet.absoluteFill, styles.brandContent]}>
             <Logo size="lg" inverted />
             <FadeIn style={styles.brandBody}>
-              <Text variant="display" color={semantic.textOnPrimary}>
+              <Text variant="display" color={semantic.textInverse}>
                 {AUTH_SLOGAN}
               </Text>
-              <Text variant="body" color={semantic.textOnPrimary} style={styles.brandText}>
+              <Text variant="body" color={semantic.textInverse} style={styles.brandText}>
                 Ứng dụng dành cho khách hàng BeeSky: hợp đồng, lịch thanh toán và phiếu thu trong một nơi.
               </Text>
               <View style={styles.features}>
                 {features.map((f) => (
                   <View key={f} style={styles.feature}>
-                    <Icon name="checkmark-circle" color={semantic.textOnPrimary} />
-                    <Text variant="bodyMedium" color={semantic.textOnPrimary}>
+                    <Icon name="checkmark-circle" color={semantic.textInverse} />
+                    <Text variant="bodyMedium" color={semantic.textInverse}>
                       {f}
                     </Text>
                   </View>
                 ))}
               </View>
             </FadeIn>
-            <Text variant="caption" color={semantic.textOnPrimary}>
+            <Text variant="caption" color={semantic.textInverse}>
               © {new Date().getFullYear()} BeeSky
             </Text>
           </LinearGradient>
@@ -106,11 +106,11 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
           <LinearGradient
             // Tối nhẹ phía trên để chữ trắng dễ đọc, rồi mờ dần vào màu nền.
             colors={[colors.overlay.heroScrim, colors.overlay.heroScrim, colors.overlay.authFadeStart, colors.overlay.authFadeMid, semantic.bg]}
-            locations={[0, 0.45, 0.62, 0.82, 1]}
+            locations={[0, 0.55, 0.7, 0.85, 1]}
             style={[StyleSheet.absoluteFill, styles.heroContent, { paddingTop: insets.top + spacing.lg }]}>
             <FadeIn style={styles.heroText}>
               <Logo size="lg" inverted />
-              <Text variant="bodyMedium" color={semantic.textOnPrimary} style={styles.heroSlogan}>
+              <Text variant="bodyMedium" color={semantic.textInverse} style={styles.heroSlogan}>
                 {AUTH_SLOGAN}
               </Text>
             </FadeIn>

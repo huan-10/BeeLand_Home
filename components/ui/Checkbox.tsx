@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { borderWidth, colors, interactive, radius, semantic, sizes, spacing } from '@/theme';
 
+import { useHover } from '@/hooks/useHover';
+
 import { Icon } from './Icon';
 import { Text } from './Text';
 
@@ -15,7 +17,8 @@ export interface CheckboxProps {
 
 /** Ô đánh dấu có nhãn; cả hàng là vùng chạm (cao tối thiểu 44). */
 export function Checkbox({ label, checked, onChange, error, disabled }: CheckboxProps) {
-  const borderColor = error ? colors.danger[500] : checked ? semantic.brand : colors.gray[300];
+  const { hovered, hoverProps } = useHover();
+  const borderColor = error ? colors.danger[500] : checked || hovered ? semantic.brand : colors.gray[400];
   return (
     <View>
       <Pressable
@@ -23,10 +26,16 @@ export function Checkbox({ label, checked, onChange, error, disabled }: Checkbox
         disabled={disabled}
         accessibilityRole="checkbox"
         accessibilityLabel={label}
-        accessibilityState={{ checked, disabled }}
+        aria-checked={checked}
+        aria-disabled={!!disabled}
+        {...hoverProps}
         style={[styles.row, interactive]}>
-        <View style={[styles.box, { borderColor, backgroundColor: checked ? semantic.brand : semantic.surface }]}>
-          {checked ? <Icon name="checkmark" size="sm" color={semantic.textOnPrimary} /> : null}
+        <View
+          style={[
+            styles.box,
+            { borderColor, backgroundColor: checked ? (hovered ? semantic.brandPressed : semantic.brand) : hovered ? colors.primary[50] : semantic.surface },
+          ]}>
+          {checked ? <Icon name="checkmark" size="sm" color={semantic.textOnBrand} /> : null}
         </View>
         <Text variant="small" color={semantic.textSecondary} style={styles.label}>
           {label}

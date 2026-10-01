@@ -5,7 +5,6 @@ import {
   borderWidth,
   colors,
   fontSizes,
-  hitSlop,
   interactive,
   radius,
   resolveFontFamily,
@@ -15,6 +14,8 @@ import {
   spacing,
   type IconName,
 } from '@/theme';
+
+import { useHover } from '@/hooks/useHover';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -35,6 +36,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const [focused, setFocused] = useState(false);
   const [secure, setSecure] = useState(true);
   const messageId = useId();
+  const toggleHover = useHover();
 
   const borderColor = error ? colors.danger[500] : focused ? semantic.focusRing : semantic.border;
 
@@ -52,7 +54,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           accessibilityLabel={label ?? rest.placeholder}
           aria-describedby={error || hint ? messageId : undefined}
           aria-invalid={Boolean(error)}
-          placeholderTextColor={semantic.textMuted}
+          placeholderTextColor={semantic.placeholder}
           secureTextEntry={password ? secure : rest.secureTextEntry}
           editable={editable}
           onFocus={(e) => {
@@ -69,8 +71,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         {password ? (
           <Pressable
             onPress={() => setSecure((s) => !s)}
-            hitSlop={hitSlop}
-            style={[styles.toggle, interactive]}
+            {...toggleHover.hoverProps}
+            style={[styles.toggle, interactive, toggleHover.hovered && styles.toggleHover]}
             accessibilityRole="button"
             accessibilityLabel={secure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu'}>
             <Icon name={secure ? 'eye-outline' : 'eye-off-outline'} color={semantic.textMuted} />
@@ -118,6 +120,15 @@ const styles = StyleSheet.create({
     ...fontSizes.base,
     ...(Platform.OS === 'web' ? { outlineWidth: 0 } : null),
   },
-  toggle: { minWidth: sizes.icon.lg, alignItems: 'center', justifyContent: 'center' },
+  // Vùng chạm 44×44; lề âm để icon vẫn thẳng hàng mép phải ô nhập.
+  toggle: {
+    width: sizes.touchTarget,
+    height: sizes.touchTarget,
+    marginRight: -spacing.ms,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleHover: { backgroundColor: colors.gray[100] },
   message: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
 });

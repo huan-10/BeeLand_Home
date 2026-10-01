@@ -59,7 +59,7 @@ export default function HomeScreen() {
             {user ? <Avatar name={user.fullName} /> : null}
             <View style={styles.flex}>
               {isWide ? (
-                <Text variant="h2" numberOfLines={2} accessibilityRole="header">
+                <Text variant="h2" accessibilityRole="header">
                   Xin chào, {user?.fullName ?? 'Quý khách'}
                 </Text>
               ) : (
@@ -68,7 +68,7 @@ export default function HomeScreen() {
                   <Text variant="small" color={semantic.textMuted}>
                     Xin chào,
                   </Text>
-                  <Text variant="h2" numberOfLines={2}>
+                  <Text variant="h2">
                     {user?.fullName ?? 'Quý khách'}
                   </Text>
                 </View>

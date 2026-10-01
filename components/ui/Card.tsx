@@ -24,10 +24,10 @@ export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, 
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        onHoverIn={hoverLift ? () => setHovered(true) : undefined}
-        onHoverOut={hoverLift ? () => setHovered(false) : undefined}
+        onHoverIn={() => setHovered(true)}
+        onHoverOut={() => setHovered(false)}
         // Phản hồi nhấn bằng opacity, không scale để không xê dịch bố cục.
-        style={({ pressed }) => [cardStyle, interactive, hovered && styles.lifted, pressed && styles.pressed]}
+        style={({ pressed }) => [cardStyle, interactive, hovered && styles.hover, hovered && hoverLift && styles.lifted, pressed && styles.pressed]}
         {...rest}>
         {children}
       </Pressable>
@@ -44,6 +44,8 @@ export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, 
 const styles = StyleSheet.create({
   card: { backgroundColor: semantic.surface, borderRadius: radius.lg },
   bordered: { borderWidth: borderWidth.hairline, borderColor: semantic.borderSubtle },
+  // Web: mọi thẻ bấm được đổi viền khi hover; `hoverLift` nâng thêm.
+  hover: { borderColor: semantic.borderHover },
   lifted: { ...shadows.md, transform: [{ translateY: -spacing['2xs'] }] },
   pressed: { opacity: opacity.pressed },
 });

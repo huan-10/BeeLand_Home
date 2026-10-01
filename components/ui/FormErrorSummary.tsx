@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, View, findNodeHandle } from 'react-native';
 
-import { borderWidth, colors, hitSlop, interactive, radius, spacing, toneColors } from '@/theme';
+import { borderWidth, colors, interactive, radius, sizes, spacing, toneColors } from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -65,7 +65,6 @@ export const FormErrorSummary = forwardRef<FormErrorSummaryHandle, FormErrorSumm
           onPress={() => onSelect(e.field)}
           accessibilityRole="link"
           accessibilityLabel={`${e.message}. Chuyển tới ô nhập`}
-          hitSlop={hitSlop}
           style={[styles.item, interactive]}>
           <Text variant="small" color={colors.danger[700]} style={styles.underline}>
             {e.message}
@@ -87,6 +86,6 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
-  item: { paddingLeft: spacing.xl - spacing.xs },
+  item: { paddingLeft: spacing.xl - spacing.xs, minHeight: sizes.touchTarget, justifyContent: 'center' },
   underline: { textDecorationLine: 'underline' },
 });

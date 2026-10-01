@@ -116,3 +116,36 @@ export function summarizeSchedule(installments: PaymentInstallmentView[]): Sched
 export function isFullyPaid(paidPercent: number): boolean {
   return paidPercent >= 100;
 }
+
+export interface InstallmentMonthGroup {
+  /** yyyy-MM */
+  key: string;
+  items: PaymentInstallmentView[];
+  total: number;
+}
+
+/** Ngày dùng để xếp lịch: đã trả → ngày trả, chưa trả → hạn thanh toán. */
+export function scheduleDate(i: PaymentInstallmentView): string {
+  return i.status === 'paid' && i.paidDate ? i.paidDate : i.dueDate;
+}
+
+/** Nhóm theo tháng, giữ nguyên thứ tự danh sách đầu vào (đã sắp xếp). */
+export function groupInstallmentsByMonth(items: PaymentInstallmentView[]): InstallmentMonthGroup[] {
+  const groups: InstallmentMonthGroup[] = [];
+  for (const item of items) {
+    const key = scheduleDate(item).slice(0, 7);
+    let g = groups.find((x) => x.key === key);
+    if (!g) {
+      g = { key, items: [], total: 0 };
+      groups.push(g);
+    }
+    g.items.push(item);
+    g.total += item.status === 'paid' ? item.paidAmount : item.remainingAmount;
+  }
+  return groups;
+}
+
+/** Các đợt quá hạn, quá hạn lâu nhất trước. */
+export function overdueInstallments(items: PaymentInstallmentView[]): PaymentInstallmentView[] {
+  return items.filter((i) => i.status === 'overdue').sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+}

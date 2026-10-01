@@ -22,7 +22,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
           <Text variant="caption" color={semantic.textMuted}>
             Đợt thanh toán tiếp theo
           </Text>
-          <Text variant="bodyMedium" weight="semibold" numberOfLines={1}>
+          <Text variant="bodyMedium" weight="semibold">
             {installment.name}
           </Text>
         </View>

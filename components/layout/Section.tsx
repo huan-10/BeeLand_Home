@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, Text } from '@/components/ui';
-import { hitSlop, interactive, semantic, spacing } from '@/theme';
+import { useHover } from '@/hooks/useHover';
+import { interactive, opacity, semantic, sizes, spacing } from '@/theme';
 
 export interface SectionProps {
   title: string;
@@ -12,6 +13,7 @@ export interface SectionProps {
 }
 
 export function Section({ title, actionLabel, onAction, children }: SectionProps) {
+  const { hovered, hoverProps } = useHover();
   return (
     <View style={styles.section}>
       <View style={styles.header}>
@@ -19,8 +21,12 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
           {title}
         </Text>
         {actionLabel && onAction ? (
-          <Pressable onPress={onAction} accessibilityRole="link" hitSlop={hitSlop} style={[styles.action, interactive]}>
-            <Text variant="smallMedium" color={semantic.textBrand}>
+          <Pressable
+            onPress={onAction}
+            accessibilityRole="link"
+            {...hoverProps}
+            style={({ pressed }) => [styles.action, interactive, pressed && styles.pressed]}>
+            <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={hovered && styles.underline}>
               {actionLabel}
             </Text>
             <Icon name="chevron-forward" size="sm" color={semantic.textBrand} />
@@ -35,5 +41,7 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
 const styles = StyleSheet.create({
   section: { gap: spacing.ms },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'] },
+  action: { flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], minHeight: sizes.touchTarget },
+  pressed: { opacity: opacity.pressed },
+  underline: { textDecorationLine: 'underline' },
 });

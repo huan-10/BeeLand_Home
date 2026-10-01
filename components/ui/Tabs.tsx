@@ -3,6 +3,8 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { borderWidth, colors, interactive, semantic, sizes, spacing } from '@/theme';
 
+import { useHover } from '@/hooks/useHover';
+
 import { Text } from './Text';
 
 export interface TabItem<K extends string> {
@@ -68,28 +70,28 @@ export function Tabs<K extends string>({ id, items, value, onChange, accessibili
       {items.map((t) => {
         const selected = t.key === value;
         const label = t.count === undefined ? t.label : `${t.label} (${t.count})`;
-        return (
-          <Pressable
-            key={t.key}
-            nativeID={tabId(id, t.key)}
-            role="tab"
-            aria-selected={selected}
-            accessibilityLabel={label}
-            tabIndex={selected ? 0 : -1}
-            onPress={() => onChange(t.key)}
-            style={({ pressed }) => [styles.tab, interactive, selected && styles.selected, pressed && styles.pressed]}>
-            <Text
-              variant="smallMedium"
-              weight={selected ? 'bold' : 'medium'}
-              color={selected ? semantic.textBrand : semantic.textMuted}
-              align="center"
-              numberOfLines={2}>
-              {label}
-            </Text>
-          </Pressable>
-        );
+        return <TabButton key={t.key} id={id} tabKey={t.key} label={label} selected={selected} onPress={() => onChange(t.key)} />;
       })}
     </View>
+  );
+}
+
+function TabButton({ id, tabKey, label, selected, onPress }: { id: string; tabKey: string; label: string; selected: boolean; onPress: () => void }) {
+  const { hovered, hoverProps } = useHover();
+  return (
+    <Pressable
+      nativeID={tabId(id, tabKey)}
+      role="tab"
+      aria-selected={selected}
+      accessibilityLabel={label}
+      tabIndex={selected ? 0 : -1}
+      onPress={onPress}
+      {...hoverProps}
+      style={({ pressed }) => [styles.tab, interactive, selected && styles.selected, (pressed || hovered) && styles.pressed]}>
+      <Text variant="smallMedium" weight={selected ? 'bold' : 'medium'} color={selected ? semantic.textBrand : semantic.textMuted} align="center">
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 

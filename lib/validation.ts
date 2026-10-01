@@ -74,3 +74,23 @@ export function validateRegisterForm(values: RegisterFormValues): FormErrors<Reg
 export function validateForgotForm(identifier: string): FormErrors<'identifier'> {
   return { identifier: validateIdentifier(identifier) };
 }
+
+export type ChangePasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
+
+export interface ChangePasswordValues {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export function validateChangePasswordForm(values: ChangePasswordValues): FormErrors<ChangePasswordField> {
+  const errors: FormErrors<ChangePasswordField> = {};
+  if (!values.currentPassword) errors.currentPassword = 'Vui lòng nhập mật khẩu hiện tại';
+  if (!values.newPassword) errors.newPassword = 'Vui lòng nhập mật khẩu mới';
+  else if (values.newPassword.length < MIN_PASSWORD_LENGTH)
+    errors.newPassword = `Mật khẩu mới phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự`;
+  else if (values.newPassword === values.currentPassword) errors.newPassword = 'Mật khẩu mới phải khác mật khẩu hiện tại';
+  if (!values.confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu mới';
+  else if (values.confirmPassword !== values.newPassword) errors.confirmPassword = 'Mật khẩu nhập lại không khớp';
+  return errors;
+}

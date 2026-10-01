@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { borderWidth, colors, interactive, radius, semantic, sizes, spacing } from '@/theme';
 
+import { useHover } from '@/hooks/useHover';
+
 import { Icon } from './Icon';
 import { Text } from './Text';
 
@@ -15,6 +17,7 @@ export interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, subtitle, onBack, right }: ScreenHeaderProps) {
+  const { hovered, hoverProps } = useHover();
   return (
     <View style={styles.container}>
       {onBack ? (
@@ -22,16 +25,17 @@ export function ScreenHeader({ title, subtitle, onBack, right }: ScreenHeaderPro
           onPress={onBack}
           accessibilityRole="button"
           accessibilityLabel="Quay lại"
-          style={({ pressed }) => [styles.back, interactive, pressed && styles.backPressed]}>
+          {...hoverProps}
+          style={({ pressed }) => [styles.back, interactive, (pressed || hovered) && styles.backPressed]}>
           <Icon name="chevron-back" size="lg" color={colors.gray[800]} />
         </Pressable>
       ) : null}
       <View style={styles.titles}>
-        <Text variant="h1" numberOfLines={2} accessibilityRole="header">
+        <Text variant="h1" accessibilityRole="header">
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="small" color={semantic.textMuted} numberOfLines={2}>
+          <Text variant="small" color={semantic.textMuted}>
             {subtitle}
           </Text>
         ) : null}

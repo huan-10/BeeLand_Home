@@ -42,12 +42,16 @@
 | Viền | `semantic.border` / `borderSubtle` | `#E5E7EB` / `#F3F4F6` |
 | Chữ chính | `semantic.text` | `#111827` |
 | Chữ phụ | `semantic.textSecondary` | `#374151` |
-| Chữ mờ | `semantic.textMuted` | `#6B7280` |
+| Chữ mờ | `semantic.textMuted` | `#4B5563` (gray-600) |
+| Placeholder ô nhập | `semantic.placeholder` | `#6B7280` (gray-500) |
 | Chữ cam | `semantic.textBrand` | `#AD5A0C` |
-| Chữ trên nền cam | `semantic.textOnPrimary` | `#FFFFFF` |
+| Chữ / icon trên nền cam đặc `#F08A24` | `semantic.textOnBrand` | `#111827` (gray-900) |
+| Chữ trên lớp phủ tối, ảnh, toast | `semantic.textInverse` | `#FFFFFF` |
+| Chữ / icon trên nền `solid` của sắc thái | `toneColors[t].onSolid` | gray-900 (primary, warning) · trắng (success, info, danger, neutral) |
+| Viền khi hover | `semantic.borderHover` | `#FACC9E` (primary-200) |
 | Icon trang trí | `semantic.iconMuted` | `#9CA3AF` (không dùng cho chữ) |
 
-**Lớp phủ** (`colors.overlay`): `onPrimarySubtle` / `onPrimaryMuted` (trắng 15% / 30% trên nền cam) · `heroScrim` (tối 45% phía trên ảnh) · `authFadeStart` / `authFadeMid` (nền trang 0% / 55%, mờ ảnh vào nền) · `brandTint` / `brandTintStrong` / `brandTintSoft` (cam phủ ảnh panel/banner thương hiệu) · `scrim` (modal).
+**Lớp phủ** (`colors.overlay`): `heroScrim` (tối 62% phía trên ảnh) · `authFadeStart` / `authFadeMid` (nền trang 0% / 55%, mờ ảnh vào nền) · `brandTint` (primary-800, 88%) / `brandTintStrong` (primary-900, 94%) — cam đậm phủ ảnh panel/banner thương hiệu, đủ để chữ trắng ≥ 4.5:1 cả trên vùng sáng của ảnh · `scrim` (modal).
 
 ### 1.3 Màu trạng thái — badge pastel [Mockup]
 
@@ -62,22 +66,24 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`toneCo
 | `primary` (cam) | `#FEF5EC` | `#AD5A0C` | `#F08A24` | Đến hạn, thanh toán một phần |
 | `neutral` (xám) | `#F3F4F6` | `#374151` | `#6B7280` | Chưa đến hạn, phiếu thu đã hủy |
 
-### 1.4 Tương phản — [Skill] áp lên màu [Mockup]
+### 1.4 Tương phản — [Skill] áp lên màu [Mockup] (đã kiểm định tự động)
 
-Đã đo theo WCAG (`color-contrast`, `color-accessible-pairs`):
+Đo theo WCAG (`color-contrast`, `color-accessible-pairs`) bằng script kiểm định (§13) trên mọi màn ở 375/768/1024/1440px — **mọi chữ ≥ 4.5:1** (chữ lớn ≥ 3:1):
 
-| Cặp | Tỷ lệ | Kết luận |
-|-----|-------|----------|
-| Chữ `primary.700` trên trắng | 4.95:1 | ✅ Dùng cho mọi chữ màu cam |
-| Chữ `gray.500` trên trắng / trên nền trang | 4.83 / 4.51:1 | ✅ Chữ mờ tối thiểu |
-| Chữ `gray.400` trên trắng | 2.54:1 | ❌ Chỉ dùng cho icon trang trí |
+| Cặp | Tỷ lệ | Quy tắc |
+|-----|-------|---------|
+| Chữ `primary.700` trên trắng / trên `primary.50` | 4.95 / 4.59:1 | Mọi chữ màu cam (link, số tiền, tab chọn) |
+| Chữ `gray.600` (`textMuted`) trên trắng / nền pastel | 7.6 / ≥ 7:1 | Chữ phụ, ngày, chú thích |
+| Placeholder `gray.500` trên trắng | 4.83:1 | Chỉ cho placeholder (ô nhập nền trắng) |
+| Chữ `gray.400` | 2.54:1 | ❌ Không dùng cho chữ — chỉ icon trang trí |
 | Chữ badge pastel (6 sắc thái) | 4.6 – 9.4:1 | ✅ |
-| **Chữ trắng trên `primary.500`** | **2.51:1** | ⚠️ **Ngoại lệ có chủ đích — xem bên dưới** |
+| **Chữ `gray.900` trên nền cam `#F08A24`** | **7.07:1** | Nút primary, chip đang chọn, dấu tick checkbox — **giữ nguyên màu nền cam của mockup** |
+| ~~Chữ trắng trên `#F08A24`~~ | 2.51:1 | ❌ Đã bỏ (trước đây là ngoại lệ chờ duyệt; yêu cầu kiểm định 4.5:1 đã quyết định) |
+| Chữ trắng trên lớp phủ `brandTint` / `brandTintStrong` / `heroScrim` | ≥ 4.5:1 (kể cả vùng sáng của ảnh) | Banner, panel đăng nhập, hero mobile |
+| Avatar: chữ `primary.800` trên `primary.100` | 5.9:1 | |
+| Nút danger: chữ `danger.700` trên trắng / `danger.50` | 6.5 / 6:1 | |
 
-**Ngoại lệ thương hiệu (mockup vs skill):** mockup dùng nút cam `#F08A24` chữ trắng; skill yêu cầu 4.5:1. Theo quy tắc ưu tiên, **giữ màu mockup** và giảm thiểu:
-- Nhãn nút luôn **semibold ≥ 14px** và có icon/ngữ cảnh rõ ràng; không đặt chữ thường cỡ nhỏ (caption) trên nền `primary.500`.
-- Thẻ tổng quan gradient đi từ `primary.500` → `primary.700` để phần lớn diện tích chữ trắng đạt ≥ 3:1.
-- Nếu cần đạt AA tuyệt đối, phương án dự phòng là nền nút `primary.700` (`#AD5A0C`, 4.95:1) — **cần chủ sản phẩm duyệt** vì làm tối màu thương hiệu.
+**Miễn trừ:** logo/wordmark "BeeSky" (WCAG 1.4.3 không áp dụng cho logotype); phần tử `disabled`.
 
 ---
 
@@ -137,7 +143,7 @@ Nhịp 4/8 (`spacing-scale`). Token `spacing` (cũng là thang spacing của Tai
 | `radius.sm` | 8 | Skeleton dòng chữ |
 | `radius.md` | 12 | Nút, ô nhập, ô icon, mục sidebar |
 | `radius.lg` | 16 | **Thẻ trắng** (Card), thông báo |
-| `radius.xl` | 24 | Thẻ tổng quan gradient |
+| `radius.xl` | 24 | Banner thương hiệu, hộp thoại |
 | `radius.full` | 9999 | Badge, chip, thanh tiến độ, avatar, nút tròn timeline |
 
 ## 5. Đổ bóng — [Mockup] (thang nhất quán theo [Skill] `elevation-consistent`)
@@ -145,7 +151,7 @@ Nhịp 4/8 (`spacing-scale`). Token `spacing` (cũng là thang spacing của Tai
 | Token | Giá trị | Dùng cho |
 |-------|---------|----------|
 | `shadows.sm` | `0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06)` | Thẻ mặc định |
-| `shadows.md` | `0 4px 12px rgba(16,24,40,.08)` | Thẻ tổng quan, thẻ form/phiếu thu |
+| `shadows.md` | `0 4px 12px rgba(16,24,40,.08)` | Thẻ form/phiếu thu |
 | `shadows.lg` | `0 12px 32px rgba(16,24,40,.12)` | Modal (dự phòng) |
 | `shadows.navTop` | `0 -2px 12px rgba(16,24,40,.04)` | Bottom tab |
 | `shadows.focusHalo` | vòng 3px `primary.100` | Ô nhập khi focus |
@@ -158,8 +164,8 @@ Thẻ = nền trắng + viền `borderSubtle` 1px + `shadows.sm`. Không dùng g
 
 | Token | Giá trị | Quy tắc |
 |-------|---------|---------|
-| `sizes.touchTarget` | 44 | Mọi phần tử bấm được ≥ 44×44 (iOS), dùng `hitSlop` khi phần nhìn thấy nhỏ hơn |
-| `sizes.control` | sm 40 · md 48 · lg 56 | Chiều cao nút/ô nhập (sm + `hitSlop`) |
+| `sizes.touchTarget` | 44 | **Hộp bấm thật** (DOM/native) của mọi phần tử tương tác ≥ 44 ở cả hai chiều: link chữ (`TextLink`, link Section, Breadcrumb) có `minHeight` 44; nút icon 44×44; nút hiện/ẩn mật khẩu 44×44 |
+| `sizes.control` | sm 44 · md 48 · lg 56 | Chiều cao nút/chip/ô nhập — **không dùng hitSlop để bù** (web không có hitSlop) |
 | `sizes.icon` | xs 12 · sm 16 · md 20 · lg 24 · xl 32 | Không dùng cỡ icon tùy ý |
 | `sizes.iconBox` | sm 36 · md 40 · lg 44 · xl 48 · hero 72 | Ô icon pastel (`IconCircle`) |
 | `sizes.avatar` | sm 36 · md 44 · lg 64 | Avatar chữ cái đầu |
@@ -199,20 +205,20 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 
 | Component | Thông số | Nguồn |
 |-----------|----------|-------|
-| **Button** | `primary` nền `primary.500`, nhấn `primary.600`, chữ trắng semibold · `secondary` nền `primary.50`, chữ `primary.700`, viền `primary.100` · `ghost` trong suốt, chữ `gray.700` · `danger` nền trắng, chữ `danger.600`, viền `danger.100`. Cao 40/48/56, bo `md`, có `loading` (spinner + `busy`) và `disabled` (opacity 0.5). Mỗi màn hình chỉ 1 nút primary. | [Mockup] màu · [Skill] trạng thái |
+| **Button** | `primary` nền `primary.500`, hover/nhấn `primary.600`, **chữ `gray.900`** semibold · `secondary` nền `primary.50` → hover `primary.100`, chữ `primary.700`, viền `primary.100` · `outline` trắng viền `gray.200` → hover `gray.50` · `ghost` trong suốt → hover `gray.100`, chữ `gray.700` · `danger` nền trắng → hover `danger.50`, chữ `danger.700`, viền `danger.100`. Cao 44/48/56, bo `md`, có `loading` (spinner + `aria-busy`) và `disabled` (opacity 0.5). Nhãn được xuống dòng, không cắt. Mỗi màn hình tối đa 1 nút primary. | [Mockup] màu · [Skill] trạng thái, tương phản |
 | **Input** | Nhãn hiển thị phía trên (không chỉ placeholder), cao 48, viền 1.5px `gray.200` → focus `primary.500` + halo, lỗi `danger.500` + dòng lỗi kèm icon ngay dưới ô (`aria-describedby`, `role="alert"`); nút hiện/ẩn mật khẩu có nhãn. | [Skill] |
 | **Card** | Trắng, bo `lg`, viền `borderSubtle`, `shadows.sm`, padding `md` (`none` khi có ảnh tràn viền). Bấm được → phản hồi opacity 0.85, **không scale**. `hoverLift` (web): hover dịch lên 2px + `shadows.md` (transform, không đổi bố cục) — dùng cho thẻ danh sách. | [Mockup] + [Skill] |
 | **Badge** | Viên thuốc pastel (§1.3), chữ caption semibold, tùy chọn chấm màu/icon. Màu luôn đi kèm chữ. Luôn một dòng, không co (`flexShrink: 0`) — phần tử bên cạnh co/xuống dòng thay. | [Mockup] + [Skill] `color-not-only`, compact label overflow |
-| **ProgressBar** | Cao 8, bo tròn, track `gray.100` (trên nền cam: overlay trắng 30%), fill theo sắc thái: `primary` (cam) khi đang trả, `success` (xanh lá) khi 100% hoặc trên thẻ cam. Có `accessibilityValue` + nhãn có chữ. | [Mockup] |
+| **ProgressBar** | Cao 8, bo tròn, track `gray.100`, fill theo sắc thái: `primary` (cam) khi đang trả, `success` (xanh lá) khi 100%. Có `accessibilityValue` + nhãn có chữ. | [Mockup] |
 | **Timeline** | Nút tròn 28 viền 2px, **luôn có icon theo trạng thái**: đã trả = xanh lá đặc + dấu tick (đường nối tô xanh) · đến hạn = cam đặc + đồng hồ báo thức · chưa đến hạn = viền xám + đồng hồ · quá hạn = đỏ + cảnh báo. Mỗi đợt: tên + Badge (chữ + icon), số tiền `h3`, % HĐ + ngày; tên truy cập đầy đủ mỗi dòng. | [Mockup] + [Skill] |
-| **Chip lọc / tab lọc** | Viên thuốc cao 40 (+hitSlop), chọn: nền `primary.500` chữ trắng semibold; thường: trắng viền `gray.200`; tùy chọn số lượng "(n)". Dùng `role="tab"` trong vùng `role="tablist"` với style `chipRow` (**xuống dòng**, không cuộn ngang). | [Mockup] + [Skill] chip collection reflow |
+| **Chip lọc / tab lọc** | Viên thuốc cao 44 (`sizes.control.sm`), chọn: nền `primary.500` chữ `textOnBrand` (gray-900) semibold, hover `primary.600`; thường: trắng viền `gray.200`, hover viền cam + nền `primary.50`; tùy chọn số lượng "(n)". Dùng `role="tab"` trong vùng `role="tablist"` với style `chipRow` (**xuống dòng**, không cuộn ngang). | [Mockup] + [Skill] chip collection reflow |
 | **IconCircle** | Ô bo `md`, nền pastel theo sắc thái, icon tông đậm. | [Mockup] |
 | **Skeleton** | Khối `gray.200` nhấp nháy opacity 0.5↔1 (800ms); **dừng khi bật giảm chuyển động**. Giữ đúng kích thước nội dung thật. | [Skill] |
 | **EmptyState / ErrorState** | Icon tròn 72 pastel, tiêu đề `h3`, mô tả, một hành động (Xóa bộ lọc / Thử lại). Lỗi có `role="alert"`. | [Skill] |
 | **ScreenHeader** | Tiêu đề `h1` (role header) + phụ đề; nút quay lại 44×44 có nhãn "Quay lại". | [Skill] |
 | **Button `outline`** | Nền trắng, viền `gray.200`, chữ `gray.900`, nhấn `gray.50`. Dùng cho đăng nhập bên thứ ba (Google/Apple). | [Skill] `primary-action` |
-| **Checkbox** | Ô 22 bo `xs`, viền 2px `gray.300` → chọn: nền `primary.500` + dấu tích trắng; cả hàng nhãn là vùng chạm ≥ 44; `role="checkbox"` + `checked`; lỗi hiển thị ngay dưới. | [Skill] |
-| **TextLink** | Chữ `smallMedium` semibold `textBrand`, `role="link"`, hitSlop 8. | [Skill] tương phản + vùng chạm |
+| **Checkbox** | Ô 22 bo `xs`, viền 2px `gray.400` (hover viền cam) → chọn: nền `primary.500` + dấu tích `textOnBrand`; cả hàng nhãn là vùng chạm ≥ 44; `role="checkbox"` + `checked`; lỗi hiển thị ngay dưới. | [Skill] |
+| **TextLink** | Chữ `smallMedium` semibold `textBrand`, `role="link"`, cao tối thiểu 44 (`sizes.touchTarget`), hover gạch chân. | [Skill] tương phản + vùng chạm |
 | **Divider** | Đường kẻ 1px `border`, tùy chọn chữ `caption` ở giữa ("hoặc tiếp tục với"). | [Mockup] |
 | **FormErrorSummary** | Hộp `danger` pastel đầu form, tiêu đề "Vui lòng kiểm tra lại thông tin" + danh sách lỗi dạng link tới ô; nhận focus sau khi gửi thất bại với **≥ 2 lỗi** (1 lỗi → focus thẳng vào ô); lỗi chi tiết vẫn hiện dưới từng ô. | [Skill] `error-summary`, `focus-management` |
 | **Toast** | `ToastProvider` ở root + `useToast().show(msg, tone)`. Nền `gray.900`, chữ trắng, icon theo tông, tối đa `sizes.toastMaxWidth`, dưới cùng màn hình (trên safe area), tự ẩn sau `motion.toast` (3.5s), `role="status"`, không lấy focus. | [Skill] `toast-dismiss`, `toast-accessibility` |
@@ -228,7 +234,6 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **StickyActionBar** | Thanh trắng dính đáy (mobile/tablet), viền trên + `shadows.navTop`, chứa 1 nút primary full width; đặt ngoài ScrollView (prop `footer` của `Screen`) để không che nội dung; tự chừa vùng an toàn khi không có bottom tab. | [Skill] sticky-navigation, safe-area |
 | **DataTable** | Bảng cho màn ≥ 1024px: khung trắng bo `lg` viền `borderSubtle`; hàng tiêu đề nền `surfaceMuted`, chữ `overline` `textMuted`; dòng cao ≥ 56, phân cách 1px; cột số căn phải `tabular-nums`. Semantics `table` / `row` / `columnheader` / `cell`. Dòng bấm được: hover `primary.50` + pointer, focus Tab, Enter mở. Màn hẹp dùng danh sách thẻ thay bảng. | [Skill] table handling |
 | **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
-| **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
 ## 10. Hiệu ứng & chuyển động — [Skill]
 
@@ -238,6 +243,9 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 - Chỉ animate `opacity`/`transform`; tối đa 1–2 phần tử động mỗi màn hình.
 - Tôn trọng giảm chuyển động: `useReducedMotion()` (native) và `@media (prefers-reduced-motion)` (web, trong `app/+html.tsx`).
 - Web: `:focus-visible` hiện viền 2px `primary.500`; `cursor: pointer` cho mọi phần tử bấm (`interactive` trong `theme/motion.ts`).
+- **Mọi phần tử tương tác có trạng thái hover nhìn thấy được** (web) qua `useHover()` (`hooks/useHover.ts`): nút đổi nền; chip viền cam + nền `primary.50`; link chữ gạch chân; thẻ bấm được viền `borderHover` (thẻ danh sách thêm `hoverLift`); mục menu/sidebar/tab nền nhạt; mục đang chọn đậm thêm (`primary.100`). Hover không làm đổi kích thước.
+- **Bàn phím (web)**: thứ tự Tab theo thứ tự hiển thị; liên kết **"Bỏ qua tới nội dung chính"** là phần tử focus đầu tiên (ẩn cho tới khi focus, chuyển focus tới vùng `role="main"` của `Screen`); tab nội dung dùng ←/→/Home/End; hộp thoại giữ focus, Esc đóng.
+- **Giảm chuyển động**: Skeleton dừng nhấp nháy, `FadeIn`/Toast/Dialog không hiệu ứng, chuyển màn Stack `animation: 'none'` (native), CSS transition/animation ~0ms (web).
 
 ## 11. Phong cách — [Mockup]
 
@@ -249,14 +257,18 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 
 - ❌ Mã hex, `rgba()` hoặc số pixel viết trực tiếp ngoài `theme/` (dùng token) — [Skill] `color-semantic`
 - ❌ Emoji làm icon; trộn nhiều bộ icon; trộn outline/filled cùng cấp — [Skill]
-- ❌ Chữ cam `primary.500` trên nền trắng; chữ `gray.400` — [Skill] tương phản
+- ❌ Chữ cam `primary.500` trên nền trắng; chữ `gray.400`; **chữ trắng trên nền cam `#F08A24`** (dùng `textOnBrand`) — [Skill] tương phản
+- ❌ `numberOfLines` / `adjustsFontSizeToFit` cắt hoặc thu nhỏ chữ thiết yếu (tên đợt, mã HĐ, số tiền) — cho xuống dòng — [Skill] text reflow
+- ❌ Dùng `hitSlop` để "bù" vùng chạm < 44 (không có tác dụng trên web) — [Skill]
+- ❌ `accessibilityState={{ selected / checked / disabled }}` — react-native-web không xuất ra DOM; dùng `aria-selected`, `aria-checked`, `aria-disabled`, `aria-busy` (chạy được cả native) — [Skill] + [Dự án]
+- ❌ Phần tử bấm được không có hover trên web; hành động nguy hiểm (đăng xuất) không có xác nhận — [Skill]
 - ❌ Chỉ dùng màu để biểu thị trạng thái (luôn kèm chữ/icon) — [Skill]
 - ❌ Vùng chạm < 44pt; nút chỉ có icon mà không có `accessibilityLabel` — [Skill]
 - ❌ Hiệu ứng nhấn scale làm xê dịch bố cục; animate width/height — [Skill]
 - ❌ Placeholder thay cho nhãn; lỗi chỉ hiện ở đầu form — [Skill]
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
-- ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
+- ❌ Glassmorphism, blur trang trí, gradient ngoài logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
 - ❌ Modal không đóng được bằng Esc/Back, không giữ focus, hoặc không trả focus về nút mở — [Skill]
 - ❌ Thanh/nút cố định che nội dung hoặc phần tử đang focus — [Skill]
 - ❌ Bảng dữ liệu trên màn hẹp (tràn / cuộn ngang) — dùng thẻ — [Skill]
@@ -267,31 +279,33 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 
 ## 13. Checklist trước khi giao (bắt buộc trước mỗi pull request về giao diện)
 
+**Kiểm định tự động** — chạy `npm run audit:ui` (`scripts/ui-audit.js`, README › Kiểm định) khi dev server web đang chạy. Script duyệt mọi màn ở 375 / 768 / 1024 / 1440px và báo: vùng chạm < 44, tương phản chữ < 4.5:1 (lấy mẫu gradient tại vị trí chữ, ảnh tính cả vùng tối và sáng), chữ bị cắt, cuộn ngang, thiếu focus ring, thiếu `cursor: pointer`, thiếu hover, tab/checkbox thiếu `aria-selected`/`aria-checked`, lỗi/cảnh báo console. **Kết quả phải rỗng** (trừ mục đã ghi rõ là sai lệch của công cụ).
+
 **Hình ảnh** — [Skill]
 - [ ] Không emoji; mọi icon là Ionicons qua `<Icon>`, cỡ theo `sizes.icon`
-- [ ] Không hex/rgba/pixel trực tiếp ngoài `theme/` (kiểm tra bằng grep, xem CLAUDE.md)
+- [ ] Không hex/rgba/pixel trực tiếp ngoài `theme/` (grep trong CLAUDE.md)
 - [ ] Màu, chữ, bo góc, bóng đúng Master hoặc file `pages/` tương ứng
-- [ ] Trạng thái nhấn không làm xê dịch bố cục
+- [ ] Trạng thái hover/nhấn không làm xê dịch bố cục
 
 **Tương tác** — [Skill]
-- [ ] Mọi phần tử bấm có phản hồi nhấn, `accessibilityRole`, nhãn rõ ràng, vùng chạm ≥ 44
-- [ ] Nút async có `loading`; trạng thái disabled rõ ràng
-- [ ] Web: có `cursor: pointer` và focus ring nhìn thấy được
+- [ ] Mọi phần tử bấm có `accessibilityRole`, nhãn rõ ràng, hộp bấm ≥ 44×44, hover + nhấn + focus nhìn thấy được
+- [ ] Nút async có `loading`; trạng thái disabled rõ ràng; hành động nguy hiểm có xác nhận
+- [ ] Web: điều hướng hoàn toàn bằng bàn phím (Tab, Enter/Space, Esc, phím mũi tên trong tab), có skip link
 
 **Trạng thái dữ liệu** — [Skill]
-- [ ] Có đủ loading (Skeleton), rỗng (EmptyState), lỗi (ErrorState + Thử lại), và kéo-để-làm-mới nếu là danh sách
+- [ ] Mọi danh sách có loading (Skeleton), rỗng (EmptyState + hành động), lỗi (ErrorState + Thử lại), kéo-để-làm-mới
 
 **Bố cục** — [Skill] + [Dự án]
-- [ ] Kiểm tra ở 375px, 768px, 1024px, 1440px; không cuộn ngang ngoài ý muốn
-- [ ] Safe area tôn trọng; nội dung không bị bottom tab che
+- [ ] 375 / 768 / 1024 / 1440px: không cuộn ngang, không chữ/badge bị cắt
+- [ ] Safe area tôn trọng; nội dung không bị bottom tab / thanh dính che
 - [ ] Desktop: nội dung ≤ 1100px căn giữa, sidebar hoạt động
 
 **Trợ năng** — [Skill]
-- [ ] Tương phản chữ ≥ 4.5:1 (trừ ngoại lệ §1.4 đã ghi nhận)
+- [ ] Tương phản chữ ≥ 4.5:1 (chữ lớn ≥ 3:1) — không còn ngoại lệ (§1.4)
 - [ ] Màu không phải tín hiệu duy nhất
-- [ ] Giảm chuyển động được tôn trọng; cỡ chữ hệ thống lớn không vỡ bố cục
+- [ ] Giảm chuyển động được tôn trọng (§10); cỡ chữ hệ thống lớn không vỡ bố cục
 - [ ] Lỗi form nằm ngay dưới ô, được thông báo cho trình đọc màn hình
 
 **Kỹ thuật** — [Dự án]
 - [ ] `npx tsc --noEmit` và `npx expo lint` sạch
-- [ ] `npx expo export --platform web` thành công
+- [ ] `npx expo export --platform web` thành công; `npx expo-doctor` không có lỗi mới

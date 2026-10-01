@@ -19,6 +19,7 @@ import {
 } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
+import { useHover } from '@/hooks/useHover';
 import { hasErrors, validateLoginForm, type FormErrors, type LoginField } from '@/lib/validation';
 import { demoAccountHint } from '@/services';
 import { borderWidth, interactive, opacity, radius, semantic, spacing, toneColors } from '@/theme';
@@ -84,6 +85,8 @@ export default function LoginScreen() {
   const clearError = (field: LoginField) => {
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   };
+
+  const demoHover = useHover();
 
   const fillDemo = () => {
     if (!demoAccountHint) return;
@@ -181,7 +184,8 @@ export default function LoginScreen() {
             onPress={fillDemo}
             accessibilityRole="button"
             accessibilityLabel={`Dùng tài khoản demo ${demoAccountHint.email}, mật khẩu ${demoAccountHint.password}`}
-            style={({ pressed }) => [styles.demo, interactive, pressed && styles.demoPressed]}>
+            {...demoHover.hoverProps}
+            style={({ pressed }) => [styles.demo, interactive, demoHover.hovered && styles.demoHover, pressed && styles.demoPressed]}>
             <Icon name="information-circle" color={toneColors.info.fg} />
             <View style={styles.flex}>
               <Text variant="smallMedium" weight="semibold" color={toneColors.info.fg}>
@@ -218,5 +222,6 @@ const styles = StyleSheet.create({
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.info.border,
   },
+  demoHover: { borderColor: toneColors.info.solid },
   demoPressed: { opacity: opacity.pressed },
 });

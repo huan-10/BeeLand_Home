@@ -12,7 +12,6 @@ import {
 import {
   borderWidth,
   colors,
-  hitSlop,
   interactive,
   opacity,
   radius,
@@ -23,6 +22,8 @@ import {
   type IconName,
   type IconSize,
 } from '@/theme';
+
+import { useHover } from '@/hooks/useHover';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -42,13 +43,14 @@ export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> 
 }
 
 const variantStyles: Record<ButtonVariant, { bg: string; pressedBg: string; fg: string; border: string }> = {
-  // Nền cam theo mockup; chữ trắng đậm (xem MASTER.md §Tương phản).
-  primary: { bg: semantic.brand, pressedBg: semantic.brandPressed, fg: semantic.textOnPrimary, border: semantic.brand },
+  // Nền cam theo mockup; chữ gray-900 để đạt 7:1 (MASTER.md §1.4).
+  primary: { bg: semantic.brand, pressedBg: semantic.brandPressed, fg: semantic.textOnBrand, border: semantic.brand },
   secondary: { bg: toneColors.primary.bg, pressedBg: colors.primary[100], fg: semantic.textBrand, border: toneColors.primary.border },
   // Nút trung tính nền trắng viền xám (đăng nhập Google/Apple...).
   outline: { bg: semantic.surface, pressedBg: colors.gray[50], fg: semantic.text, border: semantic.border },
   ghost: { bg: colors.transparent, pressedBg: colors.gray[100], fg: semantic.textSecondary, border: colors.transparent },
-  danger: { bg: semantic.surface, pressedBg: toneColors.danger.bg, fg: colors.danger[600], border: toneColors.danger.border },
+  // danger-700: ≥ 4.5:1 cả trên nền trắng và nền hồng nhạt khi hover/nhấn.
+  danger: { bg: semantic.surface, pressedBg: toneColors.danger.bg, fg: colors.danger[700], border: toneColors.danger.border },
 };
 
 const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number; icon: IconSize; text: 'smallMedium' | 'bodyMedium' }> = {
@@ -72,24 +74,24 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
   const v = variantStyles[variant];
   const s = sizeStyles[size];
   const isDisabled = disabled || loading;
+  const { hovered, hoverProps } = useHover();
 
   return (
     <Pressable
       ref={ref}
       accessibilityRole="button"
       accessibilityLabel={title}
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      aria-disabled={!!isDisabled}
       aria-busy={loading}
       disabled={isDisabled}
-      // Nút nhỏ (40) được nới vùng chạm để đạt tối thiểu 44.
-      hitSlop={size === 'sm' ? hitSlop : undefined}
+      {...hoverProps}
       style={({ pressed }) => [
         styles.base,
         interactive,
         {
           height: s.height,
           paddingHorizontal: s.paddingHorizontal,
-          backgroundColor: pressed ? v.pressedBg : v.bg,
+          backgroundColor: pressed || (hovered && !isDisabled) ? v.pressedBg : v.bg,
           borderColor: v.border,
         },
         fullWidth && styles.fullWidth,
@@ -102,7 +104,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
       ) : (
         <View style={styles.content}>
           {leftIcon ? <Icon name={leftIcon} size={s.icon} color={v.fg} /> : null}
-          <Text variant={s.text} weight="semibold" color={v.fg} numberOfLines={1}>
+          <Text variant={s.text} weight="semibold" color={v.fg}>
             {title}
           </Text>
           {rightIcon ? <Icon name={rightIcon} size={s.icon} color={v.fg} /> : null}
