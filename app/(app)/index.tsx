@@ -12,6 +12,7 @@ import {
   Icon,
   IconButton,
   IconCircle,
+  MoneySummaryCard,
   Skeleton,
   SkeletonCard,
   Text,
@@ -20,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useLatestNotifications } from '@/hooks/useNotifications';
-import { formatCurrency, formatDate, formatDaysLeft, formatWeekdayDate } from '@/lib/format';
+import { formatCurrency, formatDate, formatDaysLeft, formatPercent, formatWeekdayDate } from '@/lib/format';
 import { unreadLabel } from '@/lib/notification';
 import { colors, radius, semantic, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
 import type { AppNotification } from '@/types';
@@ -59,16 +60,16 @@ export default function HomeScreen() {
             {user ? <Avatar name={user.fullName} /> : null}
             <View style={styles.flex}>
               {isWide ? (
-                <Text variant="h2" accessibilityRole="header">
+                <Text variant="title" accessibilityRole="header">
                   Xin chào, {user?.fullName ?? 'Quý khách'}
                 </Text>
               ) : (
                 // Mobile: tách lời chào để tên không bị ngắt giữa chừng; vẫn đọc liền "Xin chào, {tên}".
                 <View accessible accessibilityRole="header" accessibilityLabel={`Xin chào, ${user?.fullName ?? 'Quý khách'}`}>
-                  <Text variant="small" color={semantic.textMuted}>
+                  <Text variant="caption" color={semantic.textMuted}>
                     Xin chào,
                   </Text>
-                  <Text variant="h2">
+                  <Text variant="title">
                     {user?.fullName ?? 'Quý khách'}
                   </Text>
                 </View>
@@ -87,9 +88,40 @@ export default function HomeScreen() {
           </View>
         </Col>
 
-        {/* Banner thương hiệu */}
-        <Col span={{ mobile: 12 }}>
+        {/* Tổng quan thanh toán (thẻ tối) + banner thương hiệu */}
+        <Col span={{ mobile: 12, desktop: 7 }}>
+          {dashboard.loading ? (
+            <Skeleton height={sizes.skeleton.hero} radius={radius['3xl']} />
+          ) : dashboard.error || !dashboard.data ? (
+            <Card>
+              <ErrorState message={dashboard.error ?? undefined} onRetry={() => void dashboard.refetch()} />
+            </Card>
+          ) : (
+            <MoneySummaryCard
+              header={
+                <View style={styles.overviewHeader}>
+                  <Text variant="subhead" color={semantic.onInverse} accessibilityRole="header">
+                    Tổng quan thanh toán
+                  </Text>
+                  <Text variant="caption" color={semantic.onInverseMuted}>
+                    {dashboard.data.activeContractCount}/{dashboard.data.contractCount} hợp đồng đang hiệu lực
+                  </Text>
+                </View>
+              }
+              totalLabel="Tổng giá trị hợp đồng"
+              total={formatCurrency(dashboard.data.totalValue)}
+              percent={dashboard.data.paidPercent}
+              progressLabel={`Đã thanh toán ${formatPercent(dashboard.data.paidPercent)}`}
+              stats={[
+                { label: 'Đã thanh toán', value: formatCurrency(dashboard.data.paidAmount) },
+                { label: 'Còn lại', value: formatCurrency(dashboard.data.remainingAmount), accent: true },
+              ]}
+            />
+          )}
+        </Col>
+        <Col span={{ mobile: 12, desktop: 5 }}>
           <BrandBanner
+            fill={isDesktop}
             title="An cư vững tâm"
             subtitle="Theo dõi hợp đồng, lịch thanh toán và phiếu thu của bạn tại một nơi."
           />
@@ -147,14 +179,15 @@ export default function HomeScreen() {
                 {dashboard.data.overdueInstallments.map((item) => (
                   <Card
                     key={item.id}
-                    shadow="none"
+                    variant="sunken"
+                    radius="xl"
                     style={styles.overdue}
                     onPress={() => router.push({ pathname: '/contracts/[id]', params: { id: item.contractId } })}
                     accessibilityLabel={`Quá hạn: ${item.contractCode}, ${item.name}, ${formatCurrency(item.remainingAmount)}`}>
                     <View style={styles.row}>
                       <IconCircle name="warning" tone="danger" size="md" />
                       <View style={styles.flex}>
-                        <Text variant="smallMedium" weight="semibold" color={colors.danger[700]}>
+                        <Text variant="captionStrong" weight="semibold" color={colors.danger[700]}>
                           {item.name} · {formatDaysLeft(item.daysUntilDue)}
                         </Text>
                         <Text variant="caption" color={colors.danger[700]}>
@@ -191,5 +224,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
-  overdue: { backgroundColor: toneColors.danger.bg, borderColor: toneColors.danger.border },
+  overdue: { backgroundColor: toneColors.danger.bg },
+  overviewHeader: { gap: spacing.xs },
 });

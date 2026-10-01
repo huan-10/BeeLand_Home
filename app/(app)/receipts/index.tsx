@@ -121,7 +121,7 @@ export default function ReceiptsScreen() {
               <View style={styles.groupHeader}>
                 <Icon name="document" color={semantic.textBrand} />
                 <View style={styles.flex}>
-                  <Text variant="h3" accessibilityRole="header">
+                  <Text variant="heading" accessibilityRole="header">
                     {g.contractCode}
                   </Text>
                   <Text variant="caption" color={semantic.textMuted}>
@@ -132,7 +132,7 @@ export default function ReceiptsScreen() {
                   <Text variant="caption" color={semantic.textMuted}>
                     Đã thanh toán
                   </Text>
-                  <Text variant="smallMedium" weight="bold" color={semantic.textSuccess}>
+                  <Text variant="captionStrong" weight="bold" color={semantic.textSuccess} numeric>
                     {formatCurrency(g.paidTotal)}
                   </Text>
                 </View>
@@ -159,15 +159,15 @@ function toRow(r: Receipt): DataTableRow<Col> {
       code: (
         <View style={styles.codeCell}>
           <Icon name="document" size="sm" color={semantic.iconMuted} />
-          <Text variant="smallMedium" weight="semibold" style={styles.flex}>
+          <Text variant="captionStrong" weight="semibold" style={styles.flex}>
             {r.code}
           </Text>
         </View>
       ),
-      date: <Text variant="small">{formatDate(r.paidDate)}</Text>,
-      contract: <Text variant="small">{r.contractCode}</Text>,
+      date: <Text variant="caption">{formatDate(r.paidDate)}</Text>,
+      contract: <Text variant="caption">{r.contractCode}</Text>,
       amount: (
-        <Text variant="smallMedium" weight="bold" color={amount.color} align="right" style={[styles.amount, amount.strike && styles.strike]}>
+        <Text variant="captionStrong" weight="bold" color={amount.color} align="right" style={[styles.amount, amount.strike && styles.strike]} numeric>
           {formatCurrency(r.amount)}
         </Text>
       ),
@@ -182,10 +182,10 @@ function TotalCard({ paidTotal, counts }: { paidTotal: number; counts: ReceiptTa
       <View style={styles.totalRow}>
         <IconCircle name="cash" tone="success" size="xl" />
         <View style={styles.flex}>
-          <Text variant="small" color={semantic.textMuted}>
+          <Text variant="caption" color={semantic.textMuted}>
             Tổng đã thanh toán · {counts.paid} phiếu
           </Text>
-          <Text variant="h2" color={semantic.textSuccess}>
+          <Text variant="title" color={semantic.textSuccess} numeric>
             {formatCurrency(paidTotal)}
           </Text>
         </View>

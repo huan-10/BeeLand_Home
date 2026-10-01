@@ -15,7 +15,7 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  InfoRow,
+  KeyValueRow,
   ScreenHeader,
   Skeleton,
   TabPanel,
@@ -239,12 +239,12 @@ function InfoPanel({ detail }: { detail: ContractDetail }) {
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
           Bên bán
         </Text>
-        <InfoRow label="Công ty" value={seller.companyName} />
-        <InfoRow label="Người đại diện" value={`${seller.representative} – ${seller.position}`} />
-        <InfoRow label="Mã số thuế" value={seller.taxCode} />
-        <InfoRow label="Địa chỉ" value={seller.address} />
-        <InfoRow label="Hotline" value={seller.hotline} />
-        <InfoRow label="Email" value={seller.email} last />
+        <KeyValueRow label="Công ty" value={seller.companyName} />
+        <KeyValueRow label="Người đại diện" value={`${seller.representative} – ${seller.position}`} />
+        <KeyValueRow label="Mã số thuế" value={seller.taxCode} copyable numeric />
+        <KeyValueRow label="Địa chỉ" value={seller.address} />
+        <KeyValueRow label="Hotline" value={seller.hotline} copyable numeric />
+        <KeyValueRow label="Email" value={seller.email} copyable last />
       </Card>
       <Card>
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
@@ -252,10 +252,10 @@ function InfoPanel({ detail }: { detail: ContractDetail }) {
         </Text>
         {terms.map((t, i) => (
           <View key={t.title} style={[styles.term, i < terms.length - 1 && styles.termDivider]}>
-            <Text variant="smallMedium" weight="semibold">
+            <Text variant="captionStrong" weight="semibold">
               {t.title}
             </Text>
-            <Text variant="small" color={semantic.textSecondary}>
+            <Text variant="caption" color={semantic.textSecondary}>
               {t.content}
             </Text>
           </View>
@@ -265,9 +265,9 @@ function InfoPanel({ detail }: { detail: ContractDetail }) {
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
           Thông tin căn hộ
         </Text>
-        <InfoRow label="Loại hợp đồng" value={contractTypeLabels[contract.type].label} />
-        <InfoRow label="Diện tích thông thủy" value={`${contract.area.toString().replace('.', ',')} m²`} />
-        <InfoRow label="Chuyên viên tư vấn" value={contract.salesAgent ?? '—'} last />
+        <KeyValueRow label="Loại hợp đồng" value={contractTypeLabels[contract.type].label} />
+        <KeyValueRow label="Diện tích thông thủy" value={`${contract.area.toString().replace('.', ',')} m²`} />
+        <KeyValueRow label="Chuyên viên tư vấn" value={contract.salesAgent ?? '—'} last />
       </Card>
     </View>
   );
@@ -282,5 +282,5 @@ const styles = StyleSheet.create({
   columnContent: { paddingBottom: spacing.lg },
   list: { gap: spacing.sm },
   term: { paddingVertical: spacing.ms, gap: spacing.xs },
-  termDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.borderSubtle },
+  termDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.border },
 });

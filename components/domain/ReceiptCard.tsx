@@ -25,7 +25,7 @@ export function ReceiptCard({ receipt, onPress }: { receipt: Receipt; onPress?: 
       <View style={styles.row}>
         <IconCircle name="document" tone={meta.tone} />
         <View style={styles.main}>
-          <Text variant="bodyMedium" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold">
             {receipt.code}
           </Text>
           <Text variant="caption" color={semantic.textMuted}>
@@ -34,11 +34,11 @@ export function ReceiptCard({ receipt, onPress }: { receipt: Receipt; onPress?: 
         </View>
         <View style={styles.right}>
           <Text
-            variant="smallMedium"
+            variant="captionStrong"
             weight="bold"
             color={amount.color}
             align="right"
-            style={[styles.amount, amount.strike && styles.strike]}>
+            style={[styles.amount, amount.strike && styles.strike]} numeric>
             {formatCurrency(receipt.amount)}
           </Text>
           <Badge label={meta.label} tone={meta.tone} icon={meta.icon} />

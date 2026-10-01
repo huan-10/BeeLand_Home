@@ -4,11 +4,11 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ChangePasswordDialog } from '@/components/domain';
 import { Screen } from '@/components/layout';
-import { Avatar, Button, Card, Dialog, Icon, IconCircle, InfoRow, ScreenHeader, Text } from '@/components/ui';
+import { Avatar, Button, Card, Dialog, Icon, IconCircle, KeyValueRow, ScreenHeader, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHover } from '@/hooks/useHover';
 import { appVersionLabel } from '@/lib/appInfo';
-import { colors, interactive, layout, radius, semantic, sizes, spacing, type IconName, type Tone } from '@/theme';
+import { interactive, layout, radius, semantic, shadows, sizes, spacing, type IconName, type Tone } from '@/theme';
 
 const HOTLINE = '1900 6868';
 
@@ -30,26 +30,28 @@ export default function ProfileScreen() {
       <ScreenHeader title="Cá nhân" subtitle="Thông tin tài khoản và cài đặt" />
 
       <View style={styles.column}>
-        <Card padding="ml">
-          <View style={styles.profileRow}>
-            <Avatar name={user.fullName} size="lg" />
-            <View style={styles.flex}>
-              <Text variant="h2">{user.fullName}</Text>
-              <Text variant="small" color={semantic.textMuted}>
-                Mã khách hàng: {user.customerCode}
-              </Text>
-            </View>
+        {/* Thẻ tài khoản nền ink — cùng ngôn ngữ với thẻ tổng tiền. */}
+        <View style={styles.accountCard}>
+          <Avatar name={user.fullName} size="lg" />
+          <View style={styles.flex}>
+            <Text variant="title" color={semantic.onInverse}>
+              {user.fullName}
+            </Text>
+            <Text variant="caption" color={semantic.onInverseMuted}>
+              Mã khách hàng: {user.customerCode}
+            </Text>
           </View>
-        </Card>
+        </View>
 
         <Card>
           <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.cardTitle}>
             Thông tin tài khoản
           </Text>
-          <InfoRow label="Email" value={user.email} />
-          <InfoRow label="Số điện thoại" value={user.phone} />
-          <InfoRow label="CCCD" value={user.idNumber || '—'} />
-          <InfoRow label="Địa chỉ" value={user.address || '—'} last />
+          <KeyValueRow label="Mã khách hàng" value={user.customerCode} copyable numeric />
+          <KeyValueRow label="Email" value={user.email} copyable />
+          <KeyValueRow label="Số điện thoại" value={user.phone} copyable numeric />
+          <KeyValueRow label="CCCD" value={user.idNumber || '—'} />
+          <KeyValueRow label="Địa chỉ" value={user.address || '—'} last />
         </Card>
 
         <Card padding="sm">
@@ -104,11 +106,11 @@ function MenuItem({ icon, tone, label, value, onPress }: { icon: IconName; tone:
       accessibilityLabel={value ? `${label}: ${value}` : label}
       style={({ pressed }) => [styles.menuItem, interactive, (pressed || hovered) && styles.menuActive]}>
       <IconCircle name={icon} tone={tone} size="sm" />
-      <Text variant="bodyMedium" style={styles.flex}>
+      <Text variant="bodyStrong" style={styles.flex}>
         {label}
       </Text>
       {value ? (
-        <Text variant="smallMedium" color={semantic.textSecondary}>
+        <Text variant="captionStrong" color={semantic.textSecondary}>
           {value}
         </Text>
       ) : null}
@@ -119,7 +121,15 @@ function MenuItem({ icon, tone, label, value, onPress }: { icon: IconName; tone:
 
 const styles = StyleSheet.create({
   column: { width: '100%', maxWidth: layout.profileMaxWidth, gap: spacing.ml },
-  profileRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  accountCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius['3xl'],
+    backgroundColor: semantic.inverse,
+    ...shadows.raised,
+  },
   flex: { flex: 1, minWidth: 0, gap: spacing.xs },
   cardTitle: { marginBottom: spacing.xs },
   menuTitle: { paddingHorizontal: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.xs },
@@ -129,7 +139,7 @@ const styles = StyleSheet.create({
     gap: spacing.ms,
     minHeight: sizes.touchTarget + spacing.sm,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
   },
-  menuActive: { backgroundColor: colors.gray[50] },
+  menuActive: { backgroundColor: semantic.surfaceSunken },
 });

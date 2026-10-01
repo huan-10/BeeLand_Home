@@ -12,13 +12,13 @@
 | Phần | Quy định |
 |------|----------|
 | Ảnh dự án | `ProjectImage` cao `sizes.projectImage` (148), `cover`; không có `projectImageUrl` hoặc tải lỗi → `assets/images/project-placeholder.jpg` |
-| Mã hợp đồng | `h3`, **xuống dòng đầy đủ** (không `numberOfLines`), chọn/copy được; loại HĐ `caption` bên dưới |
+| Mã hợp đồng | `heading`, **xuống dòng đầy đủ** (không `numberOfLines`), chọn/copy được; loại HĐ `caption` bên dưới |
 | Badge trạng thái | Bên phải mã, có chấm + **chữ** ("Đang hiệu lực", "Đã tất toán", "Chờ xử lý"); không co lại (`flexShrink: 0`) |
-| Tên dự án | `bodyMedium` semibold, **xuống dòng đầy đủ** |
-| Căn hộ · Tòa / Ngày ký | Icon outline `sm` + `small` `textSecondary` |
+| Tên dự án | `bodyStrong` semibold, **xuống dòng đầy đủ** |
+| Căn hộ · Tòa / Ngày ký | Icon outline `sm` + `caption` `textSecondary` |
 | Giá trị / Đã thanh toán | Hàng nhãn – số tiền (đậm), "Đã thanh toán 1.250.000.000 đ (50%)": % màu `textBrand`, hoặc `textSuccess` khi 100% |
 | Thanh tiến độ | `ProgressBar` **cam** (`primary`) khi < 100%, **xanh lá** (`success`) khi 100% (`isFullyPaid`); nhãn "Tiến độ thanh toán 100%, đã tất toán" |
-| Tương tác | Cả thẻ là nút → `/contracts/[id]` (đường dẫn rút gọn `/contract/[id]` chuyển hướng về đây). Web: hover **nâng nhẹ** (`Card hoverLift`: dịch lên 2px + `shadows.md`), con trỏ pointer, focus ring; nhấn: opacity |
+| Tương tác | Cả thẻ là nút → `/contracts/[id]` (đường dẫn rút gọn `/contract/[id]` chuyển hướng về đây). Web: hover **nâng nhẹ** (`Card hoverLift`: dịch lên 4px + `shadows.raised`), con trỏ pointer, focus ring; nhấn: opacity |
 
 ## Bố cục (`Grid`/`Col`)
 | Bề rộng | Cột thẻ |

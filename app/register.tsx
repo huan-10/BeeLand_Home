@@ -113,7 +113,7 @@ export default function RegisterScreen() {
       subtitle="Đăng ký để theo dõi hợp đồng và lịch thanh toán của bạn."
       footer={
         <View style={styles.footerRow}>
-          <Text variant="small" color={semantic.textMuted}>
+          <Text variant="caption" color={semantic.textMuted}>
             Đã có tài khoản?
           </Text>
           <TextLink label="Đăng nhập" onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))} />

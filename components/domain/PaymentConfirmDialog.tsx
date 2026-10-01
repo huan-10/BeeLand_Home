@@ -1,8 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Dialog, InfoRow, Text } from '@/components/ui';
+import { Button, Dialog, KeyValueRow, Text } from '@/components/ui';
 import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
-import { radius, semantic, spacing, toneColors } from '@/theme';
+import { radius, semantic, spacing } from '@/theme';
 import type { PaymentInstallmentView } from '@/types';
 
 export interface PaymentConfirmDialogProps {
@@ -28,26 +28,26 @@ export function PaymentConfirmDialog({ visible, installment, submitting, onConfi
         </>
       }>
       <View style={styles.amountBox}>
-        <Text variant="caption" color={semantic.textMuted}>
+        <Text variant="caption" color={semantic.onInverseMuted}>
           Số tiền cần thanh toán
         </Text>
-        <Text variant="h1" color={semantic.textBrand}>
+        <Text variant="title" color={semantic.onInverse} numeric>
           {formatCurrency(installment.remainingAmount)}
         </Text>
-        <Text variant="caption" weight="semibold" color={overdue ? toneColors.danger.fg : semantic.textSecondary}>
+        <Text variant="caption" weight="semibold" color={overdue ? semantic.onInverseAccent : semantic.onInverseMuted}>
           {formatDaysLeft(installment.daysUntilDue)}
         </Text>
       </View>
       <View>
-        <InfoRow label="Hợp đồng" value={installment.contractCode} />
-        <InfoRow label="Đợt thanh toán" value={installment.name} />
-        <InfoRow label="Căn hộ" value={`${installment.unitCode} · ${installment.projectName}`} />
-        <InfoRow label="Hạn thanh toán" value={formatDate(installment.dueDate)} last />
+        <KeyValueRow label="Hợp đồng" value={installment.contractCode} />
+        <KeyValueRow label="Đợt thanh toán" value={installment.name} />
+        <KeyValueRow label="Căn hộ" value={`${installment.unitCode} · ${installment.projectName}`} />
+        <KeyValueRow label="Hạn thanh toán" value={formatDate(installment.dueDate)} numeric last />
       </View>
     </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  amountBox: { alignItems: 'center', gap: spacing.xs, padding: spacing.md, borderRadius: radius.md, backgroundColor: toneColors.primary.bg },
+  amountBox: { alignItems: 'center', gap: spacing.xs, padding: spacing.ml, borderRadius: radius.xl, backgroundColor: semantic.inverse },
 });

@@ -77,7 +77,7 @@ export function ChangePasswordDialog({ visible, userId, onClose }: ChangePasswor
           <Button title="Lưu mật khẩu" leftIcon="lock" loading={submitting} onPress={() => void handleSubmit()} />
         </>
       }>
-      <Text variant="small" color={semantic.textMuted}>
+      <Text variant="caption" color={semantic.textMuted}>
         Mật khẩu mới cần ít nhất {MIN_PASSWORD_LENGTH} ký tự và khác mật khẩu hiện tại.
       </Text>
       <View style={styles.fields}>

@@ -7,8 +7,8 @@
 - **Không có nút primary trên trang** (hành động chính nằm trong hộp thoại).
 
 ## Thành phần chính
-1. **Thẻ hồ sơ**: `Avatar lg` (chữ `primary.800` trên `primary.100`, 5.9:1) + tên `h2` + "Mã khách hàng".
-2. **Thông tin tài khoản**: `InfoRow` Email · Số điện thoại · CCCD · Địa chỉ (thiếu dữ liệu → "—").
+1. **Thẻ tài khoản nền ink** (bo 28, `raised`): `Avatar lg` + tên `title` trắng + "Mã khách hàng" (`onInverseMuted`).
+2. **Thông tin tài khoản**: `KeyValueRow` Mã khách hàng · Email · Số điện thoại (**3 dòng đầu chạm để sao chép**) · CCCD · Địa chỉ (thiếu dữ liệu → "—").
 3. **Bảo mật & hỗ trợ** (menu, mỗi mục cao ≥ 52, hover/nhấn nền `gray.50`): **Đổi mật khẩu** · Thông báo · Phiếu thu của tôi · Hotline hỗ trợ 1900 6868 (mở `tel:`).
 4. **Đăng xuất**: `Button danger` tách riêng dưới menu → **hộp thoại xác nhận** "Đăng xuất?" (Hủy / Đăng xuất danger, có loading).
 5. **Phiên bản app**: "BeeSky · Phiên bản 1.0.0 · Web/iOS/Android" (`lib/appInfo.ts`, từ `app.json`).

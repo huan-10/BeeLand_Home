@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Badge, Card, Icon, ProgressBar, Text } from '@/components/ui';
+import { Badge, Card, Icon, KeyValueRow, MoneySummaryCard, Text } from '@/components/ui';
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format';
 import { contractStatusMeta, contractTypeLabels } from '@/lib/labels';
 import { isFullyPaid } from '@/lib/payment';
-import { borderWidth, interactive, opacity, radius, semantic, sizes, spacing, toneColors } from '@/theme';
+import { colors, interactive, opacity, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 import type { ContractListItem } from '@/types';
 
 import { useHover } from '@/hooks/useHover';
@@ -15,11 +15,15 @@ import { ProjectImage } from './ProjectImage';
 export interface ContractSummaryCardProps {
   contract: ContractListItem;
   onOpenDocument: () => void;
-  /** Hành động phụ đặt cuối thẻ (desktop: nút "Thanh toán ngay"). */
+  /** Hành động đặt cuối thẻ tổng tiền (desktop: nút "Thanh toán ngay"). */
   footer?: ReactNode;
 }
 
-/** Phần đầu màn Chi tiết hợp đồng: ảnh, mã, trạng thái, căn hộ, số tiền, tiến độ, link PDF. */
+/**
+ * Phần đầu màn Chi tiết hợp đồng:
+ * 1. Thẻ tổng tiền nền ink — mã, loại, trạng thái, dự án, giá trị, đã trả / còn lại, tiến độ.
+ * 2. Thẻ căn hộ — ảnh dự án, căn, ngày ký, mã hợp đồng (chạm để sao chép), link PDF.
+ */
 export function ContractSummaryCard({ contract, onOpenDocument, footer }: ContractSummaryCardProps) {
   const docHover = useHover();
   const status = contractStatusMeta[contract.status];
@@ -28,106 +32,95 @@ export function ContractSummaryCard({ contract, onOpenDocument, footer }: Contra
   const percent = formatPercent(summary.paidPercent);
 
   return (
-    <Card padding="none" style={styles.card}>
-      <ProjectImage uri={contract.projectImageUrl} projectName={contract.projectName} height={sizes.projectImage} />
-      <View style={styles.body}>
-        <View style={styles.titleRow}>
-          <View style={styles.flex}>
-            <Text variant="h2" selectable>
-              {contract.code}
+    <View style={styles.stack}>
+      <MoneySummaryCard
+        header={
+          <>
+            <View style={styles.titleRow}>
+              <View style={styles.flex}>
+                <Text variant="heading" color={semantic.onInverse} selectable>
+                  {contract.code}
+                </Text>
+                <Text variant="caption" color={semantic.onInverseMuted}>
+                  {contractTypeLabels[contract.type].label}
+                </Text>
+              </View>
+              <Badge label={status.label} tone={status.tone} dot size="md" />
+            </View>
+            <Text variant="subhead" color={semantic.onInverse}>
+              {contract.projectName}
             </Text>
-            <Text variant="caption" color={semantic.textMuted}>
-              {contractTypeLabels[contract.type].label}
-            </Text>
+          </>
+        }
+        totalLabel="Giá trị hợp đồng"
+        total={formatCurrency(contract.totalValue)}
+        percent={summary.paidPercent}
+        progressLabel={`Đã thanh toán ${percent}${done ? ' · đã tất toán' : ''}`}
+        stats={[
+          { label: 'Đã thanh toán', value: formatCurrency(summary.paidAmount) },
+          { label: 'Còn phải thanh toán', value: formatCurrency(summary.remainingAmount), accent: !done },
+        ]}
+        footer={footer}
+      />
+
+      <Card padding="none">
+        {/* Ảnh cắt bo góc trên ở lớp riêng để thẻ giữ được bóng trên iOS. */}
+        <View style={styles.imageWrap}>
+          <ProjectImage uri={contract.projectImageUrl} projectName={contract.projectName} height={sizes.projectImage} />
+        </View>
+        <View style={styles.body}>
+          <View style={styles.meta}>
+            <MetaRow icon="home" text={`Căn ${contract.unitCode} · ${contract.block} · Tầng ${contract.floor}`} />
+            <MetaRow icon="calendar" text={`Ngày ký ${formatDate(contract.signedDate)}`} />
           </View>
-          <Badge label={status.label} tone={status.tone} dot size="md" />
+          <KeyValueRow label="Mã hợp đồng" value={contract.code} copyable numeric last />
+          <Pressable
+            onPress={onOpenDocument}
+            accessibilityRole="link"
+            accessibilityLabel="Xem hợp đồng (PDF)"
+            accessibilityHint="Mở tệp hợp đồng PDF"
+            {...docHover.hoverProps}
+            style={({ pressed }) => [styles.docRow, interactive, docHover.hovered && styles.docHover, pressed && styles.pressed]}>
+            <Icon name="document" color={toneColors.primary.fg} />
+            <Text variant="captionStrong" weight="semibold" color={semantic.textBrand} style={styles.flex}>
+              Xem hợp đồng (PDF)
+            </Text>
+            <Icon name="external" size="sm" color={toneColors.primary.fg} />
+          </Pressable>
         </View>
-
-        <Text variant="bodyMedium" weight="semibold">
-          {contract.projectName}
-        </Text>
-        <View style={styles.meta}>
-          <MetaRow icon="home" text={`Căn ${contract.unitCode} · ${contract.block} · Tầng ${contract.floor}`} />
-          <MetaRow icon="calendar" text={`Ngày ký ${formatDate(contract.signedDate)}`} />
-        </View>
-
-        <View style={styles.amounts}>
-          <AmountRow label="Giá trị hợp đồng" value={formatCurrency(contract.totalValue)} />
-          <AmountRow
-            label="Đã thanh toán"
-            value={`${formatCurrency(summary.paidAmount)} (${percent})`}
-            color={done ? semantic.textSuccess : semantic.textBrand}
-          />
-          <AmountRow label="Còn phải thanh toán" value={formatCurrency(summary.remainingAmount)} />
-          <ProgressBar
-            value={summary.paidPercent}
-            tone={done ? 'success' : 'primary'}
-            accessibilityLabel={`Tiến độ thanh toán ${percent}${done ? ', đã tất toán' : ''}`}
-          />
-        </View>
-
-        <Pressable
-          onPress={onOpenDocument}
-          accessibilityRole="link"
-          accessibilityLabel="Xem hợp đồng (PDF)"
-          accessibilityHint="Mở tệp hợp đồng PDF"
-          {...docHover.hoverProps}
-          style={({ pressed }) => [styles.docRow, interactive, docHover.hovered && styles.docHover, pressed && styles.pressed]}>
-          <Icon name="document" color={toneColors.primary.fg} />
-          <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={styles.flex}>
-            Xem hợp đồng (PDF)
-          </Text>
-          <Icon name="external" size="sm" color={toneColors.primary.fg} />
-        </Pressable>
-
-        {footer}
-      </View>
-    </Card>
+      </Card>
+    </View>
   );
 }
 
 function MetaRow({ icon, text }: { icon: 'home' | 'calendar'; text: string }) {
   return (
     <View style={styles.metaRow}>
-      <Icon name={icon} size="sm" color={semantic.iconMuted} />
-      <Text variant="small" color={semantic.textSecondary} style={styles.flex}>
+      <Icon name={icon} size="sm" color={semantic.textMuted} />
+      <Text variant="caption" color={semantic.textSecondary} style={styles.flex}>
         {text}
       </Text>
     </View>
   );
 }
 
-function AmountRow({ label, value, color = semantic.text }: { label: string; value: string; color?: string }) {
-  return (
-    <View style={styles.amountRow}>
-      <Text variant="small" color={semantic.textMuted}>
-        {label}
-      </Text>
-      <Text variant="smallMedium" weight="bold" color={color} align="right" style={styles.flex}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  card: { overflow: 'hidden' },
-  body: { padding: spacing.md, gap: spacing.ms },
+  stack: { gap: spacing.md },
+  imageWrap: { borderTopLeftRadius: radius['2xl'], borderTopRightRadius: radius['2xl'], overflow: 'hidden' },
+  body: { padding: spacing.ml, gap: spacing.sm },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   flex: { flex: 1, minWidth: 0 },
   meta: { gap: spacing.xs },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  amounts: { gap: spacing.sm, paddingTop: spacing.ms, borderTopWidth: borderWidth.hairline, borderTopColor: semantic.borderSubtle },
-  amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.ms },
   docRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     minHeight: sizes.touchTarget,
     paddingHorizontal: spacing.ms,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     backgroundColor: toneColors.primary.bg,
   },
-  docHover: { backgroundColor: toneColors.primary.border },
+  docHover: { backgroundColor: colors.primary[100] },
   pressed: { opacity: opacity.pressed },
 });

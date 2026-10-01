@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, Text } from '@/components/ui';
 import { useHover } from '@/hooks/useHover';
-import { interactive, opacity, semantic, sizes, spacing } from '@/theme';
+import { colors, interactive, opacity, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 
 export interface SectionProps {
   title: string;
@@ -17,7 +17,7 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text variant="h3" accessibilityRole="header">
+        <Text variant="heading" accessibilityRole="header">
           {title}
         </Text>
         {actionLabel && onAction ? (
@@ -25,8 +25,8 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
             onPress={onAction}
             accessibilityRole="link"
             {...hoverProps}
-            style={({ pressed }) => [styles.action, interactive, pressed && styles.pressed]}>
-            <Text variant="smallMedium" weight="semibold" color={semantic.textBrand} style={hovered && styles.underline}>
+            style={({ pressed }) => [styles.action, interactive, hovered && styles.actionHover, pressed && styles.pressed]}>
+            <Text variant="captionStrong" weight="semibold" color={semantic.textBrand}>
               {actionLabel}
             </Text>
             <Icon name="chevronRight" size="sm" color={semantic.textBrand} />
@@ -40,8 +40,18 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
 
 const styles = StyleSheet.create({
   section: { gap: spacing.ms },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchTarget },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
+  // Nút viên thuốc "Xem tất cả": nền cam pastel, hover đậm hơn.
+  action: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    minHeight: sizes.touchTarget,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.ms,
+    borderRadius: radius.full,
+    backgroundColor: toneColors.primary.bg,
+  },
+  actionHover: { backgroundColor: colors.primary[100] },
   pressed: { opacity: opacity.pressed },
-  underline: { textDecorationLine: 'underline' },
 });

@@ -97,18 +97,23 @@ export interface ScheduleSummary {
   overdueCount: number;
   paidAmount: number;
   paidCount: number;
+  /** Phần trăm đã trả trên tổng (đã trả + còn phải trả) của mọi đợt. */
+  paidPercent: number;
 }
 
 export function summarizeSchedule(installments: PaymentInstallmentView[]): ScheduleSummary {
   const unpaid = installments.filter((i) => i.status !== 'paid');
   const overdue = installments.filter((i) => i.status === 'overdue');
+  const dueAmount = unpaid.reduce((sum, i) => sum + i.remainingAmount, 0);
+  const paidAmount = installments.reduce((sum, i) => sum + i.paidAmount, 0);
   return {
-    dueAmount: unpaid.reduce((sum, i) => sum + i.remainingAmount, 0),
+    dueAmount,
     dueCount: unpaid.length,
     overdueAmount: overdue.reduce((sum, i) => sum + i.remainingAmount, 0),
     overdueCount: overdue.length,
-    paidAmount: installments.reduce((sum, i) => sum + i.paidAmount, 0),
+    paidAmount,
     paidCount: installments.length - unpaid.length,
+    paidPercent: calcPercent(paidAmount, paidAmount + dueAmount),
   };
 }
 

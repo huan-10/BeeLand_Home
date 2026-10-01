@@ -19,11 +19,6 @@ export const shadows = {
   modal: { boxShadow: '0px 24px 56px rgba(43, 32, 25, 0.24)' },
   /** Vòng sáng quanh ô nhập khi focus. */
   focusHalo: { boxShadow: `0px 0px 0px 3px ${semantic.focusHalo}` },
-  // --- Tên cũ, giữ tạm để chuyển dần (xoá ở giai đoạn 3) ---
-  sm: { boxShadow: '0px 1px 2px rgba(43, 32, 25, 0.04), 0px 6px 20px rgba(43, 32, 25, 0.06)' },
-  md: { boxShadow: '0px 2px 4px rgba(43, 32, 25, 0.05), 0px 12px 28px rgba(43, 32, 25, 0.10)' },
-  lg: { boxShadow: '0px 24px 56px rgba(43, 32, 25, 0.24)' },
-  navTop: { boxShadow: '0px -4px 16px rgba(43, 32, 25, 0.07)' },
 } satisfies Record<string, ViewStyle>;
 
 export type ShadowLevel = keyof typeof shadows;

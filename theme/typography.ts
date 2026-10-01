@@ -40,14 +40,6 @@ export const textVariants = {
   caption: { size: 'caption', weight: 'regular' },
   captionStrong: { size: 'caption', weight: 'medium' },
   label: { size: 'label', weight: 'semibold', tracking: 'label' },
-  // --- Tên cũ, giữ tạm để chuyển dần từng màn (xoá ở giai đoạn 3) ---
-  h1: { size: 'title', weight: 'bold', tracking: 'tight' },
-  h2: { size: 'title', weight: 'bold', tracking: 'tight' },
-  h3: { size: 'heading', weight: 'semibold' },
-  bodyMedium: { size: 'body', weight: 'medium' },
-  small: { size: 'caption', weight: 'regular' },
-  smallMedium: { size: 'caption', weight: 'medium' },
-  overline: { size: 'label', weight: 'semibold', tracking: 'label' },
 } satisfies Record<string, VariantSpec>;
 
 export type TextVariant = keyof typeof textVariants;

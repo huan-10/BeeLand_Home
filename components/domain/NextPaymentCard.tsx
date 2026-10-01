@@ -22,7 +22,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
           <Text variant="caption" color={semantic.textMuted}>
             Đợt thanh toán tiếp theo
           </Text>
-          <Text variant="bodyMedium" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold">
             {installment.name}
           </Text>
         </View>
@@ -33,7 +33,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
           <Text variant="caption" color={semantic.textMuted}>
             Số tiền
           </Text>
-          <Text variant="h2" color={semantic.textBrand}>
+          <Text variant="title" color={semantic.textBrand} numeric>
             {formatCurrency(installment.remainingAmount)}
           </Text>
         </View>
@@ -41,7 +41,7 @@ export function NextPaymentCard({ installment, onViewContract }: NextPaymentCard
           <Text variant="caption" color={semantic.textMuted}>
             Hạn thanh toán
           </Text>
-          <Text variant="bodyMedium" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold">
             {formatDate(installment.dueDate)}
           </Text>
         </View>

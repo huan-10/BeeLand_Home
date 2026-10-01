@@ -43,12 +43,12 @@ export function InstallmentTimeline({ installments }: { installments: PaymentIns
             </View>
             <View style={[styles.content, !isLast && styles.contentGap]}>
               <View style={styles.titleRow}>
-                <Text variant="bodyMedium" weight="semibold" style={styles.flex}>
+                <Text variant="bodyStrong" weight="semibold" style={styles.flex}>
                   {item.name}
                 </Text>
                 <Badge label={meta.label} tone={meta.tone} icon={meta.icon} />
               </View>
-              <Text variant="h3" color={isPaid ? semantic.text : tone.fg}>
+              <Text variant="heading" color={isPaid ? semantic.text : tone.fg} numeric>
                 {formatCurrency(item.amount)}
               </Text>
               <Text variant="caption" color={item.status === 'overdue' ? colors.danger[700] : semantic.textMuted}>

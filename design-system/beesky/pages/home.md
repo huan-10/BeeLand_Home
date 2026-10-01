@@ -4,8 +4,10 @@
 
 ## Khác Master
 - Không dùng `ScreenHeader`; thay bằng **header chào**: `Avatar md` + lời chào + ngày (`formatWeekdayDate`, ví dụ "Thứ Năm, 01/10/2026") + `IconButton` chuông.
-  - Mobile (< 768px): "Xin chào," (`small`, `textMuted`) ở dòng trên, tên `h2` dòng dưới (không ngắt giữa tên); cả khối là một header đọc liền "Xin chào, {tên}".
-  - ≥ 768px: một dòng `h2` "Xin chào, {tên}" (tối đa 2 dòng, không cắt).
+  - Mobile (< 768px): "Xin chào," (`caption`, `textMuted`) ở dòng trên, tên `title` dòng dưới (không ngắt giữa tên); cả khối là một header đọc liền "Xin chào, {tên}".
+  - ≥ 768px: một dòng `title` "Xin chào, {tên}" (tối đa 2 dòng, không cắt).
+- **Thẻ tổng quan nền ink** (`MoneySummaryCard`, desktop 7 cột cạnh banner 5 cột; mobile trên banner): "Tổng quan thanh toán" + "a/b hợp đồng đang hiệu lực", tổng giá trị `display`, thanh tiến độ + chữ %, Đã thanh toán / Còn lại — số liệu từ `useDashboard` (đã có sẵn). Đang tải: Skeleton bo 28; lỗi: `ErrorState`.
+- Tiêu đề khối dùng `Section`: nút **viên thuốc** "Xem tất cả" / "Lịch thanh toán" nền `primary.50`.
 - Chuông: **chấm đỏ** (`danger.600`, viền trắng) khi có thông báo chưa đọc — **không hiển thị số**; tên truy cập là cụm từ đầy đủ: "Thông báo, 2 thông báo chưa đọc" (`lib/notification.ts` → `unreadLabel`).
 - **Banner thương hiệu** (`BrandBanner`): ảnh khu đô thị + gradient cam ngang (`brandTintStrong` → `brandTint`, đủ đậm cho chữ trắng ≥ 4.5:1), bo `xl`, logo `sm` inverted, tiêu đề + mô tả trắng. Chỉ trang trí, không bấm được.
 - Không còn thẻ tổng quan gradient và danh sách hợp đồng trên Trang chủ (đã có ở Hợp đồng / Thanh toán).

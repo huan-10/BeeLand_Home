@@ -18,6 +18,7 @@ npm start         # dev server, quét QR bằng Expo Go trên điện thoại
 
 npm run lint       # ESLint
 npm run typecheck  # tsc --noEmit
+npm test           # test tương phản màu (node:test, đọc theme/tokens.json)
 npm run audit:ui   # kiểm định giao diện web (xem mục "Kiểm định")
 npx expo-doctor    # kiểm tra phiên bản thư viện / cấu hình Expo
 ```
@@ -46,10 +47,11 @@ app/                 Màn hình (Expo Router)
   login.tsx
   (app)/_layout.tsx  Tabs: bottom tab < 768px, sidebar ≥ 768px
   (app)/…            Trang chủ, Hợp đồng, Thanh toán, Phiếu thu, Cá nhân, Thông báo
-components/ui/       Button, Input, Card, Badge, Chip, Tabs, DataTable, Dialog, Toast, ProgressBar, Skeleton, EmptyState, ErrorState…
-components/layout/   Screen (container tối đa 1100px), AppNavigation (bottom tab / sidebar + skip link), AuthLayout, Grid/Col
+components/ui/       Button, Input, Card, MoneySummaryCard, KeyValueRow, Badge, Chip, Tabs, DataTable, Dialog, Toast, ProgressBar…
+components/layout/   Screen (container tối đa 1100px), AppNavigation (thanh tab kính nổi / sidebar + skip link), AuthLayout, Grid/Col
 components/domain/   Thẻ hợp đồng, đợt thanh toán, phiếu thu, thông báo…
-theme/               Design system: tokens.json (màu, bo góc, cỡ chữ), shadows, typography, fonts
+theme/               Design system: tokens.json (màu, vai trò màu, bo góc, cỡ chữ), shadows, typography, fonts, icons
+tests/               Test tương phản màu
 types/               Interface: User, Contract, PaymentInstallment, Receipt, AppNotification
 data/mock/           Dữ liệu giả – CHỈ được đọc bởi services/
 services/            Lớp truy cập dữ liệu (hàm async)
@@ -94,12 +96,16 @@ Khi có lỗi, ném `ServiceError` với thông điệp tiếng Việt — màn 
 
 ## Giao diện
 
-- Màu chủ đạo cam `#F08A24` (thang 50–900), xanh lá (thành công), xanh dương (thông tin), đỏ (cảnh báo), thang xám.
-  Chữ trên nền cam dùng `gray.900` (7:1) — chữ trắng trên `#F08A24` chỉ đạt 2.5:1 nên không dùng.
-- Bo góc 12 / 16 / 24, đổ bóng nhẹ, font Be Vietnam Pro + Noto Sans (đủ dấu tiếng Việt, qua `expo-font`), light mode.
+- Phong cách **"Bo tròn – Mật ong & Cà phê"** (bản làm mới 2026-10): cam thương hiệu `#F08A24` cho logo / tiến độ,
+  nút chính cam mật ong đậm `#A9520A` chữ trắng (5.4:1), thang xám ấm "cát", màu đậm nâu cà phê `#2B2019` cho thẻ
+  tổng tiền, chip/tab đang chọn và toast; badge pastel cho trạng thái.
+- Thẻ bo 24–28 nổi bằng bóng ấm 4 mức (soft / raised / overlay / modal) thay cho viền; một font Be Vietnam Pro
+  (display 28 / title 22 / heading 17 / body 15 / caption 14 / label 12, số tiền chữ số đều độ rộng); light mode.
+- Mobile: thanh tab kính mờ nổi; web ≥ 768px: sidebar + lưới 12 cột.
 - Quy chuẩn đầy đủ: `design-system/beesky/MASTER.md` và `design-system/beesky/pages/`.
 - Token khai báo một lần trong `theme/tokens.json`, dùng chung cho `tailwind.config.js` (NativeWind) và style TypeScript.
-- Không hard-code màu / kích thước ngoài `theme/`; icon dùng Ionicons (`@expo/vector-icons`), không dùng emoji.
+- Không hard-code màu / kích thước ngoài `theme/`; icon dùng lucide-react-native qua `<Icon name>`, không dùng emoji.
+- `npm test` kiểm 72 cặp tương phản WCAG trực tiếp trên `theme/tokens.json`.
 
 ## Kiểm định (accessibility & responsive)
 

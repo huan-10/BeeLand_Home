@@ -101,7 +101,7 @@ export default function LoginScreen() {
       subtitle="Chào mừng bạn trở lại! Đăng nhập để xem hợp đồng và lịch thanh toán."
       footer={
         <View style={styles.footerRow}>
-          <Text variant="small" color={semantic.textMuted}>
+          <Text variant="caption" color={semantic.textMuted}>
             Chưa có tài khoản?
           </Text>
           <TextLink label="Đăng ký" onPress={() => router.push('/register')} />
@@ -188,7 +188,7 @@ export default function LoginScreen() {
             style={({ pressed }) => [styles.demo, interactive, demoHover.hovered && styles.demoHover, pressed && styles.demoPressed]}>
             <Icon name="info" color={toneColors.info.fg} />
             <View style={styles.flex}>
-              <Text variant="smallMedium" weight="semibold" color={toneColors.info.fg}>
+              <Text variant="captionStrong" weight="semibold" color={toneColors.info.fg}>
                 Tài khoản dùng thử
               </Text>
               <Text variant="caption" color={toneColors.info.fg}>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.ms,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     backgroundColor: toneColors.info.bg,
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.info.border,

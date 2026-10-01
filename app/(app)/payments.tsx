@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { InstallmentCard } from '@/components/domain';
-import { Col, Grid, Screen } from '@/components/layout';
+import { Screen } from '@/components/layout';
 import {
   Badge,
   Card,
@@ -12,7 +12,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
-  IconCircle,
+  MoneySummaryCard,
   ScreenHeader,
   SkeletonList,
   Text,
@@ -22,9 +22,9 @@ import {
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useHover } from '@/hooks/useHover';
 import { usePaymentSchedule } from '@/hooks/useInstallments';
-import { formatCurrency, formatDate, formatDaysLeft, formatMonthYear } from '@/lib/format';
+import { formatCurrency, formatDate, formatDaysLeft, formatMonthYear, formatPercent } from '@/lib/format';
 import { installmentStatusMeta } from '@/lib/labels';
-import { borderWidth, chipRow, colors, interactive, radius, semantic, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
+import { borderWidth, chipRow, colors, interactive, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 import type { InstallmentFilter, PaymentInstallmentView } from '@/types';
 
 const filters: { value: InstallmentFilter; label: string }[] = [
@@ -55,17 +55,21 @@ export default function PaymentsScreen() {
       {data && data.overdue.length > 0 ? <OverdueAlert items={data.overdue} amount={data.summary.overdueAmount} /> : null}
 
       {data ? (
-        <Grid>
-          <Col span={{ mobile: 12, desktop: 4 }}>
-            <StatCard icon="wallet" tone="primary" label="Cần thanh toán" value={formatCurrency(data.summary.dueAmount)} hint={`${data.summary.dueCount} đợt`} />
-          </Col>
-          <Col span={{ mobile: 12, desktop: 4 }}>
-            <StatCard icon="warning" tone="danger" label="Quá hạn" value={formatCurrency(data.summary.overdueAmount)} hint={`${data.summary.overdueCount} đợt`} />
-          </Col>
-          <Col span={{ mobile: 12, desktop: 4 }}>
-            <StatCard icon="checkCircle" tone="success" label="Đã thanh toán" value={formatCurrency(data.summary.paidAmount)} hint={`${data.summary.paidCount} đợt`} />
-          </Col>
-        </Grid>
+        <MoneySummaryCard
+          header={
+            <Text variant="subhead" color={semantic.onInverse} accessibilityRole="header">
+              Tổng hợp thanh toán
+            </Text>
+          }
+          totalLabel={`Cần thanh toán · ${data.summary.dueCount} đợt`}
+          total={formatCurrency(data.summary.dueAmount)}
+          percent={data.summary.paidPercent}
+          progressLabel={`Đã thanh toán ${formatPercent(data.summary.paidPercent)} tổng các đợt`}
+          stats={[
+            { label: `Quá hạn · ${data.summary.overdueCount} đợt`, value: formatCurrency(data.summary.overdueAmount), accent: data.summary.overdueCount > 0 },
+            { label: `Đã thanh toán · ${data.summary.paidCount} đợt`, value: formatCurrency(data.summary.paidAmount) },
+          ]}
+        />
       ) : null}
 
       <View style={chipRow} accessibilityRole="tablist">
@@ -95,10 +99,10 @@ export default function PaymentsScreen() {
           {data.groups.map((g) => (
             <View key={g.key} style={styles.group}>
               <View style={styles.groupHeader}>
-                <Text variant="h3" accessibilityRole="header">
+                <Text variant="heading" accessibilityRole="header">
                   {formatMonthYear(`${g.key}-01`)}
                 </Text>
-                <Text variant="smallMedium" color={semantic.textMuted}>
+                <Text variant="captionStrong" color={semantic.textMuted}>
                   {g.items.length} đợt · {formatCurrency(g.total)}
                 </Text>
               </View>
@@ -129,7 +133,7 @@ function toRow(i: PaymentInstallmentView): DataTableRow<ColumnKey> {
     cells: {
       name: (
         <View>
-          <Text variant="smallMedium" weight="semibold">
+          <Text variant="captionStrong" weight="semibold">
             {i.name}
           </Text>
           <Text variant="caption" color={semantic.textMuted}>
@@ -139,7 +143,7 @@ function toRow(i: PaymentInstallmentView): DataTableRow<ColumnKey> {
       ),
       due: (
         <View>
-          <Text variant="small">{formatDate(isPaid && i.paidDate ? i.paidDate : i.dueDate)}</Text>
+          <Text variant="caption">{formatDate(isPaid && i.paidDate ? i.paidDate : i.dueDate)}</Text>
           {!isPaid ? (
             <Text variant="caption" weight="semibold" color={i.status === 'overdue' ? colors.danger[700] : semantic.textMuted}>
               {formatDaysLeft(i.daysUntilDue)}
@@ -148,7 +152,7 @@ function toRow(i: PaymentInstallmentView): DataTableRow<ColumnKey> {
         </View>
       ),
       amount: (
-        <Text variant="smallMedium" weight="bold" align="right" style={styles.amount}>
+        <Text variant="captionStrong" weight="bold" align="right" style={styles.amount} numeric>
           {formatCurrency(isPaid ? i.amount : i.remainingAmount)}
         </Text>
       ),
@@ -163,11 +167,11 @@ function OverdueAlert({ items, amount }: { items: PaymentInstallmentView[]; amou
     <View style={styles.alert} role="alert">
       <View style={styles.alertHeader}>
         <Icon name="alertCircle" size="lg" color={toneColors.danger.fg} accessibilityLabel="Cảnh báo" />
-        <Text variant="bodyMedium" weight="bold" color={toneColors.danger.fg} style={styles.flex}>
+        <Text variant="bodyStrong" weight="bold" color={toneColors.danger.fg} style={styles.flex}>
           {items.length} đợt quá hạn · {formatCurrency(amount)}
         </Text>
       </View>
-      <Text variant="small" color={toneColors.danger.fg}>
+      <Text variant="caption" color={toneColors.danger.fg}>
         Vui lòng thanh toán sớm để tránh phát sinh lãi chậm trả.
       </Text>
       {items.map((i) => (
@@ -187,36 +191,18 @@ function OverdueRow({ item }: { item: PaymentInstallmentView }) {
       accessibilityLabel={`${item.name}, hợp đồng ${item.contractCode}, ${formatCurrency(item.remainingAmount)}, ${formatDaysLeft(item.daysUntilDue)}. Mở hợp đồng`}
       style={({ pressed }) => [styles.overdueRow, interactive, (hovered || pressed) && styles.overdueRowHover]}>
       <View style={styles.flex}>
-        <Text variant="smallMedium" weight="semibold" color={toneColors.danger.fg}>
+        <Text variant="captionStrong" weight="semibold" color={toneColors.danger.fg}>
           {item.name} · {item.contractCode}
         </Text>
         <Text variant="caption" color={toneColors.danger.fg}>
           Hạn {formatDate(item.dueDate)} · {formatDaysLeft(item.daysUntilDue)}
         </Text>
       </View>
-      <Text variant="smallMedium" weight="bold" color={toneColors.danger.fg}>
+      <Text variant="captionStrong" weight="bold" color={toneColors.danger.fg} numeric>
         {formatCurrency(item.remainingAmount)}
       </Text>
       <Icon name="chevronRight" size="sm" color={toneColors.danger.fg} />
     </Pressable>
-  );
-}
-
-function StatCard({ icon, tone, label, value, hint }: { icon: IconName; tone: Tone; label: string; value: string; hint: string }) {
-  return (
-    <Card style={styles.stat}>
-      <View style={styles.statRow}>
-        <IconCircle name={icon} tone={tone} size="md" />
-        <View style={styles.flex}>
-          <Text variant="caption" color={semantic.textMuted}>
-            {label} · {hint}
-          </Text>
-          <Text variant="bodyMedium" weight="bold" style={styles.amount}>
-            {value}
-          </Text>
-        </View>
-      </View>
-    </Card>
   );
 }
 
@@ -227,12 +213,10 @@ const styles = StyleSheet.create({
   groupHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm },
   list: { gap: spacing.ms },
   amount: { fontVariant: ['tabular-nums'] },
-  stat: { flex: 1 },
-  statRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
   alert: {
     gap: spacing.sm,
     padding: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: radius['2xl'],
     backgroundColor: toneColors.danger.bg,
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.danger.border,
@@ -245,7 +229,7 @@ const styles = StyleSheet.create({
     minHeight: sizes.touchTarget,
     paddingHorizontal: spacing.ms,
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     backgroundColor: semantic.surface,
   },
   overdueRowHover: { backgroundColor: colors.danger[100] },

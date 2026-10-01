@@ -23,7 +23,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
           {item.onPress ? (
             <TextLink label={item.label} onPress={item.onPress} />
           ) : (
-            <Text variant="smallMedium" color={semantic.textMuted} aria-current="page">
+            <Text variant="captionStrong" color={semantic.textMuted} aria-current="page">
               {item.label}
             </Text>
           )}

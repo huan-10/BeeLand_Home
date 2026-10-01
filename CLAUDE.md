@@ -10,10 +10,10 @@ Chạy trên iOS, Android và Web với cùng một giao diện. Toàn bộ ch�
 - Expo SDK 57, React Native 0.86, React 19, TypeScript (strict)
 - Expo Router (routes nằm ở `app/` ở gốc dự án — dự án này **không** dùng `src/app/`)
 - react-native-web + `@expo/metro-runtime` (web xuất tĩnh), NativeWind v4 + Tailwind 3
-- Font: Be Vietnam Pro (tiêu đề) + Noto Sans (nội dung) qua `expo-font`; icon: Ionicons (`@expo/vector-icons`)
+- Font: **chỉ Be Vietnam Pro** (400/500/600/700) qua `expo-font`; icon: **lucide-react-native** qua `<Icon name>` (tên ngữ nghĩa trong `theme/icons.ts`)
 - AsyncStorage cho phiên đăng nhập; **chưa có backend** — dữ liệu giả trong `data/mock/`
 
-Lệnh: `npm run web` · `npm run ios` · `npm run android` · `npm run lint` · `npm run typecheck` · `npx expo export --platform web`.
+Lệnh: `npm run web` · `npm run ios` · `npm run android` · `npm run lint` · `npm run typecheck` · `npm test` (tương phản màu) · `npm run audit:ui` · `npx expo export --platform web`.
 Trong môi trường không truy cập được api.expo.dev, thêm `EXPO_OFFLINE=1` trước `npx expo install` / `npx expo export`.
 
 ## Cấu trúc
@@ -21,7 +21,7 @@ Trong môi trường không truy cập được api.expo.dev, thêm `EXPO_OFFLIN
 ```
 app/                 Màn hình (Expo Router). (app)/ là nhóm cần đăng nhập
 components/ui/       Component nền tảng (Button, Input, Card, Badge, Text, Icon…)
-components/layout/   Screen, AppNavigation (bottom tab / sidebar), Logo, Section, ResponsiveGrid
+components/layout/   Screen, AppNavigation (thanh tab kính nổi / sidebar), AuthLayout, Logo, Section, Grid/Col
 components/domain/   Thẻ nghiệp vụ (ContractCard, InstallmentTimeline, ReceiptCard…)
 theme/               Design token — tokens.json là nguồn duy nhất (dùng chung với tailwind.config.js)
 types/               Interface domain
@@ -69,6 +69,6 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 4. Triển khai bằng token và component sẵn có; nếu cần giá trị mới, thêm vào `theme/tokens.json` và ghi vào MASTER.md.
 5. **Tự kiểm tra checklist ở MASTER.md §13** (hình ảnh, tương tác, trạng thái dữ liệu, bố cục 375/768/1024/1440, trợ năng, kỹ thuật) và chạy:
    ```bash
-   npx tsc --noEmit && npx expo lint && npx expo export --platform web
+   npx tsc --noEmit && npx expo lint && npm test && npx expo export --platform web
    ```
    **chỉ tạo pull request khi tất cả đều đạt**; ghi kết quả kiểm tra vào mô tả PR.

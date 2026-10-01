@@ -12,7 +12,6 @@ export * from './FormErrorSummary';
 export * from './Icon';
 export * from './IconButton';
 export * from './IconCircle';
-export * from './InfoRow';
 export * from './KeyValueRow';
 export * from './BrandMark';
 export * from './Input';

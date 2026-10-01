@@ -23,7 +23,7 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
       <View style={styles.row}>
         <IconCircle name={isPaid ? 'checkCircle' : 'calendar'} tone={meta.tone} />
         <View style={styles.main}>
-          <Text variant="bodyMedium" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold">
             {installment.name}
           </Text>
           {showContract ? (
@@ -32,7 +32,7 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
             </Text>
           ) : null}
         </View>
-        <Text variant="smallMedium" weight="bold" align="right">
+        <Text variant="captionStrong" weight="bold" align="right" numeric>
           {formatCurrency(installment.amount)}
         </Text>
       </View>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.ms,
     paddingTop: spacing.ms,
     borderTopWidth: borderWidth.hairline,
-    borderTopColor: semantic.borderSubtle,
+    borderTopColor: semantic.border,
   },
   date: { flex: 1 },
 });

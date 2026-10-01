@@ -36,7 +36,7 @@ export default function ForgotPasswordScreen() {
 
   const footer = (
     <View style={styles.footerRow}>
-      <Text variant="small" color={semantic.textMuted}>
+      <Text variant="caption" color={semantic.textMuted}>
         Nhớ mật khẩu rồi?
       </Text>
       <TextLink label="Đăng nhập" onPress={backToLogin} />

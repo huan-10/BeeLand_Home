@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, FadeIn, Icon, Text } from '@/components/ui';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { colors, layout, semantic, sizes, spacing } from '@/theme';
+import { colors, layout, radius, semantic, sizes, spacing } from '@/theme';
 
 import { Logo } from './Logo';
 
@@ -26,7 +26,7 @@ export interface AuthLayoutProps {
 /**
  * Khung chung cho Đăng nhập / Đăng ký / Quên mật khẩu.
  * Mobile: ảnh khu đô thị phía trên mờ dần vào nền + form một cột.
- * Desktop (≥1024px): 2 cột — trái ảnh thương hiệu phủ gradient cam, phải form trong thẻ tối đa 440px.
+ * Desktop (≥1024px): 2 cột — trái ảnh thương hiệu phủ gradient cam đậm → nâu đen ink, phải form trong thẻ tối đa 440px.
  */
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   // 2 cột từ 1024px; 768–1023px dùng 1 cột với thẻ form căn giữa để form không bị bóp hẹp.
@@ -35,11 +35,11 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
 
   const header = (
     <FadeIn style={styles.header}>
-      <Text variant="h1" accessibilityRole="header">
+      <Text variant="title" accessibilityRole="header">
         {title}
       </Text>
       {subtitle ? (
-        <Text variant="small" color={semantic.textMuted}>
+        <Text variant="caption" color={semantic.textMuted}>
           {subtitle}
         </Text>
       ) : null}
@@ -66,8 +66,10 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
               <View style={styles.features}>
                 {features.map((f) => (
                   <View key={f} style={styles.feature}>
-                    <Icon name="checkCircle" color={semantic.textInverse} />
-                    <Text variant="bodyMedium" color={semantic.textInverse}>
+                    <View style={styles.featureIcon}>
+                      <Icon name="check" size="sm" color={semantic.onInverse} strong />
+                    </View>
+                    <Text variant="bodyStrong" color={semantic.textInverse}>
                       {f}
                     </Text>
                   </View>
@@ -82,7 +84,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
 
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={styles.formScrollWide} keyboardShouldPersistTaps="handled">
-            <Card padding="xl" shadow="md" style={styles.formCard}>
+            <Card padding="xl" radius="3xl" shadow="raised" style={styles.formCard}>
               <View style={styles.form}>
                 {header}
                 {children}
@@ -110,7 +112,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
             style={[StyleSheet.absoluteFill, styles.heroContent, { paddingTop: insets.top + spacing.lg }]}>
             <FadeIn style={styles.heroText}>
               <Logo size="lg" inverted />
-              <Text variant="bodyMedium" color={semantic.textInverse} style={styles.heroSlogan}>
+              <Text variant="bodyStrong" color={semantic.textInverse} style={styles.heroSlogan}>
                 {AUTH_SLOGAN}
               </Text>
             </FadeIn>
@@ -118,7 +120,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
         </ImageBackground>
 
         <View style={styles.mobileBody}>
-          <Card padding="ml" shadow="md">
+          <Card padding="ml" radius="3xl" shadow="raised">
             <View style={styles.form}>
               {header}
               {children}
@@ -140,7 +142,15 @@ const styles = StyleSheet.create({
   brandBody: { gap: spacing.md },
   brandText: { maxWidth: layout.brandTextMaxWidth },
   features: { gap: spacing.ms, marginTop: spacing.md },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  featureIcon: {
+    width: sizes.iconBox.sm,
+    height: sizes.iconBox.sm,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: semantic.inverseTrack,
+  },
   formScrollWide: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
   formCard: { width: '100%', maxWidth: layout.formMaxWidth, alignSelf: 'center' },
   form: { gap: spacing.md },

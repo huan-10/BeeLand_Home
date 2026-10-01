@@ -4,7 +4,7 @@ import { Badge, Card, Icon, ProgressBar, Skeleton, Text } from '@/components/ui'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format';
 import { contractStatusMeta, contractTypeLabels } from '@/lib/labels';
 import { isFullyPaid } from '@/lib/payment';
-import { borderWidth, fontSizes, radius, semantic, sizes, spacing } from '@/theme';
+import { fontSizes, radius, semantic, sizes, spacing } from '@/theme';
 import type { ContractListItem } from '@/types';
 
 import { ProjectImage } from './ProjectImage';
@@ -30,15 +30,17 @@ export function ContractCard({ contract, onPress }: ContractCardProps) {
       padding="none"
       onPress={onPress}
       hoverLift
-      style={styles.card}
       accessibilityLabel={`Hợp đồng ${contract.code}, ${contract.projectName}, căn ${contract.unitCode}, ${status.label}, đã thanh toán ${percent}`}
       accessibilityHint="Mở chi tiết hợp đồng">
-      <ProjectImage uri={contract.projectImageUrl} projectName={contract.projectName} height={sizes.projectImage} />
+      {/* Ảnh cắt bo góc trên ở lớp riêng: thẻ không cần overflow hidden nên giữ được bóng trên iOS. */}
+      <View style={styles.imageWrap}>
+        <ProjectImage uri={contract.projectImageUrl} projectName={contract.projectName} height={sizes.projectImage} />
+      </View>
 
       <View style={styles.body}>
         <View style={styles.titleRow}>
           <View style={styles.titleCol}>
-            <Text variant="h3" selectable>
+            <Text variant="heading" selectable>
               {contract.code}
             </Text>
             <Text variant="caption" color={semantic.textMuted}>
@@ -48,20 +50,20 @@ export function ContractCard({ contract, onPress }: ContractCardProps) {
           <Badge label={status.label} tone={status.tone} dot />
         </View>
 
-        <Text variant="bodyMedium" weight="semibold">
+        <Text variant="bodyStrong" weight="semibold">
           {contract.projectName}
         </Text>
 
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Icon name="home" size="sm" color={semantic.iconMuted} />
-            <Text variant="small" color={semantic.textSecondary} style={styles.flexText}>
+            <Text variant="caption" color={semantic.textSecondary} style={styles.flexText}>
               Căn {contract.unitCode} · {contract.block}
             </Text>
           </View>
           <View style={styles.metaItem}>
             <Icon name="calendar" size="sm" color={semantic.iconMuted} />
-            <Text variant="small" color={semantic.textSecondary}>
+            <Text variant="caption" color={semantic.textSecondary}>
               Ngày ký {formatDate(contract.signedDate)}
             </Text>
           </View>
@@ -69,20 +71,20 @@ export function ContractCard({ contract, onPress }: ContractCardProps) {
 
         <View style={styles.amounts}>
           <View style={styles.amountRow}>
-            <Text variant="small" color={semantic.textMuted}>
+            <Text variant="caption" color={semantic.textMuted}>
               Giá trị hợp đồng
             </Text>
-            <Text variant="smallMedium" weight="bold" align="right" style={styles.flexText}>
+            <Text variant="captionStrong" weight="bold" align="right" numeric style={styles.flexText}>
               {formatCurrency(contract.totalValue)}
             </Text>
           </View>
           <View style={styles.amountRow}>
-            <Text variant="small" color={semantic.textMuted}>
+            <Text variant="caption" color={semantic.textMuted}>
               Đã thanh toán
             </Text>
-            <Text variant="smallMedium" weight="bold" align="right" style={styles.flexText}>
+            <Text variant="captionStrong" weight="bold" align="right" numeric style={styles.flexText}>
               {formatCurrency(summary.paidAmount)}{' '}
-              <Text variant="smallMedium" weight="bold" color={done ? semantic.textSuccess : semantic.textBrand}>
+              <Text variant="captionStrong" weight="bold" color={done ? semantic.textSuccess : semantic.textBrand}>
                 ({percent})
               </Text>
             </Text>
@@ -101,8 +103,10 @@ export function ContractCard({ contract, onPress }: ContractCardProps) {
 /** Skeleton cùng kích thước thẻ thật để không nhảy bố cục khi tải xong. */
 export function ContractCardSkeleton() {
   return (
-    <Card padding="none" style={styles.card}>
-      <Skeleton height={sizes.projectImage} radius={radius.none} />
+    <Card padding="none">
+      <View style={styles.imageWrap}>
+        <Skeleton height={sizes.projectImage} radius={radius.none} />
+      </View>
       <View style={styles.body}>
         <Skeleton width="55%" height={fontSizes.heading.lineHeight} />
         <Skeleton width="80%" />
@@ -114,8 +118,8 @@ export function ContractCardSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  card: { overflow: 'hidden' },
-  body: { padding: spacing.md, gap: spacing.ms },
+  imageWrap: { borderTopLeftRadius: radius['2xl'], borderTopRightRadius: radius['2xl'], overflow: 'hidden' },
+  body: { padding: spacing.ml, gap: spacing.ms },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   titleCol: { flex: 1, minWidth: 0, gap: spacing.xs },
   meta: { gap: spacing.xs },
@@ -124,8 +128,8 @@ const styles = StyleSheet.create({
   amounts: {
     gap: spacing.sm,
     paddingTop: spacing.ms,
-    borderTopWidth: borderWidth.hairline,
-    borderTopColor: semantic.borderSubtle,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: semantic.border,
   },
   amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.ms },
 });

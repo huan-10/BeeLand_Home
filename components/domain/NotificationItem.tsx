@@ -4,7 +4,7 @@ import { IconCircle, Text } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/format';
 import { notificationTypeMeta } from '@/lib/labels';
 import { useHover } from '@/hooks/useHover';
-import { borderWidth, colors, interactive, opacity, radius, semantic, sizes, spacing } from '@/theme';
+import { colors, interactive, opacity, radius, semantic, shadows, sizes, spacing } from '@/theme';
 import type { AppNotification } from '@/types';
 
 export function NotificationItem({ notification, onPress }: { notification: AppNotification; onPress?: () => void }) {
@@ -27,12 +27,12 @@ export function NotificationItem({ notification, onPress }: { notification: AppN
       <IconCircle name={meta.icon} tone={meta.tone} size="md" />
       <View style={styles.main}>
         <View style={styles.titleRow}>
-          <Text variant="smallMedium" weight="semibold" style={styles.flex}>
+          <Text variant="captionStrong" weight="semibold" style={styles.flex}>
             {notification.title}
           </Text>
           {!notification.read ? <View style={styles.dot} /> : null}
         </View>
-        <Text variant="small" color={semantic.textSecondary}>
+        <Text variant="caption" color={semantic.textSecondary}>
           {notification.message}
         </Text>
         <Text variant="caption" color={semantic.textMuted}>
@@ -48,14 +48,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.ms,
     padding: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: radius['2xl'],
     backgroundColor: semantic.surface,
-    borderWidth: borderWidth.hairline,
-    borderColor: colors.transparent,
+    ...shadows.soft,
   },
   unread: { backgroundColor: colors.primary[50] },
-  hover: { backgroundColor: semantic.surfaceMuted, borderColor: semantic.borderHover },
-  unreadHover: { backgroundColor: colors.primary[100] },
+  hover: { backgroundColor: semantic.surfaceMuted, ...shadows.raised },
+  unreadHover: { backgroundColor: colors.primary[100], ...shadows.raised },
   pressed: { opacity: opacity.pressed },
   main: { flex: 1, gap: spacing.xs },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
