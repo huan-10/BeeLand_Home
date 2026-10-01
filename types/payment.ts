@@ -30,3 +30,11 @@ export interface PaymentInstallmentView extends PaymentInstallment {
 }
 
 export type InstallmentFilter = 'all' | 'due' | 'paid';
+
+/** Kết quả khởi tạo thanh toán. */
+export interface PaymentIntent {
+  status: 'redirect' | 'unavailable';
+  /** URL cổng thanh toán khi `status = redirect`. */
+  checkoutUrl?: string;
+  message: string;
+}

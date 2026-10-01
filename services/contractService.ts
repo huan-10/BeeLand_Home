@@ -1,8 +1,20 @@
+import { Asset } from 'expo-asset';
+
+import { mockSeller, mockTermsByType } from '@/data/mock/contractDetails';
 import { mockContracts } from '@/data/mock/contracts';
 import { mockInstallments } from '@/data/mock/installments';
 import { countContractsByStatus, matchesContractCode, matchesContractFilter } from '@/lib/contract';
 import { summarizeContractPayments, toInstallmentView } from '@/lib/payment';
-import type { Contract, ContractCounts, ContractFilter, ContractListItem, PaymentInstallmentView } from '@/types';
+import type {
+  Contract,
+  ContractCounts,
+  ContractDocument,
+  ContractFilter,
+  ContractListItem,
+  ContractParty,
+  ContractTerm,
+  PaymentInstallmentView,
+} from '@/types';
 
 import { ServiceError } from './errors';
 import { clone, simulateLatency } from './mockLatency';
@@ -10,7 +22,13 @@ import { clone, simulateLatency } from './mockLatency';
 export interface ContractDetail {
   contract: ContractListItem;
   installments: PaymentInstallmentView[];
+  seller: ContractParty;
+  terms: ContractTerm[];
+  document: ContractDocument;
 }
+
+/** Hợp đồng PDF mẫu đóng gói trong ứng dụng (mock). */
+const SAMPLE_CONTRACT_PDF = require('@/assets/docs/hop-dong-mau.pdf');
 
 const typeOrder: Record<Contract['type'], number> = { purchase: 0, deposit: 1, reservation: 2 };
 
@@ -46,5 +64,11 @@ export async function getContractById(id: string): Promise<ContractDetail> {
   await simulateLatency();
   const contract = mockContracts.find((c) => c.id === id);
   if (!contract) throw new ServiceError('Không tìm thấy hợp đồng.', 'NOT_FOUND');
-  return { contract: toListItem(contract), installments: buildInstallmentViews(contract) };
+  return {
+    contract: toListItem(contract),
+    installments: buildInstallmentViews(contract),
+    seller: clone(mockSeller),
+    terms: clone(mockTermsByType[contract.type]),
+    document: { title: `Hợp đồng ${contract.code}.pdf`, url: Asset.fromModule(SAMPLE_CONTRACT_PDF).uri },
+  };
 }

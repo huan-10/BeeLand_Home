@@ -40,7 +40,9 @@
           "backgroundColor": "#F6F7F9"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

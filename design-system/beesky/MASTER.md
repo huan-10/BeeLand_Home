@@ -59,7 +59,7 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`toneCo
 | `info` (xanh dương) | `#EFF6FF` | `#1D4ED8` | `#3B82F6` | Thông tin, HĐĐC/PGC |
 | `danger` (đỏ) | `#FEF2F2` | `#B91C1C` | `#EF4444` | Quá hạn, lỗi, đăng xuất |
 | `warning` (vàng cam) | `#FFFBEB` | `#B45309` | `#F59E0B` | Chờ xử lý |
-| `primary` (cam) | `#FEF5EC` | `#AD5A0C` | `#F08A24` | Sắp đến hạn |
+| `primary` (cam) | `#FEF5EC` | `#AD5A0C` | `#F08A24` | Đến hạn, thanh toán một phần |
 | `neutral` (xám) | `#F3F4F6` | `#374151` | `#6B7280` | Chưa đến hạn |
 
 ### 1.4 Tương phản — [Skill] áp lên màu [Mockup]
@@ -204,7 +204,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **Card** | Trắng, bo `lg`, viền `borderSubtle`, `shadows.sm`, padding `md` (`none` khi có ảnh tràn viền). Bấm được → phản hồi opacity 0.85, **không scale**. `hoverLift` (web): hover dịch lên 2px + `shadows.md` (transform, không đổi bố cục) — dùng cho thẻ danh sách. | [Mockup] + [Skill] |
 | **Badge** | Viên thuốc pastel (§1.3), chữ caption semibold, tùy chọn chấm màu/icon. Màu luôn đi kèm chữ. Luôn một dòng, không co (`flexShrink: 0`) — phần tử bên cạnh co/xuống dòng thay. | [Mockup] + [Skill] `color-not-only`, compact label overflow |
 | **ProgressBar** | Cao 8, bo tròn, track `gray.100` (trên nền cam: overlay trắng 30%), fill theo sắc thái: `primary` (cam) khi đang trả, `success` (xanh lá) khi 100% hoặc trên thẻ cam. Có `accessibilityValue` + nhãn có chữ. | [Mockup] |
-| **Timeline** | Nút tròn 28 viền 2px; đã trả: nền đặc + dấu tích, đường nối tô màu; chưa trả: số thứ tự. Mỗi đợt: tên + badge, số tiền `h3`, % HĐ + ngày. | [Mockup] |
+| **Timeline** | Nút tròn 28 viền 2px, **luôn có icon theo trạng thái**: đã trả = xanh lá đặc + dấu tick (đường nối tô xanh) · đến hạn = cam đặc + đồng hồ báo thức · chưa đến hạn = viền xám + đồng hồ · quá hạn = đỏ + cảnh báo. Mỗi đợt: tên + Badge (chữ + icon), số tiền `h3`, % HĐ + ngày; tên truy cập đầy đủ mỗi dòng. | [Mockup] + [Skill] |
 | **Chip lọc / tab lọc** | Viên thuốc cao 40 (+hitSlop), chọn: nền `primary.500` chữ trắng semibold; thường: trắng viền `gray.200`; tùy chọn số lượng "(n)". Dùng `role="tab"` trong vùng `role="tablist"` với style `chipRow` (**xuống dòng**, không cuộn ngang). | [Mockup] + [Skill] chip collection reflow |
 | **IconCircle** | Ô bo `md`, nền pastel theo sắc thái, icon tông đậm. | [Mockup] |
 | **Skeleton** | Khối `gray.200` nhấp nháy opacity 0.5↔1 (800ms); **dừng khi bật giảm chuyển động**. Giữ đúng kích thước nội dung thật. | [Skill] |
@@ -222,6 +222,10 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **BrandBanner** | Ảnh khu đô thị + gradient cam ngang, bo `xl`, logo inverted, chữ trắng. Trang trí. | [Mockup] |
 | **Grid / Col** | Lưới 12 cột (`layout.gridColumns`), `Col span={{ mobile, tablet?, desktop?, wide? }}` (breakpoint lớn kế thừa nhỏ hơn), gutter theo token spacing. | [Dự án] |
 | **ProjectImage** | Ảnh dự án `cover`, chiều cao cố định (`sizes.projectImage`), có nhãn truy cập; thiếu URL/lỗi → ảnh minh họa mặc định. | [Mockup] |
+| **Tabs / TabPanel** | Tab gạch chân: tab chọn có viền dưới 3px `brand` + chữ `textBrand` đậm; cao ≥ 44. `role="tablist"`/`"tab"` + `aria-selected`, panel `role="tabpanel"` + `aria-labelledby` + `tabIndex=0`. Web: roving tabindex, ←/→ (vòng), Home/End. | [Skill] keyboard-nav |
+| **Dialog** | Modal giữa màn hình, nền `scrim`, hộp trắng bo `xl`, tối đa 440px, `shadows.lg`; tiêu đề `h3` làm nhãn dialog, nút X (IconButton); hàng nút cuối (Hủy ghost + hành động primary). Đóng bằng Esc / X / vùng tối / Back; web giữ focus trong hộp thoại, focus đầu vào nút Đóng, đóng xong trả focus về nút mở. Tắt hiệu ứng khi giảm chuyển động. | [Skill] modal-escape, focus |
+| **Breadcrumb** | Desktop: "Mục cha › Mục hiện tại", link `textBrand`, mục hiện tại `textMuted` + `aria-current="page"`, `role="navigation"`. | [Skill] breadcrumb-web |
+| **StickyActionBar** | Thanh trắng dính đáy (mobile/tablet), viền trên + `shadows.navTop`, chứa 1 nút primary full width; đặt ngoài ScrollView (prop `footer` của `Screen`) để không che nội dung; tự chừa vùng an toàn khi không có bottom tab. | [Skill] sticky-navigation, safe-area |
 | **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
 | **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
@@ -252,6 +256,8 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
 - ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
+- ❌ Modal không đóng được bằng Esc/Back, không giữ focus, hoặc không trả focus về nút mở — [Skill]
+- ❌ Thanh/nút cố định che nội dung hoặc phần tử đang focus — [Skill]
 - ❌ Hàng chip/tab lọc cuộn ngang hoặc bị cắt; cắt chữ mã hợp đồng / tên dự án (cho xuống dòng) — [Skill]
 - ❌ Hiển thị số chưa đọc chỉ bằng màu/số trần cho trình đọc màn hình (dùng cụm từ đầy đủ) — [Skill]
 - ❌ Hơn một nút primary trên một màn hình — [Skill]

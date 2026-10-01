@@ -58,3 +58,26 @@ export interface ContractFilter {
   /** Tìm theo số hợp đồng, mã căn hoặc tên dự án. */
   search?: string;
 }
+
+/** Bên bán (chủ đầu tư / đơn vị phân phối). */
+export interface ContractParty {
+  companyName: string;
+  representative: string;
+  position: string;
+  taxCode: string;
+  address: string;
+  hotline: string;
+  email: string;
+}
+
+/** Điều khoản chính hiển thị ở tab "Thông tin khác". */
+export interface ContractTerm {
+  title: string;
+  content: string;
+}
+
+/** Tệp hợp đồng (PDF). `url` có thể là đường dẫn http(s) hoặc file cục bộ. */
+export interface ContractDocument {
+  title: string;
+  url: string;
+}

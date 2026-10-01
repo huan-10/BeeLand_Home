@@ -6,26 +6,38 @@ import { installmentStatusMeta } from '@/lib/labels';
 import { borderWidth, colors, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 import type { PaymentInstallmentView } from '@/types';
 
-/** Lịch thanh toán dạng timeline (theo mockup): nút tròn + đường nối, đã trả tô màu. */
+/**
+ * Lịch thanh toán dạng timeline (theo mockup):
+ * xanh lá + dấu tick = đã thanh toán · cam = đến hạn · xám = chưa đến hạn · đỏ = quá hạn.
+ * Mỗi đợt có icon trong nút tròn + Badge có chữ và icon, nên không phụ thuộc màu.
+ */
 export function InstallmentTimeline({ installments }: { installments: PaymentInstallmentView[] }) {
   return (
-    <View accessibilityRole="list">
+    <View role="list" aria-label="Lịch thanh toán">
       {installments.map((item, index) => {
         const meta = installmentStatusMeta[item.status];
         const tone = toneColors[meta.tone];
         const isLast = index === installments.length - 1;
         const isPaid = item.status === 'paid';
+        const filled = item.status !== 'scheduled';
+        const dateText =
+          isPaid && item.paidDate
+            ? `Đã thanh toán ngày ${formatDate(item.paidDate)}`
+            : `Hạn ${formatDate(item.dueDate)} · ${formatDaysLeft(item.daysUntilDue)}`;
         return (
-          <View key={item.id} style={styles.item} accessibilityLabel={`${item.name}, ${formatCurrency(item.amount)}, ${meta.label}`}>
+          <View
+            key={item.id}
+            style={styles.item}
+            role="listitem"
+            accessible
+            accessibilityLabel={`${item.name}, ${formatCurrency(item.amount)}, ${dateText}, ${meta.label}`}>
             <View style={styles.rail}>
-              <View style={[styles.node, { backgroundColor: isPaid ? tone.solid : semantic.surface, borderColor: tone.solid }]}>
-                {isPaid ? (
-                  <Icon name="checkmark" size="sm" color={semantic.textOnPrimary} />
-                ) : (
-                  <Text variant="caption" weight="bold" color={tone.fg}>
-                    {item.sequence}
-                  </Text>
-                )}
+              <View
+                style={[
+                  styles.node,
+                  { backgroundColor: filled ? tone.solid : semantic.surface, borderColor: filled ? tone.solid : colors.gray[300] },
+                ]}>
+                <Icon name={meta.icon} size="sm" color={filled ? semantic.textOnPrimary : semantic.textMuted} />
               </View>
               {!isLast ? <View style={[styles.line, isPaid && { backgroundColor: tone.solid }]} /> : null}
             </View>
@@ -34,16 +46,13 @@ export function InstallmentTimeline({ installments }: { installments: PaymentIns
                 <Text variant="bodyMedium" weight="semibold" style={styles.flex}>
                   {item.name}
                 </Text>
-                <Badge label={meta.label} tone={meta.tone} />
+                <Badge label={meta.label} tone={meta.tone} icon={meta.icon} />
               </View>
               <Text variant="h3" color={isPaid ? semantic.text : tone.fg}>
                 {formatCurrency(item.amount)}
               </Text>
-              <Text variant="caption" color={semantic.textMuted}>
-                {item.percentOfContract}% giá trị HĐ ·{' '}
-                {isPaid && item.paidDate
-                  ? `Thanh toán ngày ${formatDate(item.paidDate)}`
-                  : `Hạn ${formatDate(item.dueDate)} (${formatDaysLeft(item.daysUntilDue).toLowerCase()})`}
+              <Text variant="caption" color={item.status === 'overdue' ? colors.danger[700] : semantic.textMuted}>
+                {item.percentOfContract}% giá trị HĐ · {dateText}
               </Text>
               {item.description ? (
                 <Text variant="caption" color={semantic.textMuted}>
@@ -70,8 +79,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   line: { flex: 1, width: borderWidth.strong, backgroundColor: colors.gray[200], marginVertical: spacing.xs },
-  content: { flex: 1, gap: spacing.xs, paddingTop: spacing['2xs'] },
+  content: { flex: 1, minWidth: 0, gap: spacing.xs, paddingTop: spacing['2xs'] },
   contentGap: { paddingBottom: spacing.lg },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  flex: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  flex: { flex: 1, minWidth: 0 },
 });

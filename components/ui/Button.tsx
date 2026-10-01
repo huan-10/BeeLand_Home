@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -56,7 +57,7 @@ const sizeStyles: Record<ButtonSize, { height: number; paddingHorizontal: number
   lg: { height: sizes.control.lg, paddingHorizontal: spacing.ml, icon: 'md', text: 'bodyMedium' },
 };
 
-export function Button({
+export const Button = forwardRef<View, ButtonProps>(function Button({
   title,
   variant = 'primary',
   size = 'md',
@@ -67,13 +68,14 @@ export function Button({
   fullWidth,
   style,
   ...rest
-}: ButtonProps) {
+}, ref) {
   const v = variantStyles[variant];
   const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
@@ -108,7 +110,7 @@ export function Button({
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   base: {

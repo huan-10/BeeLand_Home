@@ -1,0 +1,53 @@
+import { StyleSheet, View } from 'react-native';
+
+import { Button, Dialog, InfoRow, Text } from '@/components/ui';
+import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
+import { radius, semantic, spacing, toneColors } from '@/theme';
+import type { PaymentInstallmentView } from '@/types';
+
+export interface PaymentConfirmDialogProps {
+  visible: boolean;
+  installment: PaymentInstallmentView;
+  submitting: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}
+
+/** Xác nhận khoản cần thanh toán trước khi chuyển sang cổng thanh toán. */
+export function PaymentConfirmDialog({ visible, installment, submitting, onConfirm, onClose }: PaymentConfirmDialogProps) {
+  const overdue = installment.status === 'overdue';
+  return (
+    <Dialog
+      visible={visible}
+      title="Xác nhận thanh toán"
+      onClose={onClose}
+      actions={
+        <>
+          <Button title="Hủy" variant="ghost" onPress={onClose} disabled={submitting} />
+          <Button title="Xác nhận thanh toán" leftIcon="card-outline" loading={submitting} onPress={onConfirm} />
+        </>
+      }>
+      <View style={styles.amountBox}>
+        <Text variant="caption" color={semantic.textMuted}>
+          Số tiền cần thanh toán
+        </Text>
+        <Text variant="h1" color={semantic.textBrand}>
+          {formatCurrency(installment.remainingAmount)}
+        </Text>
+        <Text variant="caption" weight="semibold" color={overdue ? toneColors.danger.fg : semantic.textSecondary}>
+          {formatDaysLeft(installment.daysUntilDue)}
+        </Text>
+      </View>
+      <View>
+        <InfoRow label="Hợp đồng" value={installment.contractCode} />
+        <InfoRow label="Đợt thanh toán" value={installment.name} />
+        <InfoRow label="Căn hộ" value={`${installment.unitCode} · ${installment.projectName}`} />
+        <InfoRow label="Hạn thanh toán" value={formatDate(installment.dueDate)} last />
+      </View>
+    </Dialog>
+  );
+}
+
+const styles = StyleSheet.create({
+  amountBox: { alignItems: 'center', gap: spacing.xs, padding: spacing.md, borderRadius: radius.md, backgroundColor: toneColors.primary.bg },
+});

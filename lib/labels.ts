@@ -25,12 +25,13 @@ export const contractStatusMeta: Record<ContractStatus, StatusMeta> = {
   cancelled: { label: 'Đã hủy', tone: 'neutral' },
 };
 
-export const installmentStatusMeta: Record<InstallmentStatus, StatusMeta> = {
-  paid: { label: 'Đã thanh toán', tone: 'success' },
-  partial: { label: 'Thanh toán một phần', tone: 'info' },
-  upcoming: { label: 'Sắp đến hạn', tone: 'primary' },
-  overdue: { label: 'Quá hạn', tone: 'danger' },
-  scheduled: { label: 'Chưa đến hạn', tone: 'neutral' },
+/** Trạng thái đợt thanh toán: luôn có chữ + icon (không chỉ dựa vào màu). */
+export const installmentStatusMeta: Record<InstallmentStatus, StatusMeta & { icon: IconName }> = {
+  paid: { label: 'Đã thanh toán', tone: 'success', icon: 'checkmark' },
+  partial: { label: 'Thanh toán một phần', tone: 'primary', icon: 'hourglass-outline' },
+  upcoming: { label: 'Đến hạn', tone: 'primary', icon: 'alarm-outline' },
+  overdue: { label: 'Quá hạn', tone: 'danger', icon: 'alert' },
+  scheduled: { label: 'Chưa đến hạn', tone: 'neutral', icon: 'time-outline' },
 };
 
 export const paymentMethodLabels: Record<PaymentMethod, string> = {

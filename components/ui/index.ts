@@ -22,3 +22,6 @@ export * from './Text';
 export * from './TextLink';
 export * from './Toast';
 export * from './ActionTile';
+export * from './Breadcrumb';
+export * from './Dialog';
+export * from './Tabs';

@@ -1,7 +1,7 @@
 import { mockContracts } from '@/data/mock/contracts';
 import { mockInstallments } from '@/data/mock/installments';
 import { toInstallmentView } from '@/lib/payment';
-import type { PaymentInstallmentView } from '@/types';
+import type { PaymentInstallmentView, PaymentIntent } from '@/types';
 
 import { ServiceError } from './errors';
 import { simulateLatency } from './mockLatency';
@@ -26,4 +26,19 @@ export async function getAllInstallments(): Promise<PaymentInstallmentView[]> {
     const contract = mockContracts.find((c) => c.id === installment.contractId);
     return contract ? [toInstallmentView(installment, contract)] : [];
   });
+}
+
+/**
+ * Khởi tạo thanh toán cho một đợt của hợp đồng.
+ * TODO: thay bằng gọi API/database thật — tạo giao dịch ở cổng thanh toán (VNPay/MoMo/ngân hàng)
+ * rồi trả về `{ status: 'redirect', checkoutUrl }` để mở trang thanh toán.
+ */
+export async function startPayment(contractId: string, installmentId: string): Promise<PaymentIntent> {
+  await simulateLatency();
+  const installment = mockInstallments.find((i) => i.id === installmentId && i.contractId === contractId);
+  if (!installment) throw new ServiceError('Không tìm thấy đợt thanh toán.', 'NOT_FOUND');
+  return {
+    status: 'unavailable',
+    message: 'Cổng thanh toán trực tuyến đang được tích hợp. Vui lòng chuyển khoản theo hướng dẫn trong hợp đồng.',
+  };
 }
