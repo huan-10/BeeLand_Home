@@ -9,3 +9,6 @@ export type Spacing = keyof typeof spacing;
 
 /** Hàng chip lọc cuộn ngang. */
 export const chipRow = { gap: spacing.sm, paddingVertical: spacing['2xs'] };
+
+/** Thứ tự lớp hiển thị. */
+export const zIndex = tokens.zIndex;

@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { Logo } from '@/components/layout';
+import { ToastProvider } from '@/components/ui';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { appFonts, colors, semantic, spacing } from '@/theme';
 
@@ -45,10 +46,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider value={navigationTheme}>
-        <AuthProvider>
-          <StatusBar style="dark" />
-          <RootNavigator />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <StatusBar style="dark" />
+            <RootNavigator />
+          </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
@@ -79,6 +82,8 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ title: 'Đăng nhập' }} />
+        <Stack.Screen name="register" options={{ title: 'Đăng ký' }} />
+        <Stack.Screen name="forgot-password" options={{ title: 'Quên mật khẩu' }} />
       </Stack.Protected>
     </Stack>
   );

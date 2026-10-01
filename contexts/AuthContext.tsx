@@ -9,7 +9,8 @@ export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 interface AuthContextValue {
   status: AuthStatus;
   user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  /** Đăng nhập bằng số điện thoại hoặc email. `remember` quyết định có lưu phiên lâu dài không. */
+  signIn: (identifier: string, password: string, remember: boolean) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -41,9 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const result = await login(email, password);
-    await saveSession(result.session);
+  const signIn = useCallback(async (identifier: string, password: string, remember: boolean) => {
+    const result = await login(identifier, password);
+    await saveSession(result.session, remember);
     setSession(result.session);
     setUser(result.user);
     setStatus('authenticated');

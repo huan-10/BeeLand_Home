@@ -59,7 +59,7 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 Áp dụng cho mọi thay đổi ảnh hưởng tới cách màn hình trông hoặc tương tác (màn mới, sửa component, đổi màu, bố cục…):
 
 1. **Đọc `design-system/beesky/MASTER.md`.**
-2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, home, contracts, contract-detail, receipts, payments, profile). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
+2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, register, forgot-password, home, contracts, contract-detail, receipts, payments, profile). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
 3. **Tra cứu skill `ui-ux-pro-max`** (`.claude/skills/ui-ux-pro-max/SKILL.md`) cho vấn đề cụ thể, mỗi truy vấn một ý, 2–5 từ khóa:
    ```bash
    python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<vấn đề UX>" --domain ux

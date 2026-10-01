@@ -109,6 +109,8 @@ const styles = StyleSheet.create({
   disabled: { backgroundColor: semantic.surfaceMuted },
   input: {
     flex: 1,
+    // Web: <input> có độ rộng tối thiểu nội tại, cần 0 để không đẩy nút ẩn/hiện ra ngoài.
+    minWidth: 0,
     height: '100%',
     color: semantic.text,
     fontFamily: resolveFontFamily('body', 'regular'),

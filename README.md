@@ -4,7 +4,7 @@
 Xây dựng bằng Expo SDK 57 + TypeScript + Expo Router + NativeWind, chạy trên iOS, Android và Web với cùng một giao diện.
 
 > Giai đoạn hiện tại dùng **dữ liệu giả (mock)**, không cần Supabase hay backend.
-> Tài khoản demo: `demo@beesky.vn` / `123456`.
+> Tài khoản demo: `demo@beesky.vn` (hoặc số `0901 234 567`) / `123456`.
 
 ## Chạy ứng dụng
 

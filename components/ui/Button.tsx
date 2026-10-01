@@ -26,7 +26,7 @@ import {
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> {
@@ -44,6 +44,8 @@ const variantStyles: Record<ButtonVariant, { bg: string; pressedBg: string; fg: 
   // Nền cam theo mockup; chữ trắng đậm (xem MASTER.md §Tương phản).
   primary: { bg: semantic.brand, pressedBg: semantic.brandPressed, fg: semantic.textOnPrimary, border: semantic.brand },
   secondary: { bg: toneColors.primary.bg, pressedBg: colors.primary[100], fg: semantic.textBrand, border: toneColors.primary.border },
+  // Nút trung tính nền trắng viền xám (đăng nhập Google/Apple...).
+  outline: { bg: semantic.surface, pressedBg: colors.gray[50], fg: semantic.text, border: semantic.border },
   ghost: { bg: colors.transparent, pressedBg: colors.gray[100], fg: semantic.textSecondary, border: colors.transparent },
   danger: { bg: semantic.surface, pressedBg: toneColors.danger.bg, fg: colors.danger[600], border: toneColors.danger.border },
 };
@@ -75,6 +77,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
+      aria-busy={loading}
       disabled={isDisabled}
       // Nút nhỏ (40) được nới vùng chạm để đạt tối thiểu 44.
       hitSlop={size === 'sm' ? hitSlop : undefined}

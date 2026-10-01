@@ -1,32 +1,51 @@
 # Trang: Đăng nhập (`app/login.tsx`)
 
-> Chỉ ghi điểm **khác** `MASTER.md`. Mục nào không nhắc tới → theo Master.
+> Chỉ ghi điểm **khác** `MASTER.md`. Khung chung dùng `components/layout/AuthLayout.tsx` (áp dụng cho cả `register.md`, `forgot-password.md`).
 
 ## Khác Master
-- **Không có điều hướng** (bottom tab / sidebar ẩn) — màn hình nằm ngoài nhóm `(app)`.
-- Được dùng **gradient lớn** cho panel thương hiệu (desktop), ngoại lệ của anti-pattern "gradient ngoài thẻ tổng quan". Gradient `primary.500 → primary.700`, mọi chữ trên panel là `textOnPrimary` (trắng), logo `inverted`.
-- Tiêu đề "Đăng nhập" dùng `h1` nhưng có logo phía trên trên mobile.
+- **Không có điều hướng** (bottom tab / sidebar) — nằm ngoài nhóm `(app)`; được bảo vệ bởi `Stack.Protected guard={!isAuthenticated}`.
+- **Ảnh nền khu đô thị** (`assets/images/auth-city.jpg`) + **gradient overlay** — ngoại lệ của anti-pattern "gradient ngoài thẻ tổng quan":
+  - Mobile: ảnh cao `sizes.authHero.mobile` + safe area; overlay `overlay.heroScrim` (tối nhẹ phía trên cho chữ trắng) → trong suốt → `overlay.authFadeMid` → `semantic.bg` (mờ dần vào nền).
+  - Desktop: panel trái phủ `overlay.brandTint` → `overlay.brandTintStrong` (cam thương hiệu), `overflow: hidden`.
+- Chữ trên ảnh luôn `textOnPrimary` (trắng), logo `inverted`.
+- Animation vào màn hình (`FadeIn`, `motion.enter` + `motion.stagger`) — chỉ ở các màn xác thực, tự tắt khi giảm chuyển động.
 
 ## Bố cục
-| | Mobile (< 768px) | Desktop (≥ 768px) |
-|---|---|---|
-| Khung | 1 cột, form căn giữa dọc, lề `ml` | 2 cột: panel thương hiệu trái (tối đa `layout.brandPanelMaxWidth`) + form phải |
-| Logo | Logo `lg` trên tiêu đề | Logo `lg` inverted trên panel |
-| Form | Không bọc thẻ, rộng tối đa `layout.formMaxWidth` | Bọc trong `Card` padding `xl`, `shadows.md` |
-| Nội dung marketing | Ẩn | Tiêu đề `display` + mô tả + 3 dòng tính năng có icon tích |
 
-## Thành phần chính
-- `Input` Email (icon mail, `keyboardType="email-address"`, `autoComplete="email"`) → `Input` Mật khẩu (`password`, nút hiện/ẩn, `autoComplete="password"`), Enter chuyển ô / gửi form.
-- `Button` primary `lg` full width "Đăng nhập" — **nút primary duy nhất**.
-- Hộp gợi ý tài khoản demo: nền `info` pastel, nút "Điền nhanh" (ẩn khi `demoAccountHint = null`).
+> Khác Master: màn xác thực chuyển sang 2 cột ở **1024px** (không phải 768px) vì ở 768px panel 50% làm form chỉ còn ~320px.
+
+| | Mobile & tablet (< 1024px) | Desktop (≥ 1024px) |
+|---|---|---|
+| Khung | 1 cột: ảnh hero (logo + slogan) phía trên, thẻ form chồng lên mép dưới ảnh (`-spacing.xl`) | 2 cột: trái panel ảnh thương hiệu (tối đa `layout.brandPanelMaxWidth`), phải form căn giữa |
+| Form | `Card` padding `ml`, `shadows.md`, rộng theo màn hình (lề 16), tối đa 440px căn giữa | `Card` padding `xl`, `shadows.md`, **tối đa 440px** (`layout.formMaxWidth`) |
+| Thương hiệu | Logo `lg` + slogan `bodyMedium` | Logo `lg` + slogan `display` + mô tả + 3 dòng tính năng có icon tích + © năm |
+| Link Đăng ký | Dưới thẻ form, căn giữa | Dưới thẻ form, căn giữa |
+
+## Thành phần chính (thứ tự = thứ tự Tab)
+1. Tiêu đề `h1` "Đăng nhập" (role header) + phụ đề.
+2. `FormErrorSummary` — chỉ khi có **≥ 2 lỗi**.
+3. `Input` "Số điện thoại hoặc email": icon người, `autoComplete="username"`, `textContentType="username"`, `keyboardType="email-address"`, không viết hoa/tự sửa.
+4. `Input` "Mật khẩu": `password` (nút Hiện/Ẩn mật khẩu có nhãn), `autoComplete="current-password"`.
+5. Hàng: `Checkbox` "Ghi nhớ đăng nhập" (mặc định bật) · `TextLink` "Quên mật khẩu?" → `/forgot-password`.
+6. `Button` primary `lg` full width "Đăng nhập" — **nút primary duy nhất**.
+7. `Divider` "hoặc tiếp tục với" + 2 `Button` `outline` Google / Apple (icon `logo-google`, `logo-apple`) → `Toast` "Tính năng sắp ra mắt".
+8. Hộp tài khoản demo (nền `info` pastel, "Điền nhanh"); ẩn khi `demoAccountHint = null`.
+9. Footer: "Chưa có tài khoản?" + `TextLink` "Đăng ký" → `/register`.
+
+## Bàn phím & web
+- Web: **Enter ở bất kỳ ô nào gửi form**. Mobile: Enter ở ô định danh chuyển sang ô mật khẩu, Enter ở ô mật khẩu gửi form.
+- Focus ring `:focus-visible` 2px `primary.500` cho nút/link/checkbox; ô nhập dùng viền cam + `shadows.focusHalo`.
+- Không chặn dán và trình quản lý mật khẩu (skill: `accessible-authentication`).
 
 ## Trạng thái
 | Trạng thái | Hiển thị |
 |-----------|----------|
-| Mặc định | Ô trống, nút bật |
-| Lỗi kiểm tra | Lỗi tiếng Việt ngay dưới từng ô (Vui lòng nhập email / Email không hợp lệ / Mật khẩu ≥ 6 ký tự); lỗi xóa khi người dùng sửa ô |
-| Đang gửi | Nút `loading` (spinner, disabled) |
-| Sai thông tin | Hộp cảnh báo `danger` pastel có icon phía trên form, `role="alert"`: "Email hoặc mật khẩu không đúng…" |
-| Thành công | Điều hướng tự động vào Trang chủ (route guard) |
+| Mặc định | Ô trống (hoặc điền sẵn email khi quay về từ Đăng ký), "Ghi nhớ" bật |
+| Lỗi kiểm tra (client) | Lỗi tiếng Việt ngay dưới từng ô (`role="alert"`, `aria-describedby`); 2 lỗi → `FormErrorSummary` nhận focus, mỗi dòng là link tới ô; 1 lỗi → focus vào ô lỗi. Lỗi của ô biến mất khi người dùng sửa ô đó |
+| Đang gửi | Nút `loading`: spinner, `disabled`, `aria-busy` |
+| Không tìm thấy tài khoản | Lỗi gắn ô **định danh**: "Không tìm thấy tài khoản với số điện thoại hoặc email này." + focus ô đó |
+| Sai mật khẩu | Lỗi gắn ô **mật khẩu**: "Mật khẩu không đúng. Vui lòng thử lại hoặc chọn "Quên mật khẩu?"." + focus ô đó |
+| Thành công | `AuthContext` → route guard chuyển vào Trang chủ. "Ghi nhớ" bật: phiên lưu AsyncStorage (giữ sau khi đóng app/tab); tắt: web `sessionStorage` (giữ khi tải lại, mất khi đóng tab), native giữ trong bộ nhớ |
+| Đã đăng nhập mà mở `/login` | Chuyển về Trang chủ |
 
-Không chặn dán / trình quản lý mật khẩu (skill: `accessible-authentication`).
+Thông điệp kiểm tra định dạng: "Vui lòng nhập số điện thoại hoặc email" · "Email không đúng định dạng (ví dụ: ten@email.com)" · "Số điện thoại phải gồm 10 số và bắt đầu bằng 0" · "Vui lòng nhập mật khẩu".

@@ -1,197 +1,213 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform, Pressable, StyleSheet, View, type TextInput } from 'react-native';
 
-import { Logo } from '@/components/layout';
-import { Button, Card, Icon, Input, Text } from '@/components/ui';
+import { AuthLayout } from '@/components/layout';
+import {
+  Button,
+  Checkbox,
+  Divider,
+  FadeIn,
+  FormErrorSummary,
+  Icon,
+  Input,
+  Text,
+  TextLink,
+  useToast,
+  type FormErrorItem,
+  type FormErrorSummaryHandle,
+} from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { hasErrors, validateLoginForm, type LoginFormErrors } from '@/lib/validation';
-import { demoAccountHint, getErrorMessage } from '@/services';
-import { borderWidth, colors, interactive, layout, opacity, radius, semantic, spacing, toneColors } from '@/theme';
+import { useFormSubmit } from '@/hooks/useFormSubmit';
+import { hasErrors, validateLoginForm, type FormErrors, type LoginField } from '@/lib/validation';
+import { demoAccountHint } from '@/services';
+import { borderWidth, interactive, opacity, radius, semantic, spacing, toneColors } from '@/theme';
+
+const COMING_SOON = 'Tính năng sắp ra mắt';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
-  const { isWide } = useBreakpoint();
-  const insets = useSafeAreaInsets();
+  const toast = useToast();
+  const params = useLocalSearchParams<{ identifier?: string }>();
+
+  const identifierRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+  const summaryRef = useRef<FormErrorSummaryHandle>(null);
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(params.identifier ?? '');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<LoginFormErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [errors, setErrors] = useState<FormErrors<LoginField>>({});
+  const { submit, submitting } = useFormSubmit(signIn);
 
-  const submit = async () => {
-    const validation = validateLoginForm(email, password);
+  // Điền sẵn khi quay lại từ màn Đăng ký (cập nhật state theo params ngay trong render).
+  const [prefilledFrom, setPrefilledFrom] = useState(params.identifier);
+  if (params.identifier !== prefilledFrom) {
+    setPrefilledFrom(params.identifier);
+    if (params.identifier) setIdentifier(params.identifier);
+  }
+
+  const focusField = (field: string) => (field === 'password' ? passwordRef : identifierRef).current?.focus();
+
+  const summaryItems: FormErrorItem[] = (['identifier', 'password'] as const).flatMap((field) => {
+    const message = errors[field];
+    return message ? [{ field, message }] : [];
+  });
+
+  /** Skill (focus-management): nhiều lỗi → focus bảng tóm tắt; một lỗi → focus ô lỗi. */
+  const focusAfterError = (next: FormErrors<LoginField>) => {
+    const fields = (['identifier', 'password'] as const).filter((f) => next[f]);
+    requestAnimationFrame(() => {
+      if (fields.length > 1) summaryRef.current?.focus();
+      else if (fields[0]) focusField(fields[0]);
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    const validation = validateLoginForm(identifier, password);
     setErrors(validation);
-    setFormError(null);
-    if (hasErrors(validation)) return;
-    setSubmitting(true);
-    try {
-      await signIn(email, password);
-    } catch (e) {
-      setFormError(getErrorMessage(e));
-      setSubmitting(false);
+    if (hasErrors(validation)) {
+      focusAfterError(validation);
+      return;
     }
+    const outcome = await submit(identifier.trim(), password, remember);
+    if (!outcome.ok) {
+      const field: LoginField = outcome.error.field === 'identifier' ? 'identifier' : 'password';
+      const next = { [field]: outcome.error.message };
+      setErrors(next);
+      focusAfterError(next);
+    }
+    // Thành công: AuthContext đổi trạng thái → route guard chuyển vào Trang chủ.
+  };
+
+  const clearError = (field: LoginField) => {
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   };
 
   const fillDemo = () => {
     if (!demoAccountHint) return;
-    setEmail(demoAccountHint.email);
+    setIdentifier(demoAccountHint.email);
     setPassword(demoAccountHint.password);
     setErrors({});
-    setFormError(null);
   };
 
-  const form = (
-    <View style={styles.form}>
-      <View style={styles.formHeader}>
-        {!isWide ? <Logo size="lg" /> : null}
-        <Text variant="h1" style={styles.title}>
-          Đăng nhập
-        </Text>
-        <Text variant="small" color={semantic.textMuted}>
-          Quản lý hợp đồng, lịch thanh toán và phiếu thu của bạn mọi lúc, mọi nơi.
-        </Text>
-      </View>
-
-      {formError ? (
-        <View style={styles.alert} accessibilityRole="alert">
-          <Icon name="alert-circle" color={toneColors.danger.fg} />
-          <Text variant="small" color={toneColors.danger.fg} style={styles.flex}>
-            {formError}
-          </Text>
-        </View>
-      ) : null}
-
-      <Input
-        label="Email"
-        icon="mail-outline"
-        placeholder="email@vidu.vn"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        textContentType="emailAddress"
-        returnKeyType="next"
-        value={email}
-        onChangeText={(t) => {
-          setEmail(t);
-          if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
-        }}
-        onSubmitEditing={() => passwordRef.current?.focus()}
-        error={errors.email}
-      />
-      <Input
-        ref={passwordRef}
-        label="Mật khẩu"
-        icon="lock-closed-outline"
-        placeholder="Nhập mật khẩu"
-        password
-        autoComplete="password"
-        textContentType="password"
-        returnKeyType="go"
-        value={password}
-        onChangeText={(t) => {
-          setPassword(t);
-          if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
-        }}
-        onSubmitEditing={() => void submit()}
-        error={errors.password}
-      />
-
-      <Button title="Đăng nhập" size="lg" loading={submitting} onPress={() => void submit()} fullWidth />
-
-      {demoAccountHint ? (
-      <Pressable onPress={fillDemo} accessibilityRole="button" style={({ pressed }) => [styles.demo, interactive, pressed && styles.demoPressed]}>
-        <Icon name="information-circle" color={toneColors.info.fg} />
-        <View style={styles.flex}>
-          <Text variant="smallMedium" color={toneColors.info.fg}>
-            Tài khoản dùng thử
-          </Text>
-          <Text variant="caption" color={toneColors.info.fg}>
-            Email: {demoAccountHint.email} · Mật khẩu: {demoAccountHint.password}
-          </Text>
-        </View>
-        <Text variant="caption" weight="semibold" color={toneColors.info.fg}>
-          Điền nhanh
-        </Text>
-      </Pressable>
-      ) : null}
-    </View>
-  );
-
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.split, !isWide && styles.column]}>
-        {isWide ? (
-          <LinearGradient
-            colors={[colors.primary[500], colors.primary[700]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.brand}>
-            <Logo size="lg" inverted />
-            <View style={styles.brandBody}>
-              <Text variant="display" color={semantic.textOnPrimary}>
-                Ngôi nhà của bạn,{'\n'}minh bạch từng đợt thanh toán.
-              </Text>
-              <Text variant="body" color={semantic.textOnPrimary} style={styles.brandText}>
-                Theo dõi tiến độ hợp đồng, nhận nhắc lịch thanh toán và tra cứu phiếu thu điện tử trong một ứng dụng.
-              </Text>
-              <View style={styles.features}>
-                {['Theo dõi tiến độ thanh toán', 'Nhắc hạn trước 30 ngày', 'Phiếu thu điện tử'].map((f) => (
-                  <View key={f} style={styles.feature}>
-                    <Icon name="checkmark-circle" color={semantic.textOnPrimary} />
-                    <Text variant="bodyMedium" color={semantic.textOnPrimary}>
-                      {f}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-            <Text variant="caption" color={semantic.textOnPrimary}>
-              © {new Date().getFullYear()} BeeSky
-            </Text>
-          </LinearGradient>
-        ) : null}
+    <AuthLayout
+      title="Đăng nhập"
+      subtitle="Chào mừng bạn trở lại! Đăng nhập để xem hợp đồng và lịch thanh toán."
+      footer={
+        <View style={styles.footerRow}>
+          <Text variant="small" color={semantic.textMuted}>
+            Chưa có tài khoản?
+          </Text>
+          <TextLink label="Đăng ký" onPress={() => router.push('/register')} />
+        </View>
+      }>
+      <FormErrorSummary ref={summaryRef} errors={summaryItems.length > 1 ? summaryItems : []} onSelect={focusField} />
 
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[styles.formScroll, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}
-          keyboardShouldPersistTaps="handled">
-          {isWide ? <Card padding="xl" shadow="md" style={styles.formCard}>{form}</Card> : form}
-        </ScrollView>
-      </View>
-    </KeyboardAvoidingView>
+      <FadeIn index={1} style={styles.fields}>
+        <Input
+          ref={identifierRef}
+          label="Số điện thoại hoặc email"
+          icon="person-outline"
+          placeholder="VD: 0901 234 567"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="username"
+          textContentType="username"
+          returnKeyType="next"
+          value={identifier}
+          onChangeText={(t) => {
+            setIdentifier(t);
+            clearError('identifier');
+          }}
+          // Web: Enter gửi form ngay; mobile: chuyển sang ô mật khẩu.
+          onSubmitEditing={() => (Platform.OS === 'web' ? void handleSubmit() : passwordRef.current?.focus())}
+          error={errors.identifier}
+        />
+        <Input
+          ref={passwordRef}
+          label="Mật khẩu"
+          icon="lock-closed-outline"
+          placeholder="Nhập mật khẩu"
+          password
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType="go"
+          value={password}
+          onChangeText={(t) => {
+            setPassword(t);
+            clearError('password');
+          }}
+          onSubmitEditing={() => void handleSubmit()}
+          error={errors.password}
+        />
+
+        <View style={styles.optionsRow}>
+          <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
+          <TextLink label="Quên mật khẩu?" onPress={() => router.push('/forgot-password')} />
+        </View>
+
+        <Button title="Đăng nhập" size="lg" loading={submitting} onPress={() => void handleSubmit()} fullWidth />
+      </FadeIn>
+
+      <FadeIn index={2} style={styles.fields}>
+        <Divider label="hoặc tiếp tục với" />
+        <View style={styles.socialRow}>
+          <Button
+            title="Google"
+            variant="outline"
+            leftIcon="logo-google"
+            style={styles.social}
+            onPress={() => toast.show(COMING_SOON)}
+            accessibilityHint={COMING_SOON}
+          />
+          <Button
+            title="Apple"
+            variant="outline"
+            leftIcon="logo-apple"
+            style={styles.social}
+            onPress={() => toast.show(COMING_SOON)}
+            accessibilityHint={COMING_SOON}
+          />
+        </View>
+
+        {demoAccountHint ? (
+          <Pressable
+            onPress={fillDemo}
+            accessibilityRole="button"
+            accessibilityLabel={`Dùng tài khoản demo ${demoAccountHint.email}, mật khẩu ${demoAccountHint.password}`}
+            style={({ pressed }) => [styles.demo, interactive, pressed && styles.demoPressed]}>
+            <Icon name="information-circle" color={toneColors.info.fg} />
+            <View style={styles.flex}>
+              <Text variant="smallMedium" weight="semibold" color={toneColors.info.fg}>
+                Tài khoản dùng thử
+              </Text>
+              <Text variant="caption" color={toneColors.info.fg}>
+                {demoAccountHint.email} hoặc {demoAccountHint.phone} · Mật khẩu: {demoAccountHint.password}
+              </Text>
+            </View>
+            <Text variant="caption" weight="semibold" color={toneColors.info.fg}>
+              Điền nhanh
+            </Text>
+          </Pressable>
+        ) : null}
+      </FadeIn>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: semantic.bg },
-  split: { flex: 1, flexDirection: 'row' },
-  column: { flexDirection: 'column' },
+  fields: { gap: spacing.md },
   flex: { flex: 1 },
-  brand: { flex: 1, maxWidth: layout.brandPanelMaxWidth, padding: spacing['2xl'], justifyContent: 'space-between' },
-  brandBody: { gap: spacing.md },
-  brandText: { maxWidth: layout.brandTextMaxWidth },
-  features: { gap: spacing.ms, marginTop: spacing.md },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  formScroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.ml },
-  formCard: { width: '100%', maxWidth: layout.formMaxWidth, alignSelf: 'center' },
-  form: { width: '100%', maxWidth: layout.formMaxWidth, alignSelf: 'center', gap: spacing.md },
-  formHeader: { gap: spacing.sm, marginBottom: spacing.xs },
-  title: { marginTop: spacing.md },
-  alert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.ms,
-    borderRadius: radius.md,
-    backgroundColor: toneColors.danger.bg,
-    borderWidth: borderWidth.hairline,
-    borderColor: toneColors.danger.border,
-  },
+  optionsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
+  socialRow: { flexDirection: 'row', gap: spacing.ms },
+  social: { flex: 1 },
+  footerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   demo: {
     flexDirection: 'row',
     alignItems: 'center',

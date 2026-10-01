@@ -47,6 +47,8 @@
 | Chữ trên nền cam | `semantic.textOnPrimary` | `#FFFFFF` |
 | Icon trang trí | `semantic.iconMuted` | `#9CA3AF` (không dùng cho chữ) |
 
+**Lớp phủ** (`colors.overlay`): `onPrimarySubtle` / `onPrimaryMuted` (trắng 15% / 30% trên nền cam) · `heroScrim` (tối 45% phía trên ảnh) · `authFadeStart` / `authFadeMid` (nền trang 0% / 55%, mờ ảnh vào nền) · `brandTint` / `brandTintStrong` (cam phủ ảnh panel thương hiệu) · `scrim` (modal).
+
 ### 1.3 Màu trạng thái — badge pastel [Mockup]
 
 Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`toneColors` trong `theme/colors.ts`):
@@ -131,6 +133,7 @@ Nhịp 4/8 (`spacing-scale`). Token `spacing` (cũng là thang spacing của Tai
 
 | Token | px | Dùng cho |
 |-------|----|----------|
+| `radius.xs` | 4 | Ô checkbox |
 | `radius.sm` | 8 | Skeleton dòng chữ |
 | `radius.md` | 12 | Nút, ô nhập, ô icon, mục sidebar |
 | `radius.lg` | 16 | **Thẻ trắng** (Card), thông báo |
@@ -160,6 +163,8 @@ Thẻ = nền trắng + viền `borderSubtle` 1px + `shadows.sm`. Không dùng g
 | `sizes.icon` | xs 12 · sm 16 · md 20 · lg 24 · xl 32 | Không dùng cỡ icon tùy ý |
 | `sizes.iconBox` | sm 36 · md 40 · lg 44 · xl 48 · hero 72 | Ô icon pastel (`IconCircle`) |
 | `sizes.avatar` | sm 36 · md 44 · lg 64 | Avatar chữ cái đầu |
+| `sizes.checkbox` | 22 | Ô checkbox (vùng chạm vẫn ≥ 44 nhờ cả hàng nhãn) |
+| `sizes.authHero.mobile` | 260 | Chiều cao ảnh hero màn xác thực trên mobile |
 | `layout.contentMaxWidth` | 1100 | Nội dung desktop căn giữa [Dự án] |
 | `layout.sidebarWidth` | 248 | Sidebar desktop [Dự án] |
 
@@ -200,11 +205,20 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 | **Skeleton** | Khối `gray.200` nhấp nháy opacity 0.5↔1 (800ms); **dừng khi bật giảm chuyển động**. Giữ đúng kích thước nội dung thật. | [Skill] |
 | **EmptyState / ErrorState** | Icon tròn 72 pastel, tiêu đề `h3`, mô tả, một hành động (Xóa bộ lọc / Thử lại). Lỗi có `role="alert"`. | [Skill] |
 | **ScreenHeader** | Tiêu đề `h1` (role header) + phụ đề; nút quay lại 44×44 có nhãn "Quay lại". | [Skill] |
+| **Button `outline`** | Nền trắng, viền `gray.200`, chữ `gray.900`, nhấn `gray.50`. Dùng cho đăng nhập bên thứ ba (Google/Apple). | [Skill] `primary-action` |
+| **Checkbox** | Ô 22 bo `xs`, viền 2px `gray.300` → chọn: nền `primary.500` + dấu tích trắng; cả hàng nhãn là vùng chạm ≥ 44; `role="checkbox"` + `checked`; lỗi hiển thị ngay dưới. | [Skill] |
+| **TextLink** | Chữ `smallMedium` semibold `textBrand`, `role="link"`, hitSlop 8. | [Skill] tương phản + vùng chạm |
+| **Divider** | Đường kẻ 1px `border`, tùy chọn chữ `caption` ở giữa ("hoặc tiếp tục với"). | [Mockup] |
+| **FormErrorSummary** | Hộp `danger` pastel đầu form, tiêu đề "Vui lòng kiểm tra lại thông tin" + danh sách lỗi dạng link tới ô; nhận focus sau khi gửi thất bại với **≥ 2 lỗi** (1 lỗi → focus thẳng vào ô); lỗi chi tiết vẫn hiện dưới từng ô. | [Skill] `error-summary`, `focus-management` |
+| **Toast** | `ToastProvider` ở root + `useToast().show(msg, tone)`. Nền `gray.900`, chữ trắng, icon theo tông, tối đa `sizes.toastMaxWidth`, dưới cùng màn hình (trên safe area), tự ẩn sau `motion.toast` (3.5s), `role="status"`, không lấy focus. | [Skill] `toast-dismiss`, `toast-accessibility` |
+| **FadeIn** | Bọc nội dung để mờ dần + trượt lên (`motion.enter`, trễ `motion.stagger` × index), `ReduceMotion.System`. Chỉ dùng ở màn xác thực. | [Skill] |
+| **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
 | **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
 ## 10. Hiệu ứng & chuyển động — [Skill]
 
-- Token thời lượng `motion`: `fast` 150ms (phản hồi nhấn, hover web) · `base` 200ms · `slow` 300ms · `skeleton` 800ms.
+- Token thời lượng `motion`: `fast` 150ms (phản hồi nhấn, hover web, toast ẩn) · `base` 200ms (toast hiện) · `slow` 300ms · `enter` 320ms + `stagger` 60ms (xuất hiện màn xác thực) · `skeleton` 800ms · `toast` 3500ms (thời gian hiển thị).
+- Lớp hiển thị `zIndex`: `base` 0 · `overlay` 40 · `toast` 100.
 - Phản hồi nhấn bằng màu nền/opacity, không thay đổi kích thước bố cục.
 - Chỉ animate `opacity`/`transform`; tối đa 1–2 phần tử động mỗi màn hình.
 - Tôn trọng giảm chuyển động: `useReducedMotion()` (native) và `@media (prefers-reduced-motion)` (web, trong `app/+html.tsx`).
@@ -227,7 +241,7 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 - ❌ Placeholder thay cho nhãn; lỗi chỉ hiện ở đầu form — [Skill]
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
-- ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan/logo/panel đăng nhập — [Mockup]
+- ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực — [Mockup]
 - ❌ Hơn một nút primary trên một màn hình — [Skill]
 - ❌ Màn hình import trực tiếp `data/mock/` — [Dự án]
 
