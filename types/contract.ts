@@ -24,6 +24,8 @@ export interface Contract {
   /** Ngày ký, chuỗi ISO yyyy-MM-dd. */
   signedDate: string;
   salesAgent?: string;
+  /** Ảnh đại diện dự án (URL từ backend). Không có → giao diện dùng ảnh minh họa mặc định. */
+  projectImageUrl?: string;
 }
 
 /** Tổng hợp tình hình thanh toán của một hợp đồng (tính từ các đợt thanh toán). */
@@ -41,6 +43,13 @@ export interface ContractPaymentSummary {
 
 export interface ContractListItem extends Contract {
   summary: ContractPaymentSummary;
+}
+
+/** Số lượng hợp đồng theo nhóm tab lọc. */
+export interface ContractCounts {
+  all: number;
+  active: number;
+  completed: number;
 }
 
 export interface ContractFilter {

@@ -111,3 +111,8 @@ export function summarizeSchedule(installments: PaymentInstallmentView[]): Sched
     paidCount: installments.length - unpaid.length,
   };
 }
+
+/** Đã thanh toán đủ 100% giá trị hợp đồng. */
+export function isFullyPaid(paidPercent: number): boolean {
+  return paidPercent >= 100;
+}

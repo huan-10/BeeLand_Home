@@ -33,6 +33,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
+    // Badge giữ nguyên một dòng; phần tử bên cạnh co lại thay vì cắt nhãn (skill: compact label overflow).
+    flexShrink: 0,
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing['2xs'],

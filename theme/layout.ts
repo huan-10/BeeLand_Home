@@ -7,8 +7,8 @@ export const layout = tokens.layout;
 export const spacing = tokens.spacing;
 export type Spacing = keyof typeof spacing;
 
-/** Hàng chip lọc cuộn ngang. */
-export const chipRow = { gap: spacing.sm, paddingVertical: spacing['2xs'] };
+/** Hàng chip / tab lọc: xuống dòng khi thiếu chỗ, không cuộn ngang (skill: chip collection reflow). */
+export const chipRow = { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm } as const;
 
 /** Thứ tự lớp hiển thị. */
 export const zIndex = tokens.zIndex;

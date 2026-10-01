@@ -24,6 +24,7 @@ export const semantic = {
   textSecondary: colors.gray[700],
   textMuted: colors.gray[500],
   textBrand: colors.primary[700],
+  textSuccess: colors.success[700],
   textOnPrimary: colors.white,
   iconMuted: colors.gray[400],
   icon: colors.gray[700],

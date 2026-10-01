@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import { InstallmentCard } from '@/components/domain';
 import { ResponsiveGrid, Screen } from '@/components/layout';
@@ -32,11 +32,11 @@ export default function PaymentsScreen() {
         </ResponsiveGrid>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRow}>
+      <View style={chipRow} accessibilityRole="tablist">
         {filters.map((f) => (
-          <Chip key={f.value} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
+          <Chip role="tab" key={f.value} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
         ))}
-      </ScrollView>
+      </View>
 
       {loading ? (
         <SkeletonList count={4} />

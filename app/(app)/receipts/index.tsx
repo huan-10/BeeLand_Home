@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ReceiptCard } from '@/components/domain';
 import { Screen } from '@/components/layout';
@@ -37,12 +37,12 @@ export default function ReceiptsScreen() {
             </View>
           </Card>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={chipRow}>
-            <Chip label="Tất cả" selected={year === 'all'} onPress={() => setYear('all')} />
+          <View style={chipRow} accessibilityRole="tablist">
+            <Chip role="tab" label="Tất cả" selected={year === 'all'} onPress={() => setYear('all')} />
             {years.map((y) => (
-              <Chip key={y} label={`Năm ${y}`} selected={year === y} onPress={() => setYear(y)} />
+              <Chip role="tab" key={y} label={`Năm ${y}`} selected={year === y} onPress={() => setYear(y)} />
             ))}
-          </ScrollView>
+          </View>
 
           {receipts.length === 0 ? (
             <EmptyState icon="receipt-outline" title="Chưa có phiếu thu" description="Phiếu thu sẽ xuất hiện sau khi khoản thanh toán được xác nhận." />

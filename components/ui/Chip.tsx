@@ -9,14 +9,19 @@ export interface ChipProps {
   selected?: boolean;
   onPress?: () => void;
   count?: number;
+  /** `tab` khi chip là tab lọc (đặt trong vùng `role="tablist"`). */
+  role?: 'button' | 'tab';
+  /** Tên truy cập đầy đủ, ví dụ "Đang hiệu lực, 2 hợp đồng". */
+  accessibilityLabel?: string;
 }
 
 /** Nút lọc dạng viên thuốc; cao tối thiểu 40 + hitSlop để đạt vùng chạm 44. */
-export function Chip({ label, selected, onPress, count }: ChipProps) {
+export function Chip({ label, selected, onPress, count, role = 'button', accessibilityLabel }: ChipProps) {
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
+      accessibilityRole={role}
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected }}
       hitSlop={{ top: spacing['2xs'], bottom: spacing['2xs'] }}
       style={({ pressed }) => [styles.chip, interactive, selected ? styles.selected : styles.idle, pressed && styles.pressed]}>

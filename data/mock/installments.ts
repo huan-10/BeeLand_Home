@@ -92,4 +92,28 @@ export const mockInstallments: PaymentInstallment[] = [
     paidAmount: 0,
     dueDate: '2026-09-25',
   },
+
+  // HDMB/2024/087-PL01 — đã tất toán
+  {
+    id: 'ins-009',
+    contractId: 'ct-004',
+    sequence: 1,
+    name: 'Đợt 1 – Ký hợp đồng',
+    percentOfContract: 30,
+    amount: 555_000_000,
+    paidAmount: 555_000_000,
+    dueDate: '2024-05-20',
+    paidDate: '2024-05-20',
+  },
+  {
+    id: 'ins-010',
+    contractId: 'ct-004',
+    sequence: 2,
+    name: 'Đợt 2 – Bàn giao căn hộ',
+    percentOfContract: 70,
+    amount: 1_295_000_000,
+    paidAmount: 1_295_000_000,
+    dueDate: '2025-06-30',
+    paidDate: '2025-06-28',
+  },
 ];

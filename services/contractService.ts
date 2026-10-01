@@ -1,7 +1,8 @@
 import { mockContracts } from '@/data/mock/contracts';
 import { mockInstallments } from '@/data/mock/installments';
+import { countContractsByStatus, matchesContractCode, matchesContractFilter } from '@/lib/contract';
 import { summarizeContractPayments, toInstallmentView } from '@/lib/payment';
-import type { Contract, ContractFilter, ContractListItem, PaymentInstallmentView } from '@/types';
+import type { Contract, ContractCounts, ContractFilter, ContractListItem, PaymentInstallmentView } from '@/types';
 
 import { ServiceError } from './errors';
 import { clone, simulateLatency } from './mockLatency';
@@ -24,24 +25,20 @@ function toListItem(contract: Contract): ContractListItem {
   return { ...clone(contract), summary: summarizeContractPayments(contract, buildInstallmentViews(contract)) };
 }
 
-function matchesFilter(contract: Contract, filter: ContractFilter): boolean {
-  if (filter.status && filter.status !== 'all' && contract.status !== filter.status) return false;
-  if (filter.type && filter.type !== 'all' && contract.type !== filter.type) return false;
-  const keyword = filter.search?.trim().toLowerCase();
-  if (keyword) {
-    const haystack = `${contract.code} ${contract.unitCode} ${contract.projectName}`.toLowerCase();
-    if (!haystack.includes(keyword)) return false;
-  }
-  return true;
-}
-
 export async function getContracts(filter: ContractFilter = {}): Promise<ContractListItem[]> {
-  // TODO: thay bằng gọi API/database thật (ví dụ GET /contracts?status=&type=&q=)
+  // TODO: thay bằng gọi API/database thật (ví dụ GET /contracts?status=&type=&code=)
   await simulateLatency();
   return mockContracts
-    .filter((c) => matchesFilter(c, filter))
+    .filter((c) => matchesContractFilter(c, filter))
     .sort((a, b) => typeOrder[a.type] - typeOrder[b.type] || b.signedDate.localeCompare(a.signedDate))
     .map(toListItem);
+}
+
+/** Số lượng hợp đồng theo tab (áp dụng cùng từ khóa tìm kiếm). */
+export async function getContractCounts(search?: string): Promise<ContractCounts> {
+  // TODO: thay bằng gọi API/database thật (ví dụ GET /contracts/counts?q=)
+  await simulateLatency();
+  return countContractsByStatus(mockContracts.filter((c) => matchesContractCode(c, search)));
 }
 
 export async function getContractById(id: string): Promise<ContractDetail> {

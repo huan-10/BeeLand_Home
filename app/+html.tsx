@@ -39,7 +39,8 @@ body {
 }
 [role="button"], [role="tab"], [role="link"], a, button {
   touch-action: manipulation;
-  transition: background-color ${motion.fast}ms ease-out, opacity ${motion.fast}ms ease-out;
+  transition: background-color ${motion.fast}ms ease-out, opacity ${motion.fast}ms ease-out,
+    transform ${motion.base}ms ease-out, box-shadow ${motion.base}ms ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

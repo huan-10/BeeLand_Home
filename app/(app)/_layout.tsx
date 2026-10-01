@@ -21,6 +21,7 @@ export default function AppLayout() {
       <Tabs.Screen name="receipts" options={{ title: 'Phiếu thu' }} />
       <Tabs.Screen name="profile" options={{ title: 'Cá nhân' }} />
       <Tabs.Screen name="notifications" options={{ title: 'Thông báo', href: null }} />
+      <Tabs.Screen name="contract/[id]" options={{ title: 'Hợp đồng', href: null }} />
     </Tabs>
   );
 }

@@ -20,7 +20,7 @@ export const contractTypeLabels: Record<ContractType, { label: string; short: st
 
 export const contractStatusMeta: Record<ContractStatus, StatusMeta> = {
   active: { label: 'Đang hiệu lực', tone: 'success' },
-  completed: { label: 'Đã hoàn tất', tone: 'info' },
+  completed: { label: 'Đã tất toán', tone: 'success' },
   pending: { label: 'Chờ xử lý', tone: 'warning' },
   cancelled: { label: 'Đã hủy', tone: 'neutral' },
 };

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import { borderWidth, interactive, opacity, radius, semantic, shadows, spacing, type ShadowLevel, type Spacing } from '@/theme';
@@ -7,12 +8,15 @@ export interface CardProps extends ViewProps {
   shadow?: ShadowLevel;
   bordered?: boolean;
   onPress?: () => void;
+  /** Web: khi hover nâng nhẹ thẻ (dịch lên 2px + bóng `md`) — chỉ dùng transform, không đổi bố cục. */
+  hoverLift?: boolean;
   style?: StyleProp<ViewStyle>;
   className?: string;
 }
 
 /** Thẻ trắng bo góc 16, viền mảnh + bóng nhẹ (theo mockup). */
-export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, style, children, ...rest }: CardProps) {
+export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, hoverLift, style, children, ...rest }: CardProps) {
+  const [hovered, setHovered] = useState(false);
   const cardStyle = [styles.card, shadows[shadow], { padding: spacing[padding] }, bordered && styles.bordered, style];
 
   if (onPress) {
@@ -20,8 +24,10 @@ export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, 
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        // Phản hồi bằng opacity, không scale để không xê dịch bố cục.
-        style={({ pressed }) => [cardStyle, interactive, pressed && styles.pressed]}
+        onHoverIn={hoverLift ? () => setHovered(true) : undefined}
+        onHoverOut={hoverLift ? () => setHovered(false) : undefined}
+        // Phản hồi nhấn bằng opacity, không scale để không xê dịch bố cục.
+        style={({ pressed }) => [cardStyle, interactive, hovered && styles.lifted, pressed && styles.pressed]}
         {...rest}>
         {children}
       </Pressable>
@@ -38,5 +44,6 @@ export function Card({ padding = 'md', shadow = 'sm', bordered = true, onPress, 
 const styles = StyleSheet.create({
   card: { backgroundColor: semantic.surface, borderRadius: radius.lg },
   bordered: { borderWidth: borderWidth.hairline, borderColor: semantic.borderSubtle },
+  lifted: { ...shadows.md, transform: [{ translateY: -spacing['2xs'] }] },
   pressed: { opacity: opacity.pressed },
 });

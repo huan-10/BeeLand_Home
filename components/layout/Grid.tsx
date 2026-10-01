@@ -38,8 +38,14 @@ export interface ColProps {
 export function Col({ span, children, style }: ColProps) {
   const gutter = useContext(GutterContext);
   const { breakpoint } = useBreakpoint();
+  const order: Breakpoint[] = ['mobile', 'tablet', 'desktop', 'wide'];
+  // Lấy span của breakpoint hiện tại, hoặc của breakpoint nhỏ hơn gần nhất có khai báo.
   const value =
-    breakpoint === 'desktop' ? (span.desktop ?? span.tablet ?? span.mobile) : breakpoint === 'tablet' ? (span.tablet ?? span.mobile) : span.mobile;
+    order
+      .slice(0, order.indexOf(breakpoint) + 1)
+      .reverse()
+      .map((b) => span[b])
+      .find((v): v is number => v !== undefined) ?? span.mobile;
   return <View style={[{ width: `${(value / layout.gridColumns) * 100}%`, paddingHorizontal: gutter / 2 }, style]}>{children}</View>;
 }
 

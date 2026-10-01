@@ -6,3 +6,4 @@ export * from './NotificationItem';
 export * from './PaymentOverviewCard';
 export * from './ReceiptCard';
 export * from './BrandBanner';
+export * from './ProjectImage';

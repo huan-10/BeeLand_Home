@@ -55,8 +55,8 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`toneCo
 
 | Sắc thái | Nền | Chữ | Đậm (thanh/chấm) | Dùng cho |
 |----------|-----|-----|------------------|----------|
-| `success` (xanh lá) | `#ECFDF3` | `#166534` | `#16A34A` | Đã thanh toán, đang hiệu lực, phiếu thu |
-| `info` (xanh dương) | `#EFF6FF` | `#1D4ED8` | `#3B82F6` | Thông tin, đã hoàn tất, HĐĐC/PGC |
+| `success` (xanh lá) | `#ECFDF3` | `#166534` | `#16A34A` | Đã thanh toán, đang hiệu lực, đã tất toán, phiếu thu, thanh tiến độ 100% |
+| `info` (xanh dương) | `#EFF6FF` | `#1D4ED8` | `#3B82F6` | Thông tin, HĐĐC/PGC |
 | `danger` (đỏ) | `#FEF2F2` | `#B91C1C` | `#EF4444` | Quá hạn, lỗi, đăng xuất |
 | `warning` (vàng cam) | `#FFFBEB` | `#B45309` | `#F59E0B` | Chờ xử lý |
 | `primary` (cam) | `#FEF5EC` | `#AD5A0C` | `#F08A24` | Sắp đến hạn |
@@ -167,6 +167,7 @@ Thẻ = nền trắng + viền `borderSubtle` 1px + `shadows.sm`. Không dùng g
 | `sizes.authHero.mobile` | 260 | Chiều cao ảnh hero màn xác thực trên mobile |
 | `sizes.banner` | mobile 168 · wide 208 | Chiều cao tối thiểu banner thương hiệu |
 | `sizes.actionTile.minHeight` | 96 | Ô chức năng |
+| `sizes.projectImage` | 148 | Chiều cao ảnh dự án trên thẻ hợp đồng |
 | `layout.contentMaxWidth` | 1100 | Nội dung desktop căn giữa [Dự án] |
 | `layout.sidebarWidth` | 248 | Sidebar desktop [Dự án] |
 
@@ -188,7 +189,7 @@ Khoảng cách tối thiểu giữa hai vùng chạm: 8px (`touch-spacing`).
 | < 768px | Bottom tab 5 mục: Trang chủ, Hợp đồng, Thanh toán, Phiếu thu, Cá nhân (icon + nhãn) | Lề `layout.gutterMobile` (16), 1 cột |
 | ≥ 768px | Sidebar trái: logo BeeSky, MENU 5 mục, Thông báo, thẻ người dùng + đăng xuất ở đáy | Lề `layout.gutterWide` (32), tối đa 1100px căn giữa, lưới 2–3 cột (`ResponsiveGrid`) |
 
-Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang chủ: 7 + 5 ở desktop) thay vì kéo giãn bố cục mobile.
+Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 ≤ wide. Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang chủ: 7 + 5 ở desktop) thay vì kéo giãn bố cục mobile.
 
 [Skill]: bottom nav ≤ 5 mục, có nhãn; mục hiện tại được tô (nền `primary.50` + icon filled + chữ `textBrand`); đăng xuất tách khỏi mục điều hướng; nội dung không bị che bởi thanh cố định (safe area); không cuộn ngang trên mobile (chip lọc cuộn ngang trong vùng riêng là ngoại lệ có chủ đích).
 
@@ -200,11 +201,11 @@ Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang ch
 |-----------|----------|-------|
 | **Button** | `primary` nền `primary.500`, nhấn `primary.600`, chữ trắng semibold · `secondary` nền `primary.50`, chữ `primary.700`, viền `primary.100` · `ghost` trong suốt, chữ `gray.700` · `danger` nền trắng, chữ `danger.600`, viền `danger.100`. Cao 40/48/56, bo `md`, có `loading` (spinner + `busy`) và `disabled` (opacity 0.5). Mỗi màn hình chỉ 1 nút primary. | [Mockup] màu · [Skill] trạng thái |
 | **Input** | Nhãn hiển thị phía trên (không chỉ placeholder), cao 48, viền 1.5px `gray.200` → focus `primary.500` + halo, lỗi `danger.500` + dòng lỗi kèm icon ngay dưới ô (`aria-describedby`, `role="alert"`); nút hiện/ẩn mật khẩu có nhãn. | [Skill] |
-| **Card** | Trắng, bo `lg`, viền `borderSubtle`, `shadows.sm`, padding `md`. Bấm được → phản hồi opacity 0.85, **không scale**. | [Mockup] + [Skill] |
-| **Badge** | Viên thuốc pastel (§1.3), chữ caption semibold, tùy chọn chấm màu/icon. Màu luôn đi kèm chữ. | [Mockup] + [Skill] `color-not-only` |
-| **ProgressBar** | Cao 8, bo tròn, track `gray.100` (trên nền cam: overlay trắng 30%), fill theo sắc thái (`primary`, `danger` khi có quá hạn, `success` trên thẻ cam). Có `accessibilityValue`. | [Mockup] |
+| **Card** | Trắng, bo `lg`, viền `borderSubtle`, `shadows.sm`, padding `md` (`none` khi có ảnh tràn viền). Bấm được → phản hồi opacity 0.85, **không scale**. `hoverLift` (web): hover dịch lên 2px + `shadows.md` (transform, không đổi bố cục) — dùng cho thẻ danh sách. | [Mockup] + [Skill] |
+| **Badge** | Viên thuốc pastel (§1.3), chữ caption semibold, tùy chọn chấm màu/icon. Màu luôn đi kèm chữ. Luôn một dòng, không co (`flexShrink: 0`) — phần tử bên cạnh co/xuống dòng thay. | [Mockup] + [Skill] `color-not-only`, compact label overflow |
+| **ProgressBar** | Cao 8, bo tròn, track `gray.100` (trên nền cam: overlay trắng 30%), fill theo sắc thái: `primary` (cam) khi đang trả, `success` (xanh lá) khi 100% hoặc trên thẻ cam. Có `accessibilityValue` + nhãn có chữ. | [Mockup] |
 | **Timeline** | Nút tròn 28 viền 2px; đã trả: nền đặc + dấu tích, đường nối tô màu; chưa trả: số thứ tự. Mỗi đợt: tên + badge, số tiền `h3`, % HĐ + ngày. | [Mockup] |
-| **Chip lọc** | Viên thuốc cao 40 (+hitSlop), chọn: nền `primary.500` chữ trắng semibold; thường: trắng viền `gray.200`. | [Mockup] |
+| **Chip lọc / tab lọc** | Viên thuốc cao 40 (+hitSlop), chọn: nền `primary.500` chữ trắng semibold; thường: trắng viền `gray.200`; tùy chọn số lượng "(n)". Dùng `role="tab"` trong vùng `role="tablist"` với style `chipRow` (**xuống dòng**, không cuộn ngang). | [Mockup] + [Skill] chip collection reflow |
 | **IconCircle** | Ô bo `md`, nền pastel theo sắc thái, icon tông đậm. | [Mockup] |
 | **Skeleton** | Khối `gray.200` nhấp nháy opacity 0.5↔1 (800ms); **dừng khi bật giảm chuyển động**. Giữ đúng kích thước nội dung thật. | [Skill] |
 | **EmptyState / ErrorState** | Icon tròn 72 pastel, tiêu đề `h3`, mô tả, một hành động (Xóa bộ lọc / Thử lại). Lỗi có `role="alert"`. | [Skill] |
@@ -219,7 +220,8 @@ Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang ch
 | **ActionTile** | Ô chức năng: `IconCircle` pastel + nhãn semibold, nền trắng, viền `borderSubtle`, bo `lg`, cao tối thiểu `sizes.actionTile.minHeight`. Web hover: nền + viền theo tông pastel; nhấn: opacity 0.85; `compact` cho màn hẹp. | [Mockup] + [Skill] hover |
 | **IconButton** | Nút 44×44 chỉ có icon, viền mảnh; hover/nhấn nền `gray.100`. Tùy chọn **chấm đỏ** (`dot`) + `dotLabel` ghép vào tên truy cập (màu không là tín hiệu duy nhất). | [Skill] |
 | **BrandBanner** | Ảnh khu đô thị + gradient cam ngang, bo `xl`, logo inverted, chữ trắng. Trang trí. | [Mockup] |
-| **Grid / Col** | Lưới 12 cột (`layout.gridColumns`), `Col span={{ mobile, tablet?, desktop? }}`, gutter theo token spacing. | [Dự án] |
+| **Grid / Col** | Lưới 12 cột (`layout.gridColumns`), `Col span={{ mobile, tablet?, desktop?, wide? }}` (breakpoint lớn kế thừa nhỏ hơn), gutter theo token spacing. | [Dự án] |
+| **ProjectImage** | Ảnh dự án `cover`, chiều cao cố định (`sizes.projectImage`), có nhãn truy cập; thiếu URL/lỗi → ảnh minh họa mặc định. | [Mockup] |
 | **AuthLayout** | Khung Đăng nhập / Đăng ký / Quên mật khẩu — xem `pages/login.md`. | [Mockup] |
 | **Thẻ tổng quan** | Gradient `primary.500 → primary.700`, bo `xl`, số tiền `display`, thanh tiến độ xanh lá, khối chia đôi Đã thanh toán / Còn lại trên overlay trắng 15%. | [Mockup] |
 
@@ -250,6 +252,7 @@ Màn hình nhiều khối dùng lưới 12 cột `Grid`/`Col` (ví dụ Trang ch
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
 - ❌ Glassmorphism, blur trang trí, gradient ngoài thẻ tổng quan / logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup]
+- ❌ Hàng chip/tab lọc cuộn ngang hoặc bị cắt; cắt chữ mã hợp đồng / tên dự án (cho xuống dòng) — [Skill]
 - ❌ Hiển thị số chưa đọc chỉ bằng màu/số trần cho trình đọc màn hình (dùng cụm từ đầy đủ) — [Skill]
 - ❌ Hơn một nút primary trên một màn hình — [Skill]
 - ❌ Màn hình import trực tiếp `data/mock/` — [Dự án]
