@@ -104,9 +104,9 @@ export function ContractCardSkeleton() {
     <Card padding="none" style={styles.card}>
       <Skeleton height={sizes.projectImage} radius={radius.none} />
       <View style={styles.body}>
-        <Skeleton width="55%" height={fontSizes.lg.lineHeight} />
+        <Skeleton width="55%" height={fontSizes.heading.lineHeight} />
         <Skeleton width="80%" />
-        <Skeleton width="45%" height={fontSizes.xs.fontSize} />
+        <Skeleton width="45%" height={fontSizes.label.fontSize} />
         <Skeleton width="100%" height={sizes.progress.md} radius={radius.full} />
       </View>
     </Card>
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   card: { overflow: 'hidden' },
   body: { padding: spacing.md, gap: spacing.ms },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  titleCol: { flex: 1, minWidth: 0, gap: spacing['2xs'] },
+  titleCol: { flex: 1, minWidth: 0, gap: spacing.xs },
   meta: { gap: spacing.xs },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   flexText: { flex: 1, minWidth: 0 },

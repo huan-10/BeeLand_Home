@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   line: { flex: 1, width: borderWidth.strong, backgroundColor: colors.gray[200], marginVertical: spacing.xs },
-  content: { flex: 1, minWidth: 0, gap: spacing.xs, paddingTop: spacing['2xs'] },
+  content: { flex: 1, minWidth: 0, gap: spacing.xs, paddingTop: spacing.xs },
   contentGap: { paddingBottom: spacing.lg },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   flex: { flex: 1, minWidth: 0 },

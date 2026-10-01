@@ -13,15 +13,15 @@ export interface LogoProps {
 }
 
 const wordmarkSize: Record<keyof typeof sizes.logo, keyof typeof fontSizes> = {
-  sm: 'base',
-  md: 'lg',
-  lg: 'xl',
-  xl: '2xl',
+  sm: 'body',
+  md: 'heading',
+  lg: 'title',
+  xl: 'title',
 };
 
 export function Logo({ size = 'md', withWordmark = true, inverted = false }: LogoProps) {
   const box = sizes.logo[size];
-  const textStyle = [fontSizes[wordmarkSize[size]], { fontFamily: resolveFontFamily('heading', 'bold') }];
+  const textStyle = [fontSizes[wordmarkSize[size]], { fontFamily: resolveFontFamily('bold') }];
   return (
     <View style={styles.row} accessibilityRole="image" accessibilityLabel="BeeSky">
       <LinearGradient

@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
-    "@expo-google-fonts/noto-sans": "^0.4.2",
     "@expo/metro-runtime": "~57.0.16",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -47,6 +46,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.cjs",
     "audit:ui": "node scripts/ui-audit.js"
   },
   "private": true

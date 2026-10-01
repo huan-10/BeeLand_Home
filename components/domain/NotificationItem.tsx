@@ -60,5 +60,5 @@ const styles = StyleSheet.create({
   main: { flex: 1, gap: spacing.xs },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   flex: { flex: 1 },
-  dot: { width: sizes.dot.md, height: sizes.dot.md, borderRadius: radius.full, backgroundColor: semantic.brand, marginTop: spacing.xs + spacing['2xs'] },
+  dot: { width: sizes.dot.md, height: sizes.dot.md, borderRadius: radius.full, backgroundColor: semantic.brand, marginTop: spacing.xs + spacing.xs },
 });

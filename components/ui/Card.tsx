@@ -46,6 +46,6 @@ const styles = StyleSheet.create({
   bordered: { borderWidth: borderWidth.hairline, borderColor: semantic.borderSubtle },
   // Web: mọi thẻ bấm được đổi viền khi hover; `hoverLift` nâng thêm.
   hover: { borderColor: semantic.borderHover },
-  lifted: { ...shadows.md, transform: [{ translateY: -spacing['2xs'] }] },
+  lifted: { ...shadows.md, transform: [{ translateY: -spacing.xs }] },
   pressed: { opacity: opacity.pressed },
 });

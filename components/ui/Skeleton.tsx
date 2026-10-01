@@ -20,7 +20,7 @@ export interface SkeletonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const lineHeight = fontSizes.sm.fontSize;
+const lineHeight = fontSizes.caption.fontSize;
 
 /** Khối giữ chỗ nhấp nháy khi tải dữ liệu. Tắt nhấp nháy khi người dùng bật giảm chuyển động. */
 export function Skeleton({ width = '100%', height = lineHeight, radius = radii.sm, style }: SkeletonProps) {
@@ -51,11 +51,11 @@ export function SkeletonCard({ lines = 3 }: { lines?: number }) {
         <Skeleton width={sizes.iconBox.lg} height={sizes.iconBox.lg} radius={radii.md} />
         <View style={styles.col}>
           <Skeleton width="60%" />
-          <Skeleton width="40%" height={fontSizes.xs.fontSize} />
+          <Skeleton width="40%" height={fontSizes.label.fontSize} />
         </View>
       </View>
       {Array.from({ length: Math.max(lines - 2, 0) }).map((_, i) => (
-        <Skeleton key={i} height={fontSizes.xs.fontSize} width={i % 2 ? '70%' : '90%'} style={styles.line} />
+        <Skeleton key={i} height={fontSizes.label.fontSize} width={i % 2 ? '70%' : '90%'} style={styles.line} />
       ))}
     </Card>
   );

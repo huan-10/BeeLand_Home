@@ -20,9 +20,10 @@ module.exports = {
         ]),
       ),
       fontFamily: {
-        sans: [tokens.fontFamily.body.regular],
-        heading: [tokens.fontFamily.heading.bold],
-        body: [tokens.fontFamily.body.regular],
+        sans: [tokens.fontFamily.regular],
+        medium: [tokens.fontFamily.medium],
+        semibold: [tokens.fontFamily.semibold],
+        bold: [tokens.fontFamily.bold],
       },
       maxWidth: {
         content: px(tokens.layout.contentMaxWidth),

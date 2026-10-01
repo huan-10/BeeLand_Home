@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingHorizontal: spacing.xs,
   },
-  bottomItem: { flex: 1, alignItems: 'center', gap: spacing['2xs'], minHeight: sizes.touchTarget },
+  bottomItem: { flex: 1, alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchTarget },
   bottomIcon: {
     width: sizes.tabIndicator.width,
     height: sizes.tabIndicator.height,

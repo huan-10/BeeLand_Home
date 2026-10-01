@@ -3,41 +3,54 @@ import type { TextStyle } from 'react-native';
 import tokens from './tokens.json';
 
 /**
- * Cặp font hỗ trợ đầy đủ dấu tiếng Việt (skill ui-ux-pro-max, "Vietnamese Friendly"):
- * Be Vietnam Pro cho tiêu đề, Noto Sans cho nội dung.
+ * Một họ font duy nhất: Be Vietnam Pro (thiết kế cho tiếng Việt, dấu rõ) với 4 độ đậm.
+ * React Native không tự chọn file font theo `fontWeight` với font tuỳ chỉnh → mỗi độ đậm là một fontFamily.
  */
 export const fontFamily = tokens.fontFamily;
-export type FontRole = keyof typeof fontFamily;
-export type FontWeight = keyof typeof fontFamily.body;
+export type FontWeight = keyof typeof fontFamily;
 
 export const letterSpacing = tokens.letterSpacing;
 
 export type FontSize = keyof typeof tokens.fontSize;
 
-/** Thang kích thước chữ: [fontSize, lineHeight]. */
+/** Thang cỡ chữ: [fontSize, lineHeight] — display 28 · title 22 · heading 17 · body 15 · caption 14 · label 12. */
 export const fontSizes = Object.fromEntries(
   Object.entries(tokens.fontSize).map(([key, [size, lineHeight]]) => [key, { fontSize: size, lineHeight }]),
 ) as Record<FontSize, Pick<TextStyle, 'fontSize' | 'lineHeight'>>;
 
-/** Chọn font theo vai trò + độ đậm (tiêu đề chỉ có semibold/bold). */
-export function resolveFontFamily(role: FontRole, weight: FontWeight): string {
-  if (role === 'heading') return weight === 'bold' ? fontFamily.heading.bold : fontFamily.heading.semibold;
-  return fontFamily.body[weight];
+export function resolveFontFamily(weight: FontWeight): string {
+  return fontFamily[weight];
 }
 
-/** Các kiểu chữ dựng sẵn dùng trong toàn ứng dụng. */
+type VariantSpec = { size: FontSize; weight: FontWeight; tracking?: keyof typeof letterSpacing };
+
+/**
+ * Kiểu chữ dựng sẵn.
+ * - `display` số tiền lớn · `title` tiêu đề màn / khối lớn · `heading` tiêu đề thẻ, mục
+ * - `subhead` dòng nhấn mạnh 15 đậm · `body` nội dung · `bodyStrong` giá trị 15 vừa
+ * - `caption` thông tin phụ 14 · `captionStrong` nhãn phụ 14 vừa · `label` nhãn nhỏ nhất 12 đậm, giãn chữ
+ */
 export const textVariants = {
-  display: { size: '3xl', weight: 'bold', role: 'heading' },
-  h1: { size: '2xl', weight: 'bold', role: 'heading' },
-  h2: { size: 'xl', weight: 'semibold', role: 'heading' },
-  h3: { size: 'lg', weight: 'semibold', role: 'heading' },
-  body: { size: 'base', weight: 'regular', role: 'body' },
-  bodyMedium: { size: 'base', weight: 'medium', role: 'body' },
-  small: { size: 'sm', weight: 'regular', role: 'body' },
-  smallMedium: { size: 'sm', weight: 'medium', role: 'body' },
-  caption: { size: 'xs', weight: 'regular', role: 'body' },
-  label: { size: 'sm', weight: 'semibold', role: 'body' },
-  overline: { size: 'xs', weight: 'semibold', role: 'body' },
-} satisfies Record<string, { size: FontSize; weight: FontWeight; role: FontRole }>;
+  display: { size: 'display', weight: 'bold', tracking: 'tight' },
+  title: { size: 'title', weight: 'bold', tracking: 'tight' },
+  heading: { size: 'heading', weight: 'semibold' },
+  subhead: { size: 'body', weight: 'semibold' },
+  body: { size: 'body', weight: 'regular' },
+  bodyStrong: { size: 'body', weight: 'medium' },
+  caption: { size: 'caption', weight: 'regular' },
+  captionStrong: { size: 'caption', weight: 'medium' },
+  label: { size: 'label', weight: 'semibold', tracking: 'label' },
+  // --- Tên cũ, giữ tạm để chuyển dần từng màn (xoá ở giai đoạn 3) ---
+  h1: { size: 'title', weight: 'bold', tracking: 'tight' },
+  h2: { size: 'title', weight: 'bold', tracking: 'tight' },
+  h3: { size: 'heading', weight: 'semibold' },
+  bodyMedium: { size: 'body', weight: 'medium' },
+  small: { size: 'caption', weight: 'regular' },
+  smallMedium: { size: 'caption', weight: 'medium' },
+  overline: { size: 'label', weight: 'semibold', tracking: 'label' },
+} satisfies Record<string, VariantSpec>;
 
 export type TextVariant = keyof typeof textVariants;
+
+/** Chữ số đều độ rộng cho số tiền, ngày, mã — cột số thẳng hàng. */
+export const numericText: TextStyle = { fontVariant: ['tabular-nums'] };

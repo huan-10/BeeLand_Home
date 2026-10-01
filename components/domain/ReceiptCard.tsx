@@ -54,12 +54,12 @@ export function ReceiptCardSkeleton() {
       <View style={styles.row}>
         <Skeleton width={sizes.iconBox.lg} height={sizes.iconBox.lg} radius={radius.md} />
         <View style={styles.main}>
-          <Skeleton width="55%" height={fontSizes.base.fontSize} />
-          <Skeleton width="75%" height={fontSizes.xs.fontSize} />
+          <Skeleton width="55%" height={fontSizes.body.fontSize} />
+          <Skeleton width="75%" height={fontSizes.label.fontSize} />
         </View>
         <View style={styles.right}>
-          <Skeleton width={sizes.skeleton.amountWidth} height={fontSizes.sm.fontSize} />
-          <Skeleton width={sizes.skeleton.badgeWidth} height={fontSizes.lg.fontSize} radius={radius.full} />
+          <Skeleton width={sizes.skeleton.amountWidth} height={fontSizes.caption.fontSize} />
+          <Skeleton width={sizes.skeleton.badgeWidth} height={fontSizes.heading.fontSize} radius={radius.full} />
         </View>
       </View>
     </Card>
@@ -68,7 +68,7 @@ export function ReceiptCardSkeleton() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
-  main: { flex: 1, minWidth: 0, gap: spacing['2xs'] },
+  main: { flex: 1, minWidth: 0, gap: spacing.xs },
   right: { alignItems: 'flex-end', gap: spacing.xs, flexShrink: 0 },
   amount: { fontVariant: ['tabular-nums'] },
   strike: { textDecorationLine: 'line-through', textDecorationColor: colors.gray[400] },

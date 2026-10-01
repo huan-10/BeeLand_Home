@@ -1,55 +1,44 @@
 import tokens from './tokens.json';
 
 /**
- * Bảng màu BeeSky (theo mockup). Nguồn duy nhất là `tokens.json`,
- * dùng chung với `tailwind.config.js` để className và style luôn đồng bộ.
+ * Bảng màu BeeSky. Nguồn duy nhất là `tokens.json` (dùng chung với `tailwind.config.js`
+ * và `tests/contrast.test.cjs`), nên className, style và test tương phản luôn đồng bộ.
+ *
+ * - `primary`: cam thương hiệu #F08A24 (500) — chỉ để trang trí, viền, thanh tiến độ, icon.
+ * - `primary.700` (#A9520A, "cam mật ong đậm"): nền nút chính, chữ trắng 5.4:1.
+ * - `gray`: thang "cát" ấm (hơi ngả nâu) — khác thang slate xanh xám.
+ * - `ink`: nâu đen "cà phê" cho thẻ tổng tiền, chip đang chọn, toast — hợp với cam (ong: đen + mật).
  */
 export const colors = tokens.colors;
 
 export type ColorScale = typeof colors.primary;
-export type Tone = 'primary' | 'success' | 'info' | 'danger' | 'warning' | 'neutral';
+export type Tone = keyof typeof tokens.tone;
+
+/** Tra một tham chiếu "nhóm.bậc" (vd `gray.900`, `onInk.muted`) hoặc tên màu gốc (`white`). */
+function resolveColor(ref: string): string {
+  const value = ref.split('.').reduce<unknown>((node, key) => (node as Record<string, unknown>)[key], colors);
+  if (typeof value !== 'string') throw new Error(`Token màu không tồn tại: ${ref}`);
+  return value;
+}
+
+function resolveAll<T extends Record<string, string>>(refs: T): { [K in keyof T]: string } {
+  return Object.fromEntries(Object.entries(refs).map(([key, ref]) => [key, resolveColor(ref)])) as { [K in keyof T]: string };
+}
 
 /**
- * Màu theo vai trò. Component dùng các token này thay vì chọn trực tiếp từ thang màu.
- * Tương phản (WCAG AA, đo bằng audit): mọi chữ ≥ 4.5:1.
- * - Chữ cam: `textBrand` (primary-700, 4.95:1 trên trắng).
- * - Chữ mờ: `textMuted` (gray-600, ≥ 7:1 trên trắng và trên nền pastel).
- * - Chữ trên nền cam đặc `brand` (#F08A24): `textOnBrand` (gray-900, 7.07:1) — giữ nguyên màu nền theo mockup.
- * - Chữ trên lớp phủ tối / ảnh / toast: `textInverse` (trắng).
- * - gray-400 chỉ dùng cho icon trang trí, không dùng cho chữ.
+ * Màu theo vai trò (khai báo ở `tokens.json` → `semantic`). Component dùng các token này thay vì chọn trực tiếp từ thang màu.
+ * Mọi cặp chữ/nền được kiểm ≥ 4.5:1 bởi `npm test` (tests/contrast.test.cjs).
+ * - Nút chính: nền `action` (primary-700) → hover `actionHover` → nhấn `actionPressed`, chữ `textOnAction` (trắng).
+ * - Chữ cam: `textBrand` (primary-700). Chữ mờ: `textMuted` (gray-600). gray-400 chỉ cho icon trang trí.
+ * - Nền cam sáng `brand` (#F08A24) chỉ đặt chữ `textOnBrand` (gray-900), không đặt chữ trắng.
+ * - Nền tối `inverse` (ink-800): chữ `onInverse`, `onInverseMuted`, số tiền `onInverseAccent`.
  */
-export const semantic = {
-  bg: colors.background,
-  surface: colors.surface,
-  surfaceMuted: colors.gray[50],
-  border: colors.gray[200],
-  borderHover: colors.primary[200],
-  borderSubtle: colors.gray[100],
-  text: colors.gray[900],
-  textSecondary: colors.gray[700],
-  textMuted: colors.gray[600],
-  placeholder: colors.gray[500],
-  textBrand: colors.primary[700],
-  textSuccess: colors.success[700],
-  textOnBrand: colors.gray[900],
-  textInverse: colors.white,
-  iconMuted: colors.gray[400],
-  icon: colors.gray[700],
-  brand: colors.primary[500],
-  brandPressed: colors.primary[600],
-  focusRing: colors.primary[500],
-  focusHalo: colors.primary[100],
-} as const;
+export const semantic = resolveAll(tokens.semantic);
 
 /**
  * Cặp nền pastel / chữ đậm cho Badge, icon tròn... (chữ ≥ 4.5:1).
  * `onSolid`: màu icon/chữ đặt trên nền `solid` (≥ 3:1 cho icon).
  */
-export const toneColors: Record<Tone, { bg: string; fg: string; solid: string; border: string; onSolid: string }> = {
-  primary: { bg: colors.primary[50], fg: colors.primary[700], solid: colors.primary[500], border: colors.primary[100], onSolid: colors.gray[900] },
-  success: { bg: colors.success[50], fg: colors.success[700], solid: colors.success[500], border: colors.success[100], onSolid: colors.white },
-  info: { bg: colors.info[50], fg: colors.info[700], solid: colors.info[500], border: colors.info[100], onSolid: colors.white },
-  danger: { bg: colors.danger[50], fg: colors.danger[700], solid: colors.danger[500], border: colors.danger[100], onSolid: colors.white },
-  warning: { bg: colors.warning[50], fg: colors.warning[700], solid: colors.warning[500], border: colors.warning[100], onSolid: colors.gray[900] },
-  neutral: { bg: colors.gray[100], fg: colors.gray[700], solid: colors.gray[500], border: colors.gray[200], onSolid: colors.white },
-};
+export const toneColors = Object.fromEntries(
+  Object.entries(tokens.tone).map(([tone, refs]) => [tone, resolveAll(refs)]),
+) as Record<Tone, { bg: string; fg: string; solid: string; border: string; onSolid: string }>;

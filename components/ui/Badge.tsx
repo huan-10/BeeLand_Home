@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing['2xs'],
+    paddingVertical: spacing.xs,
     borderRadius: radius.full,
   },
   md: { paddingHorizontal: spacing.ms, paddingVertical: spacing.xs },

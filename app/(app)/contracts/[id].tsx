@@ -281,6 +281,6 @@ const styles = StyleSheet.create({
   main: { flexGrow: layout.detailMainFlex, flexShrink: 1, flexBasis: 0 },
   columnContent: { paddingBottom: spacing.lg },
   list: { gap: spacing.sm },
-  term: { paddingVertical: spacing.ms, gap: spacing['2xs'] },
+  term: { paddingVertical: spacing.ms, gap: spacing.xs },
   termDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.borderSubtle },
 });

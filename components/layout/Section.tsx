@@ -41,7 +41,7 @@ export function Section({ title, actionLabel, onAction, children }: SectionProps
 const styles = StyleSheet.create({
   section: { gap: spacing.ms },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: spacing['2xs'], minHeight: sizes.touchTarget },
+  action: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchTarget },
   pressed: { opacity: opacity.pressed },
   underline: { textDecorationLine: 'underline' },
 });

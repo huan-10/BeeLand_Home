@@ -1,19 +1,29 @@
 import type { ViewStyle } from 'react-native';
 
-import { colors } from './colors';
+import { semantic } from './colors';
 
 /**
- * Đổ bóng nhẹ (theo mockup: thẻ trắng nổi nhẹ trên nền xám sáng).
- * Dùng `boxShadow` (React Native kiến trúc mới + web) để hiển thị giống nhau mọi nền tảng.
+ * Bóng 4 mức, màu bóng nâu ấm (ink) thay vì đen xanh. Thẻ dùng bóng thay cho viền.
+ * Dùng `boxShadow` (React Native kiến trúc mới + web) để giống nhau mọi nền tảng.
+ * - `soft`: thẻ trên nền màn hình
+ * - `raised`: thẻ khi hover / nâng lên; `raisedTop`: thanh hành động dính đáy (bóng hắt lên)
+ * - `overlay`: toast, thanh tab nổi, menu
+ * - `modal`: hộp thoại
  */
 export const shadows = {
   none: {},
-  sm: { boxShadow: '0px 1px 2px rgba(16, 24, 40, 0.05), 0px 1px 3px rgba(16, 24, 40, 0.06)' },
-  md: { boxShadow: '0px 4px 12px rgba(16, 24, 40, 0.08)' },
-  lg: { boxShadow: '0px 12px 32px rgba(16, 24, 40, 0.12)' },
-  navTop: { boxShadow: '0px -2px 12px rgba(16, 24, 40, 0.04)' },
+  soft: { boxShadow: '0px 1px 2px rgba(43, 32, 25, 0.04), 0px 6px 20px rgba(43, 32, 25, 0.06)' },
+  raised: { boxShadow: '0px 2px 4px rgba(43, 32, 25, 0.05), 0px 12px 28px rgba(43, 32, 25, 0.10)' },
+  raisedTop: { boxShadow: '0px -4px 16px rgba(43, 32, 25, 0.07)' },
+  overlay: { boxShadow: '0px 12px 32px rgba(43, 32, 25, 0.16)' },
+  modal: { boxShadow: '0px 24px 56px rgba(43, 32, 25, 0.24)' },
   /** Vòng sáng quanh ô nhập khi focus. */
-  focusHalo: { boxShadow: `0px 0px 0px 3px ${colors.primary[100]}` },
+  focusHalo: { boxShadow: `0px 0px 0px 3px ${semantic.focusHalo}` },
+  // --- Tên cũ, giữ tạm để chuyển dần (xoá ở giai đoạn 3) ---
+  sm: { boxShadow: '0px 1px 2px rgba(43, 32, 25, 0.04), 0px 6px 20px rgba(43, 32, 25, 0.06)' },
+  md: { boxShadow: '0px 2px 4px rgba(43, 32, 25, 0.05), 0px 12px 28px rgba(43, 32, 25, 0.10)' },
+  lg: { boxShadow: '0px 24px 56px rgba(43, 32, 25, 0.24)' },
+  navTop: { boxShadow: '0px -4px 16px rgba(43, 32, 25, 0.07)' },
 } satisfies Record<string, ViewStyle>;
 
 export type ShadowLevel = keyof typeof shadows;

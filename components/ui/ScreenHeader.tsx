@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backPressed: { backgroundColor: colors.gray[100] },
-  titles: { flex: 1, gap: spacing['2xs'] },
+  titles: { flex: 1, gap: spacing.xs },
   right: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

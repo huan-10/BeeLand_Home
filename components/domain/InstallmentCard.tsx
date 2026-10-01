@@ -50,7 +50,7 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
-  main: { flex: 1, gap: spacing['2xs'] },
+  main: { flex: 1, gap: spacing.xs },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

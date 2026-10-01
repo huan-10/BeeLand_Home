@@ -115,9 +115,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
     height: '100%',
     color: semantic.text,
-    fontFamily: resolveFontFamily('body', 'regular'),
+    fontFamily: resolveFontFamily('regular'),
     // 16px trở lên để iOS không tự phóng to khi focus.
-    ...fontSizes.base,
+    ...fontSizes.body,
     ...(Platform.OS === 'web' ? { outlineWidth: 0 } : null),
   },
   // Vùng chạm 44×44; lề âm để icon vẫn thẳng hàng mép phải ô nhập.
