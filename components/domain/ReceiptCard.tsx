@@ -25,10 +25,10 @@ export function ReceiptCard({ receipt, onPress }: { receipt: Receipt; onPress?: 
       <View style={styles.row}>
         <IconCircle name="document" tone={meta.tone} />
         <View style={styles.main}>
-          <Text variant="bodyStrong" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold" numberOfLines={2}>
             {receipt.code}
           </Text>
-          <Text variant="caption" color={semantic.textMuted}>
+          <Text variant="caption" color={semantic.textMuted} numberOfLines={2}>
             {formatDate(receipt.paidDate)} · {receipt.contractCode}
           </Text>
         </View>

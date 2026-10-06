@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { IconCircle, Text } from '@/components/ui';
+import { IconCircle, Pressable, Text } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/format';
 import { notificationTypeMeta } from '@/lib/labels';
 import { useHover } from '@/hooks/useHover';

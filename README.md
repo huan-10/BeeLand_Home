@@ -33,9 +33,15 @@ Build web tĩnh: `npx expo export --platform web` (kết quả nằm trong `dist
 | `/` | Trang chủ: lời chào, banner, 4 lối tắt, đợt thanh toán gần nhất, thông báo mới |
 | `/contracts`, `/contracts/[id]` | Danh sách hợp đồng (lọc + tìm theo mã) và chi tiết (lịch thanh toán, phiếu thu, thông tin khác, xem PDF mẫu, "Thanh toán ngay") |
 | `/payments` | Các đợt thanh toán của **mọi hợp đồng**, nhóm theo tháng, sắp theo ngày; cảnh báo đợt quá hạn (chữ + icon); lọc Sắp đến hạn / Đã thanh toán / Tất cả |
-| `/receipts`, `/receipts/[id]` | Phiếu thu (lọc theo trạng thái / hợp đồng), chi tiết + tải PDF / chia sẻ (giao diện) |
+| `/receipts`, `/receipts/[id]` | Phiếu thu (mở từ thanh phân đoạn trong Thanh toán, không còn tab riêng) (lọc theo trạng thái / hợp đồng), chi tiết + tải PDF / chia sẻ (giao diện) |
 | `/profile` | Thông tin tài khoản, đổi mật khẩu (giao diện), lối tắt, đăng xuất (có xác nhận), phiên bản ứng dụng |
-| `/notifications` | Thông báo, đánh dấu đã đọc |
+| `/notifications` | Thông báo (thanh toán + nhà ở xã hội), đánh dấu đã đọc |
+| `/noxh` | **Nhà ở xã hội** (tab giữa): hồ sơ cần chú ý, bốc thăm nổi bật, đợt đang nhận hồ sơ |
+| `/noxh/dot/[id]`, `/noxh/huong-dan` | Chi tiết đợt (nhóm đối tượng, đếm ngược, "Đăng ký hồ sơ") · hướng dẫn |
+| `/noxh/ho-so`, `/noxh/ho-so/tao`, `/noxh/ho-so/[id]` (+ `/thong-tin`, `/giay-to`, `/da-nop`) | Hồ sơ của tôi · tạo hồ sơ · chi tiết (các bước, quá trình xử lý) · thông tin cá nhân · giấy tờ (chụp ảnh / chọn tệp, nộp, bổ sung) · đã nộp |
+| `/noxh/boc-tham`, `/noxh/boc-tham/[id]`, `/noxh/ket-qua` | Bốc thăm của tôi · phòng bốc thăm (lồng cầu, kết quả, giấy xác nhận) · kết quả đã công bố |
+
+**Nhà ở xã hội** dùng dữ liệu thật (`services/noxhApi.ts`, cùng luồng với web `PortalNoxhService`; `NOXH_BACKEND` đi theo `AUTH_BACKEND`). Nộp hồ sơ, tải giấy tờ, bốc thăm, đánh dấu đã đọc **ghi vào database thật** khi khách thao tác — chỉ thử bằng tài khoản thử nghiệm (`docs/database.md`). Thiết kế: `docs/superpowers/specs/2026-10-05-noxh-customer-app-design.md`. Chạy thử toàn bộ app không gọi server: `EXPO_PUBLIC_AUTH_BACKEND=mock npx expo start --web`. Tài khoản mock: `0901 234 567` / `123456` (có hợp đồng + NOXH: 4 hồ sơ, bốc thăm đang mở trúng A-1205), `0938 111 222` hoặc CCCD `001 099 012 345` / `123456` (chỉ NOXH). Phiên cũ chưa có token NOXH: mật khẩu kết nối `123456`.
 
 Mọi danh sách đều có 3 trạng thái **đang tải (skeleton) / rỗng / lỗi + "Thử lại"**; màn hình chính hỗ trợ kéo để làm mới.
 
@@ -55,7 +61,7 @@ tests/               Test tương phản màu
 types/               Interface: User, Contract, PaymentInstallment, Receipt, AppNotification
 data/mock/           Dữ liệu giả – CHỈ được đọc bởi services/
 services/            Lớp truy cập dữ liệu (hàm async)
-hooks/               useContracts, useContract, usePaymentSchedule, useReceipts, useBreakpoint, useHover…
+hooks/               useContracts, useContract, usePaymentsView, useReceipts, useBreakpoint, useHover…
 lib/                 format.ts (tiền, ngày), payment.ts (tổng đã trả, %, số ngày, nhóm theo tháng), validation.ts, labels…
 scripts/ui-audit.js  Kiểm định giao diện web tự động (Playwright)
 design-system/       Quy chuẩn giao diện: beesky/MASTER.md + pages/<màn hình>.md
@@ -104,7 +110,7 @@ Khi có lỗi, ném `ServiceError` với thông điệp tiếng Việt — màn 
 - Mobile: thanh tab kính mờ nổi; web ≥ 768px: sidebar + lưới 12 cột.
 - Quy chuẩn đầy đủ: `design-system/beesky/MASTER.md` và `design-system/beesky/pages/`.
 - Token khai báo một lần trong `theme/tokens.json`, dùng chung cho `tailwind.config.js` (NativeWind) và style TypeScript.
-- Không hard-code màu / kích thước ngoài `theme/`; icon dùng lucide-react-native qua `<Icon name>`, không dùng emoji.
+- Không hard-code màu / kích thước ngoài `theme/`; icon dùng Phosphor (phosphor-react-native) qua `<Icon name>`, không dùng emoji.
 - `npm test` kiểm 72 cặp tương phản WCAG trực tiếp trên `theme/tokens.json`.
 
 ## Kiểm định (accessibility & responsive)

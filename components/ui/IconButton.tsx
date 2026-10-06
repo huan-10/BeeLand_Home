@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { borderWidth, colors, interactive, radius, semantic, shadows, sizes, type IconName } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
 import { Icon } from './Icon';
+import { Pressable } from './Pressable';
 
 export interface IconButtonProps {
   icon: IconName;

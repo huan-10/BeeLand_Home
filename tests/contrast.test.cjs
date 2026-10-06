@@ -54,7 +54,6 @@ const TEXT = 4.5;
 const GRAPHIC = 3;
 const s = semantic;
 const glassOnWhite = over(s.glass, tokens.colors.white);
-const glassOnInk = over(s.glass, tokens.colors.ink['900']);
 
 // Chữ thường trên các nền sáng
 for (const [bgName, bg] of [['surface', s.surface], ['bg', s.bg], ['surfaceMuted', s.surfaceMuted], ['surfaceSunken', s.surfaceSunken]]) {
@@ -78,9 +77,10 @@ for (const bg of ['inverse', 'inverseHover', 'inverseStrong']) {
   check(`onInverseMuted / ${bg}`, s.onInverseMuted, s[bg], TEXT);
   check(`onInverseAccent / ${bg}`, s.onInverseAccent, s[bg], TEXT);
 }
-check('thanh tiến độ cam / inverse', s.brand, s.inverse, GRAPHIC);
+check('thanh tiến độ màu nhấn / inverse', s.brand, s.inverse, GRAPHIC);
+check('icon lỗi toast / inverseStrong', tokens.colors.danger['500'], s.inverseStrong, GRAPHIC);
 check('thanh tiến độ xanh / inverse', tone.success.solid, s.inverse, GRAPHIC);
-check('thanh tiến độ cam / track trên inverse', s.brand, over(s.inverseTrack, s.inverse), GRAPHIC);
+check('thanh tiến độ màu nhấn / track trên inverse', s.brand, over(s.inverseTrack, s.inverse), GRAPHIC);
 
 // Badge / icon tròn / thông báo: chữ đậm trên nền pastel và trên thẻ trắng
 for (const [name, t] of Object.entries(tone)) {
@@ -89,11 +89,10 @@ for (const [name, t] of Object.entries(tone)) {
   check(`tone.${name}.onSolid / solid (icon)`, t.onSolid, t.solid, GRAPHIC);
 }
 
-// Thanh tab kính mờ (mobile): chữ trên lớp kính, xét cả khi nội dung phía sau trắng hoặc tối nhất
-for (const [bgName, bg] of [['kính/nền trắng', glassOnWhite], ['kính/nền tối', glassOnInk]]) {
-  check(`textSecondary / ${bgName}`, s.textSecondary, bg, TEXT);
-  check(`textMuted / ${bgName}`, s.textMuted, bg, TEXT);
-}
+// Thanh tab kính mờ (mobile, chỉ icon): icon thường `inverse`, icon đang chọn `action` trên viên kính sáng
+const glassActiveOnGlass = over(s.glassActive, glassOnWhite);
+check('icon tab / kính trên nền trắng', s.inverse, glassOnWhite, GRAPHIC);
+check('icon tab đang chọn / viên kính sáng', s.action, glassActiveOnGlass, GRAPHIC);
 
 // Thành phần đồ họa
 check('focusRing / surface', s.focusRing, s.surface, GRAPHIC);
@@ -105,6 +104,9 @@ check('nút danger: chữ / nền hover', tone.danger.fg, tone.danger.bg, TEXT);
 
 // Lớp phủ ảnh: chữ trắng trên ảnh (xét vùng sáng nhất của ảnh khu đô thị)
 const brightPhoto = 'rgb(253, 214, 170)';
-for (const name of ['heroScrim', 'brandTint', 'brandTintStrong']) {
+for (const name of ['heroScrim', 'brandTint', 'brandTintStrong', 'imageScrimBottom']) {
   check(`chữ trắng / ${name} trên vùng ảnh sáng`, tokens.colors.white, over(tokens.colors.overlay[name], brightPhoto), TEXT);
 }
+
+// Viên kính trên ảnh dự án (loại hợp đồng): chữ trắng trên kính tối phủ vùng ảnh sáng nhất
+check('chữ trắng / glassOnImage trên lớp phủ ảnh', tokens.colors.white, over(tokens.colors.overlay.glassOnImage, over(tokens.colors.overlay.heroScrim, brightPhoto)), TEXT);

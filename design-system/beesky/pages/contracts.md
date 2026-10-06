@@ -17,7 +17,7 @@
 | Tên dự án | `bodyStrong` semibold, **xuống dòng đầy đủ** |
 | Căn hộ · Tòa / Ngày ký | Icon outline `sm` + `caption` `textSecondary` |
 | Giá trị / Đã thanh toán | Hàng nhãn – số tiền (đậm), "Đã thanh toán 1.250.000.000 đ (50%)": % màu `textBrand`, hoặc `textSuccess` khi 100% |
-| Thanh tiến độ | `ProgressBar` **cam** (`primary`) khi < 100%, **xanh lá** (`success`) khi 100% (`isFullyPaid`); nhãn "Tiến độ thanh toán 100%, đã tất toán" |
+| Thanh tiến độ | `ProgressBar` **xanh trời** (`primary`) khi < 100%, **xanh lá** (`success`) khi 100% (`isFullyPaid`); nhãn "Tiến độ thanh toán 100%, đã tất toán" |
 | Tương tác | Cả thẻ là nút → `/contracts/[id]` (đường dẫn rút gọn `/contract/[id]` chuyển hướng về đây). Web: hover **nâng nhẹ** (`Card hoverLift`: dịch lên 4px + `shadows.raised`), con trỏ pointer, focus ring; nhấn: opacity |
 
 ## Bố cục (`Grid`/`Col`)
@@ -34,3 +34,11 @@
 | Lỗi | `ErrorState` + "Thử lại" trong `Card` |
 | Không có kết quả | `EmptyState` "Không tìm thấy hợp đồng": khi tìm kiếm → nêu mã đã nhập; khi lọc → "Chưa có hợp đồng nào trong mục này."; nút "Xóa bộ lọc" khi đang lọc/tìm |
 | Làm mới | Kéo để làm mới |
+
+> 2026-10-02: thẻ dùng **ảnh thật của dự án** + lớp phủ, tên dự án / căn đè ảnh; thẻ danh sách có khối tiến độ và "đợt tiếp theo". Chi tiết: `docs/real-data.md` mục Giao diện thẻ hợp đồng.
+
+> 2026-10-02 — Thanh bám dính: ô tìm (mã HĐ, mã căn, tên dự án — không phân biệt dấu) + `ChipBar`; cuộn qua tiêu đề → `CompactSummary` "N hợp đồng · tổng giá trị", "Đã trả …", %. Quy tắc chung: MASTER §8 "thanh bám dính".
+
+## Bộ lọc gọn (2026-10-05)
+- Bỏ 3 chip trạng thái (Tất cả / Đang hiệu lực / Đã tất toán) — trạng thái đã có nhãn trên từng thẻ. Thanh bám dính còn: ô tìm + `UnitFilterBar` "Tất cả · <mã căn>" (chip gọn 36, lọc trên máy, căn lấy từ kết quả tìm). Khách 1 căn → không hiện hàng chip.
+- Không có kết quả khi chọn căn → "Căn X chưa có hợp đồng." + "Xóa bộ lọc" (xoá cả tìm kiếm và căn).

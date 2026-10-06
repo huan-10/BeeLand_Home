@@ -2,51 +2,65 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ContractCard, ContractCardSkeleton } from '@/components/domain';
+import { ContractCard, ContractCardSkeleton, UnitFilterBar } from '@/components/domain';
 import { Col, Grid, Screen } from '@/components/layout';
-import { Card, Chip, EmptyState, ErrorState, Input, ScreenHeader } from '@/components/ui';
+import { Card, CompactSummary, EmptyState, ErrorState, Input, ScreenHeader, Text } from '@/components/ui';
+import { summarizeContractList } from '@/lib/contract';
+import { formatCurrency, formatPercent } from '@/lib/format';
+import { activeUnit, filterByUnit, unitCodesOf } from '@/lib/unitFilter';
+import { useAuth } from '@/contexts/AuthContext';
 import { useContracts } from '@/hooks/useContracts';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { chipRow, spacing } from '@/theme';
+import { semantic, spacing } from '@/theme';
 import type { ColSpan } from '@/components/layout';
-import type { ContractCounts, ContractStatus } from '@/types';
-
-type TabValue = Extract<ContractStatus, 'active' | 'completed'> | 'all';
-
-const tabs: { value: TabValue; label: string; countKey: keyof ContractCounts }[] = [
-  { value: 'all', label: 'Tất cả', countKey: 'all' },
-  { value: 'active', label: 'Đang hiệu lực', countKey: 'active' },
-  { value: 'completed', label: 'Đã tất toán', countKey: 'completed' },
-];
 
 /** Mobile/tablet 1 cột · desktop (≥1024) 2 cột · màn rộng (≥1280) 3 cột. */
 const cardSpan: ColSpan = { mobile: 12, desktop: 6, wide: 4 };
 const SKELETON_COUNT = 3;
 
 export default function ContractsScreen() {
-  const [tab, setTab] = useState<TabValue>('all');
+  // Trạng thái (đang hiệu lực / đã tất toán) xem trên nhãn từng thẻ; bộ lọc chỉ còn tìm kiếm + mã căn cho gọn.
+  const [unit, setUnit] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search.trim());
-  const { data, loading, refreshing, error, refetch } = useContracts({ status: tab, search: debouncedSearch });
+  const { data, loading, refreshing, error, refetch } = useContracts({ search: debouncedSearch });
+  const { contractsAvailable } = useAuth();
 
-  const counts = data?.counts;
-  const items = data?.items ?? [];
-  const isFiltered = Boolean(debouncedSearch) || tab !== 'all';
+  const all = data?.items ?? [];
+  const units = unitCodesOf(all);
+  const shownUnit = activeUnit(units, unit);
+  const items = filterByUnit(all, shownUnit);
+  const isFiltered = Boolean(debouncedSearch) || shownUnit !== null;
+  const listSummary = summarizeContractList(items);
 
   const clearFilters = () => {
     setSearch('');
-    setTab('all');
+    setUnit(null);
   };
 
   return (
-    <Screen onRefresh={() => void refetch()} refreshing={refreshing}>
-      <ScreenHeader title="Hợp đồng của tôi" subtitle="Theo dõi giá trị và tiến độ thanh toán từng hợp đồng" />
-
+    <Screen
+      onRefresh={() => void refetch()}
+      refreshing={refreshing}
+      // top={<ScreenHeader title="Hợp đồng của tôi" subtitle="Theo dõi giá trị và tiến độ thanh toán từng hợp đồng" />}
+      sticky={(collapsed) => (
       <View style={styles.filters}>
+        {collapsed && items.length > 0 ? (
+          <CompactSummary
+            label={`${listSummary.count} hợp đồng · ${formatCurrency(listSummary.totalValue)}`}
+            value={`Đã trả ${formatCurrency(listSummary.paidAmount)}`}
+            aside={
+              <Text variant="captionStrong" weight="semibold" color={semantic.textBrand} numeric>
+                {formatPercent(listSummary.paidPercent)}
+              </Text>
+            }
+            progress={listSummary.paidPercent}
+          />
+        ) : null}
         <Input
-          label="Tìm theo mã hợp đồng"
           icon="search"
-          placeholder="VD: HDMB/2026/001"
+          placeholder="Tìm mã hợp đồng, mã căn, dự án"
+          accessibilityLabel="Tìm hợp đồng theo mã hợp đồng, mã căn hoặc tên dự án"
           value={search}
           onChangeText={setSearch}
           autoCapitalize="characters"
@@ -54,24 +68,9 @@ export default function ContractsScreen() {
           returnKeyType="search"
           clearButtonMode="while-editing"
         />
-        {/* Tab lọc xuống dòng khi thiếu chỗ thay vì bị cắt (skill: chip collection reflow). */}
-        <View style={chipRow} accessibilityRole="tablist">
-          {tabs.map((t) => {
-            const count = counts?.[t.countKey];
-            return (
-              <Chip
-                key={t.value}
-                role="tab"
-                label={t.label}
-                count={count}
-                selected={tab === t.value}
-                onPress={() => setTab(t.value)}
-                accessibilityLabel={count === undefined ? t.label : `${t.label}, ${count} hợp đồng`}
-              />
-            );
-          })}
-        </View>
+        <UnitFilterBar units={units} value={shownUnit} onChange={setUnit} accessibilityLabel="Lọc hợp đồng theo căn" />
       </View>
+      )}>
 
       {loading ? (
         <Grid>
@@ -85,6 +84,16 @@ export default function ContractsScreen() {
         <Card>
           <ErrorState message={error} onRetry={() => void refetch()} />
         </Card>
+      ) : !contractsAvailable ? (
+        <Card>
+          <EmptyState
+            icon="building"
+            title="Bạn chưa có hợp đồng"
+            description="Khi trúng bốc thăm và ký hợp đồng, thông tin sẽ hiển thị tại đây."
+            actionLabel="Đến Nhà ở xã hội"
+            onAction={() => router.navigate('/noxh')}
+          />
+        </Card>
       ) : items.length === 0 ? (
         <Card>
           <EmptyState
@@ -93,7 +102,7 @@ export default function ContractsScreen() {
             description={
               debouncedSearch
                 ? `Không có hợp đồng nào có mã chứa "${debouncedSearch}". Kiểm tra lại mã hoặc xóa bộ lọc.`
-                : 'Chưa có hợp đồng nào trong mục này.'
+                : `Căn ${shownUnit ?? ''} chưa có hợp đồng.`
             }
             actionLabel={isFiltered ? 'Xóa bộ lọc' : undefined}
             onAction={clearFilters}
@@ -113,5 +122,5 @@ export default function ContractsScreen() {
 }
 
 const styles = StyleSheet.create({
-  filters: { gap: spacing.ms },
+  filters: { gap: spacing.sm },
 });

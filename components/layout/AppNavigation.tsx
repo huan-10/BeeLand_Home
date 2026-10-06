@@ -1,10 +1,10 @@
 import type { BottomTabBarProps } from 'expo-router/tabs';
-import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, Icon, IconButton, Text } from '@/components/ui';
+import { Avatar, Icon, IconButton, Pressable, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { floatingTabBarBottom } from '@/hooks/useFloatingTabBarSpace';
@@ -13,7 +13,7 @@ import {
   borderWidth,
   interactive,
   layout,
-  letterSpacing,
+  opacity,
   radius,
   semantic,
   shadows,
@@ -23,7 +23,7 @@ import {
 } from '@/theme';
 
 import { Logo } from './Logo';
-import { primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
+import { activeNavName, primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
 
 /**
  * Thanh điều hướng của ứng dụng, dùng làm `tabBar` cho `<Tabs>`.
@@ -31,12 +31,14 @@ import { primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
  */
 export function AppNavigation({ state, navigation }: BottomTabBarProps) {
   const { isWide } = useBreakpoint();
-  const activeName = state.routes[state.index]?.name;
+  const routeName = state.routes[state.index]?.name;
+  // Route con (Phiếu thu) tô sáng tab chính tương ứng (Thanh toán).
+  const activeName = activeNavName(routeName);
 
   const onNavigate = (item: NavItem) => {
     const route = state.routes.find((r) => r.name === item.name);
     if (!route) return;
-    const isFocused = activeName === item.name;
+    const isFocused = routeName === item.name;
     const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
     if (event.defaultPrevented) return;
     if (isFocused) {
@@ -59,24 +61,38 @@ interface BarProps {
   onNavigate: (item: NavItem) => void;
 }
 
+const TAB_SLOT = sizes.tabBar.slot;
+const TAB_PAD = sizes.tabBar.pad;
+const PILL_H = sizes.tabBar.height - TAB_PAD * 2;
+const PILL_W = TAB_SLOT - TAB_PAD;
+const pillOffset = (i: number) => TAB_SLOT * i + (TAB_SLOT - PILL_W) / 2;
+
 /**
- * Mobile: thanh tab kính mờ nổi (viên thuốc căn giữa, cách đáy một khoảng). Nội dung phía sau
- * được chừa chỗ bởi `useFloatingTabBarSpace` trong `Screen` / `StickyActionBar`.
+ * Mobile: thanh tab kính mờ nổi kiểu Beeland Sales — viên thuốc gọn căn giữa, chỉ icon; tab đang chọn
+ * nằm trong viên kính sáng (icon xanh) trượt giữa các tab. Nhãn vẫn đọc được qua `accessibilityLabel`.
+ * Nội dung phía sau được chừa chỗ bởi `useFloatingTabBarSpace` trong `Screen` / `StickyActionBar`.
  */
 function BottomBar({ activeName, onNavigate }: BarProps) {
   const insets = useSafeAreaInsets();
+  const activeIndex = Math.max(0, primaryNavItems.findIndex((item) => item.name === activeName));
+  // Khởi tạo đúng vị trí tab hiện tại → lần đầu không trượt từ mép trái.
+  const [x] = useState(() => new Animated.Value(pillOffset(activeIndex)));
+
+  useEffect(() => {
+    Animated.spring(x, { toValue: pillOffset(activeIndex), useNativeDriver: Platform.OS !== 'web', speed: 18, bounciness: 6 }).start();
+  }, [activeIndex, x]);
+
   return (
     <View style={[styles.floatWrap, { bottom: floatingTabBarBottom(insets.bottom) }]}>
       {/* Hai lớp: lớp ngoài giữ bóng, lớp trong cắt bo tròn cho hiệu ứng kính (iOS mất bóng khi overflow hidden). */}
       <View style={[styles.floatShadow, shadows.overlay]}>
-        <View style={styles.floatBar}>
-          <BlurView intensity={sizes.tabBar.blur} tint="light" style={StyleSheet.absoluteFill} />
+        <View style={styles.floatBar} role="tablist" aria-label="Điều hướng chính">
+          <BlurView intensity={sizes.tabBar.blur} tint="light" experimentalBlurMethod="dimezisBlurView" style={StyleSheet.absoluteFill} />
           <View style={[StyleSheet.absoluteFill, styles.glassTint]} />
-          <View style={styles.floatItems} role="tablist" aria-label="Điều hướng chính">
-            {primaryNavItems.map((item) => (
-              <BottomItem key={item.name} item={item} active={activeName === item.name} onPress={() => onNavigate(item)} />
-            ))}
-          </View>
+          <Animated.View style={[styles.pill, { transform: [{ translateX: x }] }]} />
+          {primaryNavItems.map((item) => (
+            <BottomItem key={item.name} item={item} active={activeName === item.name} onPress={() => onNavigate(item)} />
+          ))}
         </View>
       </View>
     </View>
@@ -84,25 +100,14 @@ function BottomBar({ activeName, onNavigate }: BarProps) {
 }
 
 function BottomItem({ item, active, onPress }: { item: NavItem; active: boolean; onPress: () => void }) {
-  const { hovered, hoverProps } = useHover();
-  const fg = active ? semantic.onInverse : semantic.textSecondary;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="tab"
       aria-selected={active}
       accessibilityLabel={item.label}
-      {...hoverProps}
-      style={({ pressed }) => [
-        styles.bottomItem,
-        interactive,
-        active && styles.bottomItemActive,
-        (hovered || pressed) && (active ? styles.bottomItemActiveHover : styles.bottomItemHover),
-      ]}>
-      <Icon name={item.icon} color={fg} strong={active} />
-      <Text variant="label" weight={active ? 'semibold' : 'medium'} color={fg} style={styles.bottomLabel}>
-        {item.label}
-      </Text>
+      style={({ pressed, hovered }) => [styles.bottomItem, interactive, (pressed || hovered) && !active && styles.bottomItemPressed]}>
+      <Icon name={item.icon} color={active ? semantic.action : semantic.inverse} variant={active ? 'fill' : 'line'} />
     </Pressable>
   );
 }
@@ -183,7 +188,7 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
       {...hoverProps}
       onPress={onPress}
       accessibilityRole="tab"
-      accessibilityLabel={item.label}
+      accessibilityLabel={item.sidebarLabel ?? item.label}
       aria-selected={active}
       style={({ pressed }) => [
         styles.sidebarItem,
@@ -191,9 +196,9 @@ function SidebarItem({ item, active, onPress }: { item: NavItem; active: boolean
         active && styles.sidebarItemActive,
         (pressed || hovered) && (active ? styles.sidebarItemActiveHover : styles.sidebarItemPressed),
       ]}>
-      <Icon name={item.icon} color={active ? semantic.onInverse : semantic.icon} strong={active} />
+      <Icon name={item.icon} color={active ? semantic.onInverse : semantic.icon} variant={active ? 'fill' : 'line'} />
       <Text variant="captionStrong" weight={active ? 'semibold' : 'medium'} color={active ? semantic.onInverse : semantic.textSecondary}>
-        {item.label}
+        {item.sidebarLabel ?? item.label}
       </Text>
     </Pressable>
   );
@@ -205,32 +210,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
     pointerEvents: 'box-none',
   },
-  floatShadow: { width: '100%', maxWidth: sizes.tabBar.maxWidth, borderRadius: radius.full },
+  floatShadow: { borderRadius: radius.full },
   floatBar: {
     height: sizes.tabBar.height,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: TAB_PAD,
     borderRadius: radius.full,
     overflow: 'hidden',
     borderWidth: borderWidth.hairline,
     borderColor: semantic.glassBorder,
   },
   glassTint: { backgroundColor: semantic.glass },
-  floatItems: { flex: 1, flexDirection: 'row', padding: spacing.xs },
-  bottomItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
+  pill: {
+    position: 'absolute',
+    left: TAB_PAD,
+    top: TAB_PAD - borderWidth.hairline,
+    width: PILL_W,
+    height: PILL_H,
     borderRadius: radius.full,
-    minHeight: sizes.touchTarget,
+    backgroundColor: semantic.glassActive,
   },
-  bottomItemActive: { backgroundColor: semantic.inverse },
-  bottomItemHover: { backgroundColor: semantic.surfaceSunken },
-  bottomItemActiveHover: { backgroundColor: semantic.inverseHover },
-  // Nhãn tab không giãn chữ để "Thanh toán" vừa một dòng ở 375px.
-  bottomLabel: { letterSpacing: letterSpacing.normal },
+  bottomItem: { width: TAB_SLOT, height: PILL_H, alignItems: 'center', justifyContent: 'center' },
+  bottomItemPressed: { opacity: opacity.pressed },
 
   sidebar: {
     width: layout.sidebarWidth,
@@ -248,7 +252,7 @@ const styles = StyleSheet.create({
     gap: spacing.ms,
     paddingHorizontal: spacing.ms,
     minHeight: sizes.control.md,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
   },
   sidebarItemActive: { backgroundColor: semantic.inverse },
   sidebarItemPressed: { backgroundColor: semantic.surfaceSunken },
@@ -271,7 +275,7 @@ const styles = StyleSheet.create({
     minHeight: sizes.touchTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     backgroundColor: semantic.action,
   },
   // Ẩn khỏi màn hình nhưng vẫn nhận focus bằng bàn phím.

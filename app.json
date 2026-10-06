@@ -26,8 +26,8 @@
       "name": "BeeSky – Khách hàng",
       "shortName": "BeeSky",
       "description": "Tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản.",
-      "themeColor": "#F08A24",
-      "backgroundColor": "#F6F7F9",
+      "themeColor": "#0A74B8",
+      "backgroundColor": "#F3F8FC",
       "lang": "vi"
     },
     "plugins": [
@@ -37,12 +37,20 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F6F7F9"
+          "backgroundColor": "#F3F8FC"
         }
       ],
       "expo-secure-store",
       "expo-sharing",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BeeSky cần truy cập ảnh để bạn chọn ảnh giấy tờ nộp hồ sơ nhà ở xã hội.",
+          "cameraPermission": "BeeSky cần dùng camera để bạn chụp giấy tờ nộp hồ sơ nhà ở xã hội.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

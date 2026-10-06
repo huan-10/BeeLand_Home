@@ -1,10 +1,11 @@
 import { useId, type ReactNode } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { colors, layout, radius, semantic, shadows, spacing, zIndex } from '@/theme';
 
 import { IconButton } from './IconButton';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface DialogProps {

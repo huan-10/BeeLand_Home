@@ -1,10 +1,11 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { interactive, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface TabItem<K extends string> {

@@ -1,19 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View, type TextInput } from 'react-native';
+import { Platform, StyleSheet, View, type TextInput } from 'react-native';
 
+import { CompanyPickerDialog } from '@/components/domain';
 import { AuthLayout } from '@/components/layout';
 import {
   Button,
   Checkbox,
-  Divider,
   FadeIn,
   FormErrorSummary,
   Icon,
   Input,
+  Pressable,
   Text,
   TextLink,
-  useToast,
   type FormErrorItem,
   type FormErrorSummaryHandle,
 } from '@/components/ui';
@@ -22,13 +22,12 @@ import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { useHover } from '@/hooks/useHover';
 import { hasErrors, validateLoginForm, type FormErrors, type LoginField } from '@/lib/validation';
 import { demoAccountHint } from '@/services';
+import type { CompanyOption } from '@/types';
 import { borderWidth, interactive, opacity, radius, semantic, spacing, toneColors } from '@/theme';
 
-const COMING_SOON = 'Tính năng sắp ra mắt';
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
-  const toast = useToast();
+  const { signIn, selectCompany } = useAuth();
   const params = useLocalSearchParams<{ identifier?: string }>();
 
   const identifierRef = useRef<TextInput>(null);
@@ -40,6 +39,8 @@ export default function LoginScreen() {
   const [remember, setRemember] = useState(true);
   const [errors, setErrors] = useState<FormErrors<LoginField>>({});
   const { submit, submitting } = useFormSubmit(signIn);
+  /** SĐT là khách của nhiều công ty (đã đăng nhập + tự liên kết) → hỏi chọn công ty để vào app. */
+  const [companies, setCompanies] = useState<CompanyOption[] | null>(null);
 
   // Điền sẵn khi quay lại từ màn Đăng ký (cập nhật state theo params ngay trong render).
   const [prefilledFrom, setPrefilledFrom] = useState(params.identifier);
@@ -74,12 +75,20 @@ export default function LoginScreen() {
     }
     const outcome = await submit(identifier.trim(), password, remember);
     if (!outcome.ok) {
-      const field: LoginField = outcome.error.field === 'identifier' ? 'identifier' : 'password';
+      const onPhone = outcome.error.field === 'identifier' || outcome.error.field === 'phone';
+      const field: LoginField = onPhone ? 'identifier' : 'password';
       const next = { [field]: outcome.error.message };
       setErrors(next);
       focusAfterError(next);
+      return;
     }
+    if (outcome.result) setCompanies(outcome.result);
     // Thành công: AuthContext đổi trạng thái → route guard chuyển vào Trang chủ.
+  };
+
+  const chooseCompany = async (companyId: string) => {
+    await selectCompany(companyId);
+    setCompanies(null);
   };
 
   const clearError = (field: LoginField) => {
@@ -90,7 +99,7 @@ export default function LoginScreen() {
 
   const fillDemo = () => {
     if (!demoAccountHint) return;
-    setIdentifier(demoAccountHint.email);
+    setIdentifier(demoAccountHint.phone);
     setPassword(demoAccountHint.password);
     setErrors({});
   };
@@ -112,12 +121,11 @@ export default function LoginScreen() {
       <FadeIn index={1} style={styles.fields}>
         <Input
           ref={identifierRef}
-          label="Số điện thoại hoặc email"
-          icon="user"
+          label="Số điện thoại hoặc CCCD"
+          icon="phone"
           placeholder="VD: 0901 234 567"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
+          // hint="Tài khoản đăng ký trên website nhà ở xã hội đăng nhập được bằng số CCCD."
+          keyboardType="phone-pad"
           autoComplete="username"
           textContentType="username"
           returnKeyType="next"
@@ -159,31 +167,11 @@ export default function LoginScreen() {
       </FadeIn>
 
       <FadeIn index={2} style={styles.fields}>
-        <Divider label="hoặc tiếp tục với" />
-        <View style={styles.socialRow}>
-          <Button
-            title="Google"
-            variant="outline"
-            brand="google"
-            style={styles.social}
-            onPress={() => toast.show(COMING_SOON)}
-            accessibilityHint={COMING_SOON}
-          />
-          <Button
-            title="Apple"
-            variant="outline"
-            brand="apple"
-            style={styles.social}
-            onPress={() => toast.show(COMING_SOON)}
-            accessibilityHint={COMING_SOON}
-          />
-        </View>
-
         {demoAccountHint ? (
           <Pressable
             onPress={fillDemo}
             accessibilityRole="button"
-            accessibilityLabel={`Dùng tài khoản demo ${demoAccountHint.email}, mật khẩu ${demoAccountHint.password}`}
+            accessibilityLabel={`Dùng tài khoản demo ${demoAccountHint.phone}, mật khẩu ${demoAccountHint.password}`}
             {...demoHover.hoverProps}
             style={({ pressed }) => [styles.demo, interactive, demoHover.hovered && styles.demoHover, pressed && styles.demoPressed]}>
             <Icon name="info" color={toneColors.info.fg} />
@@ -192,7 +180,7 @@ export default function LoginScreen() {
                 Tài khoản dùng thử
               </Text>
               <Text variant="caption" color={toneColors.info.fg}>
-                {demoAccountHint.email} hoặc {demoAccountHint.phone} · Mật khẩu: {demoAccountHint.password}
+                {demoAccountHint.phone} · Mật khẩu: {demoAccountHint.password}
               </Text>
             </View>
             <Text variant="caption" weight="semibold" color={toneColors.info.fg}>
@@ -201,6 +189,14 @@ export default function LoginScreen() {
           </Pressable>
         ) : null}
       </FadeIn>
+
+      <CompanyPickerDialog
+        visible={!!companies}
+        companies={companies ?? []}
+        description="Số điện thoại của bạn là khách hàng của nhiều chủ đầu tư. Chọn công ty muốn xem và quản lý — bạn có thể chuyển công ty bất cứ lúc nào trong mục Cá nhân."
+        onSelect={chooseCompany}
+        onClose={() => setCompanies(null)}
+      />
     </AuthLayout>
   );
 }
@@ -209,15 +205,13 @@ const styles = StyleSheet.create({
   fields: { gap: spacing.md },
   flex: { flex: 1 },
   optionsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, flexWrap: 'wrap' },
-  socialRow: { flexDirection: 'row', gap: spacing.ms },
-  social: { flex: 1 },
   footerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   demo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.ms,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     backgroundColor: toneColors.info.bg,
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.info.border,

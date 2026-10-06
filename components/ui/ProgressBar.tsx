@@ -13,7 +13,7 @@ export interface ProgressBarProps {
   accessibilityLabel?: string;
 }
 
-/** Thanh tiến độ bo tròn: cam khi đang trả, xanh lá khi xong (theo `tone`). */
+/** Thanh tiến độ bo tròn: xanh trời khi đang trả, xanh lá khi xong (theo `tone`). */
 export function ProgressBar({ value, tone = 'primary', size = 'md', trackColor, onInverse, accessibilityLabel }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, value));
   const track = trackColor ?? (onInverse ? semantic.inverseTrack : semantic.surfaceSunken);

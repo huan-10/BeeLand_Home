@@ -1,12 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { interactive, radius, semantic, sizes, spacing } from '@/theme';
 
 import { useHover } from '@/hooks/useHover';
 
 import { Icon } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 import { useToast } from './Toast';
 
@@ -72,7 +73,7 @@ export function KeyValueRow({ label, value, last, copyable, numeric }: KeyValueR
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.ms, gap: spacing.md, minHeight: sizes.touchTarget },
-  copyRow: { gap: spacing.sm, marginHorizontal: -spacing.sm, paddingHorizontal: spacing.sm, borderRadius: radius.md },
+  copyRow: { gap: spacing.sm, marginHorizontal: -spacing.sm, paddingHorizontal: spacing.sm, borderRadius: radius.lg },
   copyActive: { backgroundColor: semantic.surfaceMuted },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.border },
   label: { flexShrink: 0, maxWidth: '50%' },

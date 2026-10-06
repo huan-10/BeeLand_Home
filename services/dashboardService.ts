@@ -14,8 +14,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
     getAllInstallments(),
     getNotifications(),
   ]);
-  const totalValue = contracts.reduce((sum, c) => sum + c.totalValue, 0);
-  const paidAmount = contracts.reduce((sum, c) => sum + c.summary.paidAmount, 0);
+  // Phiếu đã huỷ / thanh lý không còn tính vào tổng giá trị và tiến độ thanh toán.
+  const live = contracts.filter((c) => c.status !== 'cancelled');
+  const totalValue = live.reduce((sum, c) => sum + c.totalValue, 0);
+  const paidAmount = live.reduce((sum, c) => sum + c.summary.paidAmount, 0);
   return {
     contractCount: contracts.length,
     activeContractCount: contracts.filter((c) => c.status === 'active').length,

@@ -4,3 +4,5 @@ export * from './notification';
 export * from './payment';
 export * from './receipt';
 export * from './user';
+export * from './noxh';
+export * from './handover';

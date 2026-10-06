@@ -15,7 +15,7 @@
 | Kéo để làm mới | Có | Không |
 
 ## Thẻ thông tin (`ContractSummaryCard`)
-**Bản làm mới:** phần đầu tách 2 thẻ — (1) **`MoneySummaryCard` nền ink**: mã HĐ `heading` trắng (chọn được) + loại HĐ + Badge trạng thái + tên dự án, "Giá trị hợp đồng" `display`, thanh tiến độ + chữ %, Đã thanh toán / Còn phải thanh toán (mật ong), desktop: nút "Thanh toán ngay" ở footer; (2) thẻ trắng: ảnh dự án (cắt bo góc trên ở lớp riêng), Căn · Tầng, ngày ký, `KeyValueRow` **Mã hợp đồng (chạm để sao chép)**, link PDF. Trước đây: ảnh dự án (`ProjectImage`) · mã HĐ `title` (xuống dòng, chọn được) + loại HĐ · Badge trạng thái `md` · tên dự án · Căn · Tòa · Tầng · Ngày ký · Giá trị hợp đồng · Đã thanh toán "số tiền (%)" (`textBrand`, `textSuccess` khi 100%) · **Còn phải thanh toán** · `ProgressBar` (cam / xanh lá khi 100%) · hàng **"Xem hợp đồng (PDF)"** (`role="link"`, nền `primary.50`, icon tài liệu + icon mở ngoài).
+**Bản làm mới:** phần đầu tách 2 thẻ — (1) **`MoneySummaryCard` nền xanh đêm (ink)**: mã HĐ `heading` trắng (chọn được) + loại HĐ + Badge trạng thái + tên dự án, "Giá trị hợp đồng" `display`, thanh tiến độ + chữ %, Đã thanh toán / Còn phải thanh toán (xanh nhạt), desktop: nút "Thanh toán ngay" ở footer; (2) thẻ trắng: ảnh dự án (cắt bo góc trên ở lớp riêng), Căn · Tầng, ngày ký, `KeyValueRow` **Mã hợp đồng (chạm để sao chép)**, link PDF. Trước đây: ảnh dự án (`ProjectImage`) · mã HĐ `title` (xuống dòng, chọn được) + loại HĐ · Badge trạng thái `md` · tên dự án · Căn · Tòa · Tầng · Ngày ký · Giá trị hợp đồng · Đã thanh toán "số tiền (%)" (`textBrand`, `textSuccess` khi 100%) · **Còn phải thanh toán** · `ProgressBar` (xanh trời / xanh lá khi 100%) · hàng **"Xem hợp đồng (PDF)"** (`role="link"`, nền `primary.50`, icon tài liệu + icon mở ngoài).
 - PDF: `services` trả `document.url` (mock: `assets/docs/hop-dong-mau.pdf`); `lib/openDocument` mở bằng tab mới (web), trình xem hệ thống qua `expo-sharing` (tệp cục bộ, native) hoặc `expo-web-browser` (URL http).
 
 ## Tab (`Tabs` + `TabPanel`)
@@ -26,7 +26,7 @@
 | Trạng thái | Nút tròn | Badge (chữ + icon) |
 |-----------|----------|--------------------|
 | Đã thanh toán | Xanh lá đặc + **dấu tick** | "Đã thanh toán" ✓ |
-| Đến hạn (≤ 30 ngày) / một phần | **Cam** đặc + icon đồng hồ báo thức / đồng hồ cát | "Đến hạn" / "Thanh toán một phần" |
+| Đến hạn (≤ 30 ngày) / một phần | **Xanh trời** đặc + icon đồng hồ báo thức / đồng hồ cát | "Đến hạn" / "Thanh toán một phần" |
 | Chưa đến hạn | **Xám** viền + icon đồng hồ | "Chưa đến hạn" |
 | Quá hạn | Đỏ đặc + icon cảnh báo (Master: `danger`) | "Quá hạn" |
 
@@ -50,3 +50,12 @@ Danh sách `ReceiptCard` của hợp đồng (`useReceipts({ contractId })`) →
 | Đang tải | Header + Skeleton `block` · `control.md` · `block` |
 | Không tìm thấy / lỗi | Header + `ErrorState` "Không tìm thấy hợp đồng." + Thử lại |
 | Đã tất toán | Không có nút "Thanh toán ngay"; thanh tiến độ xanh lá |
+
+> 2026-10-02: thẻ dùng **ảnh thật của dự án** + lớp phủ, tên dự án / căn đè ảnh; thẻ danh sách có khối tiến độ và "đợt tiếp theo". Chi tiết: `docs/real-data.md` mục Giao diện thẻ hợp đồng.
+
+> 2026-10-02 — Mobile: thanh tab bám dính; cuộn qua thẻ tổng → `CompactSummary` "mã HĐ · dự án", "Còn …", "Đã trả x%". Quy tắc chung: MASTER §8 "thanh bám dính".
+
+## Tối giản (2026-10-05) — thay các mục "Thẻ thông tin", "Tab" và thanh dính đáy ở trên
+- **Một thẻ thông tin** (`ContractSummaryCard`), mỗi thông tin xuất hiện một lần: ảnh dự án `sizes.roundImage` (loại HĐ viên kính + badge trạng thái ở trên, tên dự án + căn ở dưới — như thẻ danh sách) → khối tiền nền `surfaceMuted` (Giá trị hợp đồng `title`, thanh tiến độ, "Đã trả · x%" | "Còn lại" xanh) → `KeyValueRow` Mã hợp đồng (chạm để sao chép) + Ngày ký → link PDF → (desktop) nút "Thanh toán ngay". Bỏ thẻ xanh đêm lớn: mã HĐ dài không còn bị bẻ dòng cạnh badge, tên dự án / mã HĐ không lặp hai lần.
+- **Tab gạch chân** `LineTabs` (cùng kiểu màn Thanh toán): Lịch thanh toán · Phiếu thu n · Thông tin; rộng theo nội dung để nhãn không bị cắt; `id` nối với `TabPanel`. Bỏ dòng tổng gọn khi cuộn — thanh bám dính chỉ còn tab.
+- **Thanh đáy mobile**: trái tên đợt cần trả, số tiền còn phải trả (đậm), "Còn n ngày" / "Quá hạn n ngày" (đỏ); phải nút "Thanh toán". Khách thấy trả khoản nào, bao nhiêu trước khi bấm. Không còn đợt cần trả → không có thanh.

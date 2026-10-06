@@ -24,7 +24,7 @@ export function IconCircle({ name, tone = 'primary', size = 'lg' }: IconCirclePr
   const box = sizes.iconBox[size];
   return (
     <View style={[styles.box, { width: box, height: box, backgroundColor: c.bg }]}>
-      <Icon name={name} size={iconForBox[size]} color={c.fg} strong />
+      <Icon name={name} size={iconForBox[size]} color={c.fg} variant="duotone" />
     </View>
   );
 }

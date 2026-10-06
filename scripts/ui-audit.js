@@ -12,7 +12,12 @@ const { chromium } = require('playwright');
 const BASE = process.env.BASE_URL || 'http://localhost:8081';
 const WIDTHS = (process.env.WIDTHS || '375,768,1024,1440').split(',').map(Number);
 const PUBLIC = ['/login', '/register', '/forgot-password'];
-const PRIVATE = ['/', '/contracts', '/contracts/ct-001', '/payments', '/receipts', '/receipts/rc-015', '/profile', '/notifications'];
+const PRIVATE = [
+  '/', '/contracts', '/contracts/ct-001', '/payments', '/receipts', '/receipts/rc-015', '/profile', '/notifications',
+  // Nhà ở xã hội (dữ liệu mock)
+  '/noxh', '/noxh/dot/dot-a', '/noxh/huong-dan', '/noxh/ho-so', '/noxh/ho-so/hs-001', '/noxh/ho-so/hs-001/thong-tin', '/noxh/ho-so/hs-001/giay-to',
+  '/noxh/boc-tham', '/noxh/boc-tham/bt-hs004', '/noxh/ket-qua',
+];
 
 const pageAudit = () => {
   const lum = ([r, g, b]) => { const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
@@ -167,6 +172,9 @@ const pageAudit = () => {
     for (const path of PUBLIC) await visit(path);
     await p.goto(BASE + '/login', { waitUntil: 'networkidle' }); await p.waitForTimeout(1200);
     await p.getByText('Điền nhanh').click(); await p.getByRole('textbox', { name: 'Mật khẩu', exact: true }).press('Enter'); await p.waitForTimeout(2200);
+    // Demo là khách của 2 công ty → chọn công ty đầu (Sunshine Group) nếu hộp thoại hiện ra.
+    const pick = p.getByText('Sunshine Group').first();
+    if (await pick.isVisible().catch(() => false)) { await pick.click(); await p.waitForTimeout(1200); }
     for (const path of PRIVATE) await visit(path);
     await ctx.close();
   }

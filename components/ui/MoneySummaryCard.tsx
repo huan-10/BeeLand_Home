@@ -10,7 +10,7 @@ export interface MoneyStat {
   label: string;
   /** Đã định dạng sẵn qua `lib/format.ts`. */
   value: string;
-  /** Tô màu mật ong để nhấn mạnh (vd "Còn lại"). */
+  /** Tô màu xanh nhạt để nhấn mạnh (vd "Còn lại"). */
   accent?: boolean;
 }
 
@@ -29,8 +29,8 @@ export interface MoneySummaryCardProps {
 }
 
 /**
- * Thẻ tổng tiền nền nâu đen "ink" (bản sắc BeeSky: ong đen + mật cam), bo 28, bóng `raised`.
- * Thanh tiến độ cam khi đang trả, xanh lá khi đã đủ; luôn kèm chữ phần trăm.
+ * Thẻ tổng tiền nền xanh đêm "ink", bo 28, bóng `raised`.
+ * Thanh tiến độ xanh trời khi đang trả, xanh lá khi đã đủ; luôn kèm chữ phần trăm.
  */
 export function MoneySummaryCard({ header, totalLabel, total, percent, progressLabel, stats, footer }: MoneySummaryCardProps) {
   const done = percent >= 100;

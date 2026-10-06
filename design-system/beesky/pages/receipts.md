@@ -2,6 +2,9 @@
 
 > Chỉ ghi điểm **khác** `MASTER.md`. Tra skill (`--domain ux`): `"data table responsive"` (bảng không được tràn trên mobile → dùng dạng thẻ; không cuộn ngang), `"empty state"` (luôn có lời giải thích + hành động).
 
+## Khác Master — điều hướng (2026-10-05)
+- Không còn tab riêng: vào từ **thanh phân đoạn "Lịch thanh toán | Phiếu thu"** (`PaymentsSegment value="receipts"`) đầu vùng bám dính, từ ô "Phiếu thu" ở Trang chủ, hoặc link thông báo. Tab Thanh toán sáng khi đang ở màn này.
+
 ## Trạng thái phiếu thu (`receiptStatusMeta`)
 | Trạng thái | Badge (chữ + icon) | Tông | Số tiền |
 |-----------|--------------------|------|---------|
@@ -39,3 +42,17 @@ Bấm thẻ / dòng → `/receipts/[id]`.
 - Thẻ phiếu bo 28 (`radius="3xl"`, `raised`). Đường kẻ nét đứt + `KeyValueRow`: **Số phiếu** (sao chép), Ngày thu, Người nộp, Hợp đồng (sao chép), Dự án / Căn, Hình thức, Mã giao dịch (sao chép), Thu ngân, Nội dung.
 - Hành động: **"Tải PDF"** (secondary, `download-outline`) và **"Chia sẻ"** (outline, `share-social-outline`) chia đôi một hàng, có `loading`. Gọi `exportReceiptPdf` / `shareReceipt` (`services/receiptService.ts`, **TODO** xuất file) → hiện trả `unavailable` → Toast "… sắp ra mắt"; khi có `url` sẽ mở bằng `openDocument`. Dưới cùng: `TextLink` "Xem hợp đồng {mã}".
 - Không có nút primary trên màn chi tiết phiếu thu.
+
+> 2026-10-02 — Thanh bám dính: tab lọc (`ChipBar`); cuộn qua thẻ tổng → thêm `CompactSummary` "Tổng đã thanh toán · N phiếu" (chữ xanh lá). Quy tắc chung: MASTER §8 "thanh bám dính".
+
+## Bộ lọc gọn (2026-10-05)
+- Bỏ 3 chip Tất cả / Đã thanh toán / Theo hợp đồng → `UnitFilterBar` "Tất cả · <mã căn>" (trạng thái phiếu có nhãn trên thẻ; lọc căn thay cho nhóm theo hợp đồng).
+- Thẻ tổng đã thanh toán theo căn đang chọn ("Căn X · Tổng đã thanh toán · n phiếu"). Căn không có phiếu → "Căn X chưa có phiếu thu" + "Xem tất cả phiếu thu".
+
+## Đã gộp vào Thanh toán (2026-10-05)
+Danh sách phiếu thu nay là tab **Đã thanh toán** của màn Thanh toán (xem `payments.md`); `/receipts` chuyển hướng sang `/payments?tab=paid`. Màn chi tiết phiếu thu `/receipts/[id]` không đổi.
+
+## Tải PDF / Chia sẻ ở chi tiết phiếu thu (2026-10-06)
+- Hai nút giữ nguyên vị trí (Tải PDF secondary · Chia sẻ outline, có `loading`). Bấm → dựng PDF Mẫu 01-TT trên máy (`getReceiptDocument` → `saveReceiptPdf` / `shareReceiptPdf`, tách `receiptFile.ts` / `receiptFile.web.ts`).
+- Hệ thống tự hiện bảng lưu / chia sẻ nên không có toast khi thành công trên điện thoại; web có toast hướng dẫn ("Chọn Lưu thành PDF…", "Đã sao chép thông tin phiếu thu."); lỗi → toast `danger`.
+- Phiếu in đen trắng, chữ Times; cuối phiếu ghi "Bản phiếu thu điện tử tạo từ ứng dụng BeeSky để tra cứu…".

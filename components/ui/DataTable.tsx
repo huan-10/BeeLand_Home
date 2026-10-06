@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { colors, interactive, radius, semantic, shadows, sizes, spacing } from '@/theme';
 
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface DataTableColumn<K extends string> {

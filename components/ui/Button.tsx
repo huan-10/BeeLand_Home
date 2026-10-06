@@ -1,13 +1,5 @@
 import { forwardRef } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  View,
-  type PressableProps,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import {
   borderWidth,
@@ -27,6 +19,7 @@ import { useHover } from '@/hooks/useHover';
 
 import { BrandMark, type BrandName } from './BrandMark';
 import { Icon } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'inverse';
@@ -46,7 +39,7 @@ export interface ButtonProps extends Omit<PressableProps, 'style' | 'children'> 
 }
 
 const variantStyles: Record<ButtonVariant, { bg: string; hoverBg: string; pressedBg: string; fg: string; border: string }> = {
-  // Nút chính: cam mật ong đậm, chữ trắng 5.4:1 (cam sáng primary-500 chỉ để trang trí).
+  // Nút chính: xanh đậm, chữ trắng 5.00:1 (xanh sáng primary-500 chỉ để trang trí).
   primary: { bg: semantic.action, hoverBg: semantic.actionHover, pressedBg: semantic.actionPressed, fg: semantic.textOnAction, border: semantic.action },
   secondary: { bg: toneColors.primary.bg, hoverBg: colors.primary[100], pressedBg: colors.primary[200], fg: semantic.textBrand, border: toneColors.primary.bg },
   // Nút trung tính nền trắng viền cát (đăng nhập Google/Apple, hành động phụ).
@@ -123,7 +116,8 @@ export const Button = forwardRef<View, ButtonProps>(function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.lg,
+    // Viên thuốc như beeland-app_2026 (nút "pill").
+    borderRadius: radius.full,
     borderWidth: borderWidth.hairline,
     alignItems: 'center',
     justifyContent: 'center',

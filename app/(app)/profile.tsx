@@ -1,24 +1,43 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
-import { ChangePasswordDialog } from '@/components/domain';
+import { ChangePasswordDialog, CompanyPickerDialog, ConnectNoxhDialog } from '@/components/domain';
 import { Screen } from '@/components/layout';
-import { Avatar, Button, Card, Dialog, Icon, IconCircle, KeyValueRow, ScreenHeader, Text } from '@/components/ui';
+import { Avatar, Button, Card, Dialog, Icon, IconCircle, KeyValueRow, Pressable, QuickActions, ScreenHeader, Text, useToast, type QuickAction } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHover } from '@/hooks/useHover';
 import { appVersionLabel } from '@/lib/appInfo';
+import { APP_MODULE_GROUPS, APP_MODULES } from '@/lib/appModules';
 import { interactive, layout, radius, semantic, shadows, sizes, spacing, type IconName, type Tone } from '@/theme';
 
 const HOTLINE = '1900 6868';
 
+/** Mục "Quản lý": mọi chức năng (danh mục chung `lib/appModules`), mỗi nhóm một dòng xổ xuống. */
+const MANAGE_GROUPS = APP_MODULE_GROUPS.map((g) => ({ ...g, items: APP_MODULES.filter((m) => m.group === g.id) }));
+
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, companies, activeCompanyId, selectCompany, noxhNeedsConnect } = useAuth();
+  const toast = useToast();
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const [noxhOpen, setNoxhOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   if (!user) return null;
+
+  const handleSwitchCompany = async (companyId: string) => {
+    if (companyId === activeCompanyId) {
+      setCompanyOpen(false);
+      return;
+    }
+    await selectCompany(companyId);
+    setCompanyOpen(false);
+    const name = companies.find((c) => c.companyId === companyId)?.companyName;
+    toast.show(name ? `Đã chuyển sang ${name}` : 'Đã chuyển công ty', 'success');
+  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -43,10 +62,42 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Quản lý: mọi chức năng, mỗi nhóm một dòng xổ xuống → lưới icon gọn. */}
+        <Card padding="sm">
+          <View style={styles.manageHead}>
+            <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.flex}>
+              Quản lý
+            </Text>
+            {/* Chọn chức năng hiện ở Trang chủ + thứ tự (lưu theo tài khoản). */}
+            <Pressable
+              onPress={() => router.push('/tuy-chinh-trang-chu')}
+              accessibilityRole="button"
+              accessibilityLabel="Tuỳ chỉnh chức năng hiển thị ở Trang chủ"
+              hitSlop={spacing.sm}
+              style={({ pressed }) => [styles.customize, interactive, pressed && styles.menuActive]}>
+              <Icon name="sliders" size="sm" color={semantic.textBrand} />
+              <Text variant="captionStrong" weight="semibold" color={semantic.textBrand}>
+                Tuỳ chỉnh
+              </Text>
+            </Pressable>
+          </View>
+          {MANAGE_GROUPS.map((g) => (
+            <ManageGroup
+              key={g.title}
+              title={g.title}
+              icon={g.icon}
+              open={!!openGroups[g.title]}
+              onToggle={() => setOpenGroups((o) => ({ ...o, [g.title]: !o[g.title] }))}
+              items={g.items.map((i) => ({ label: i.short, icon: i.icon, onPress: () => router.push(i.href, { withAnchor: true }) }))}
+            />
+          ))}
+        </Card>
+
         <Card>
           <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.cardTitle}>
             Thông tin tài khoản
           </Text>
+          {user.companyName ? <KeyValueRow label="Công ty" value={user.companyName} /> : null}
           <KeyValueRow label="Mã khách hàng" value={user.customerCode} copyable numeric />
           <KeyValueRow label="Email" value={user.email} copyable />
           <KeyValueRow label="Số điện thoại" value={user.phone} copyable numeric />
@@ -54,13 +105,28 @@ export default function ProfileScreen() {
           <KeyValueRow label="Địa chỉ" value={user.address || '—'} last />
         </Card>
 
+        {/* Một SĐT là khách của nhiều chủ đầu tư → chuyển công ty không cần đăng nhập lại. */}
+        {companies.length > 1 ? (
+          <Card padding="sm">
+            <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.menuTitle}>
+              Công ty ({companies.length})
+            </Text>
+            <MenuItem icon="building" tone="primary" label="Chuyển công ty" value={user.companyName} onPress={() => setCompanyOpen(true)} />
+          </Card>
+        ) : null}
+
         <Card padding="sm">
           <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.menuTitle}>
             Bảo mật & hỗ trợ
           </Text>
+          <MenuItem
+            icon="building"
+            tone="primary"
+            label="Nhà ở xã hội"
+            value={noxhNeedsConnect ? 'Kết nối' : 'Đã kết nối'}
+            onPress={() => (noxhNeedsConnect ? setNoxhOpen(true) : router.navigate('/noxh'))}
+          />
           <MenuItem icon="key" tone="primary" label="Đổi mật khẩu" onPress={() => setPasswordOpen(true)} />
-          <MenuItem icon="bell" tone="warning" label="Thông báo" onPress={() => router.push('/notifications')} />
-          <MenuItem icon="receipt" tone="success" label="Phiếu thu của tôi" onPress={() => router.push('/receipts')} />
           <MenuItem
             icon="phone"
             tone="info"
@@ -78,6 +144,13 @@ export default function ProfileScreen() {
       </View>
 
       <ChangePasswordDialog visible={passwordOpen} userId={user.id} onClose={() => setPasswordOpen(false)} />
+      <CompanyPickerDialog
+        visible={companyOpen}
+        companies={companies}
+        activeCompanyId={activeCompanyId}
+        onSelect={handleSwitchCompany}
+        onClose={() => setCompanyOpen(false)}
+      />
       <Dialog
         visible={logoutOpen}
         title="Đăng xuất?"
@@ -92,7 +165,35 @@ export default function ProfileScreen() {
           Bạn sẽ cần đăng nhập lại để xem hợp đồng và lịch thanh toán.
         </Text>
       </Dialog>
+      <ConnectNoxhDialog visible={noxhOpen} onClose={() => setNoxhOpen(false)} />
     </Screen>
+  );
+}
+
+/** Một nhóm của "Quản lý": dòng tiêu đề (icon · tên · số mục · mũi tên) bấm để xổ / thu lưới chức năng. */
+function ManageGroup({ title, icon, open, onToggle, items }: { title: string; icon: IconName; open: boolean; onToggle: () => void; items: QuickAction[] }) {
+  const { hovered, hoverProps } = useHover();
+  return (
+    <View>
+      <Pressable
+        onPress={onToggle}
+        {...hoverProps}
+        accessibilityRole="button"
+        accessibilityLabel={`${title}, ${items.length} mục`}
+        accessibilityState={{ expanded: open }}
+        aria-expanded={open}
+        style={({ pressed }) => [styles.menuItem, interactive, (pressed || hovered) && styles.menuActive]}>
+        <IconCircle name={icon} tone="primary" size="sm" />
+        <Text variant="bodyStrong" style={styles.flex}>
+          {title}
+        </Text>
+        <Text variant="captionStrong" color={semantic.textSecondary}>
+          {items.length} mục
+        </Text>
+        <Icon name={open ? 'chevronUp' : 'chevronDown'} size="sm" color={semantic.iconMuted} />
+      </Pressable>
+      {open ? <QuickActions bare size="sm" accessibilityLabel={title} items={items} /> : null}
+    </View>
   );
 }
 
@@ -132,6 +233,8 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1, minWidth: 0, gap: spacing.xs },
   cardTitle: { marginBottom: spacing.xs },
+  manageHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingLeft: spacing.sm, paddingTop: spacing.xs },
+  customize: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.full },
   menuTitle: { paddingHorizontal: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.xs },
   menuItem: {
     flexDirection: 'row',
@@ -139,7 +242,7 @@ const styles = StyleSheet.create({
     gap: spacing.ms,
     minHeight: sizes.touchTarget + spacing.sm,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
   },
   menuActive: { backgroundColor: semantic.surfaceSunken },
 });

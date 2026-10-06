@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { interactive, letterSpacing, motion, opacity, radius, semantic, shadows, sizes, spacing, toneColors, type IconName, type Tone } from '@/theme';
 
 import { IconCircle } from './IconCircle';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface ActionTileProps {
@@ -17,7 +18,7 @@ export interface ActionTileProps {
 }
 
 /**
- * Ô chức năng: thẻ trắng bo 24, icon tròn pastel + nhãn. Web: hover nền theo tông + bóng `raised` (không đổi kích thước);
+ * Ô chức năng (kiểu Beeland Sales): thẻ trắng bo 20, icon tròn pastel + nhãn. Web: hover nền theo tông + bóng `raised` (không đổi kích thước);
  * nhấn: giảm opacity; focus: viền `:focus-visible` toàn cục.
  */
 export function ActionTile({ label, icon, tone, onPress, accessibilityHint, compact }: ActionTileProps) {
@@ -38,7 +39,7 @@ export function ActionTile({ label, icon, tone, onPress, accessibilityHint, comp
         pressed && styles.pressed,
       ]}>
       <IconCircle name={icon} tone={tone} size={compact ? 'lg' : 'xl'} />
-      <Text variant={compact ? 'label' : 'captionStrong'} weight="semibold" align="center" style={compact && styles.compactLabel}>
+      <Text variant={compact ? 'label' : 'captionStrong'} weight="medium" align="center" style={compact && styles.compactLabel}>
         {label}
       </Text>
     </Pressable>
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
-    borderRadius: radius['2xl'],
+    borderRadius: radius.xl,
     backgroundColor: semantic.surface,
     ...shadows.soft,
     // Web: chuyển màu mượt khi hover.

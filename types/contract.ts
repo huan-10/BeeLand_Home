@@ -24,6 +24,8 @@ export interface Contract {
   /** Ngày ký, chuỗi ISO yyyy-MM-dd. */
   signedDate: string;
   salesAgent?: string;
+  /** Tên trạng thái gốc trên server (vd "HĐMB chờ duyệt"); có thì badge hiển thị tên này. */
+  statusLabel?: string;
   /** Ảnh đại diện dự án (URL từ backend). Không có → giao diện dùng ảnh minh họa mặc định. */
   projectImageUrl?: string;
 }

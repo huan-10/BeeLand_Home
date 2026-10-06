@@ -23,7 +23,8 @@ function webSessionStorage(): Storage | null {
 function isAuthSession(value: unknown): value is AuthSession {
   if (typeof value !== 'object' || value === null) return false;
   const v = value as Record<string, unknown>;
-  return typeof v.token === 'string' && typeof v.userId === 'string' && typeof v.createdAt === 'string';
+  // `token` vắng khi công ty đang xem chỉ có phiên NOXH (tài khoản tự đăng ký qua website).
+  return (typeof v.token === 'string' || v.token === undefined) && typeof v.userId === 'string' && typeof v.createdAt === 'string';
 }
 
 function parse(raw: string | null): AuthSession | null {
@@ -57,6 +58,14 @@ export async function saveSession(session: AuthSession, remember: boolean): Prom
   const web = webSessionStorage();
   if (web) web.setItem(SESSION_KEY, raw);
   else memorySession = raw;
+}
+
+/** Ghi đè phiên đang lưu (ví dụ khi chuyển công ty), giữ nguyên kiểu lưu bền / tạm thời đã chọn lúc đăng nhập. */
+export async function updateSession(session: AuthSession): Promise<void> {
+  const remember = await AsyncStorage.getItem(SESSION_KEY)
+    .then((raw) => raw !== null)
+    .catch(() => false);
+  await saveSession(session, remember);
 }
 
 export async function clearSession(): Promise<void> {

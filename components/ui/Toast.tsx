@@ -3,7 +3,7 @@ import Animated, { FadeInUp, FadeOutDown, ReduceMotion } from 'react-native-rean
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { breakpoints, layout, motion, radius, semantic, shadows, sizes, spacing, zIndex, type IconName, type Tone } from '@/theme';
+import { breakpoints, colors, layout, motion, radius, semantic, shadows, sizes, spacing, zIndex, type IconName, type Tone } from '@/theme';
 
 import { Icon } from './Icon';
 import { Text } from './Text';
@@ -28,11 +28,11 @@ const toneIcon: Record<ToastTone, IconName> = {
   danger: 'alertCircle',
 };
 
-/** Icon trên nền tối: thông tin / thành công dùng màu sáng, lỗi dùng cam mật (≥ 3:1 trên ink). */
+/** Icon trên nền tối: thông tin chữ phụ, thành công xanh nhạt, lỗi đỏ 500 (≥ 3:1 trên ink). */
 const toneAccent: Record<ToastTone, string> = {
   info: semantic.onInverseMuted,
   success: semantic.onInverseAccent,
-  danger: semantic.onInverseAccent,
+  danger: colors.danger[500],
 };
 
 /** Thông báo ngắn ở cuối màn hình, tự ẩn sau `motion.toast` ms, không lấy focus (role="status"). */

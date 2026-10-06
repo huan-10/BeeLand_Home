@@ -1,4 +1,13 @@
-export type NotificationType = 'payment_reminder' | 'payment_overdue' | 'receipt' | 'contract' | 'project';
+export type NotificationType =
+  | 'payment_reminder'
+  | 'payment_overdue'
+  | 'receipt'
+  | 'contract'
+  | 'project'
+  /** Nhà ở xã hội: lịch bốc thăm · kết quả bốc thăm · huỷ đợt bốc thăm. */
+  | 'noxh_lottery'
+  | 'noxh_result'
+  | 'noxh_cancel';
 
 export interface AppNotification {
   id: string;

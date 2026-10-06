@@ -12,11 +12,11 @@ import { semantic } from './colors';
  */
 export const shadows = {
   none: {},
-  soft: { boxShadow: '0px 1px 2px rgba(43, 32, 25, 0.04), 0px 6px 20px rgba(43, 32, 25, 0.06)' },
-  raised: { boxShadow: '0px 2px 4px rgba(43, 32, 25, 0.05), 0px 12px 28px rgba(43, 32, 25, 0.10)' },
-  raisedTop: { boxShadow: '0px -4px 16px rgba(43, 32, 25, 0.07)' },
-  overlay: { boxShadow: '0px 12px 32px rgba(43, 32, 25, 0.16)' },
-  modal: { boxShadow: '0px 24px 56px rgba(43, 32, 25, 0.24)' },
+  soft: { boxShadow: '0px 1px 2px rgba(15, 23, 42, 0.04), 0px 6px 20px rgba(15, 23, 42, 0.06)' },
+  raised: { boxShadow: '0px 2px 4px rgba(15, 23, 42, 0.05), 0px 12px 28px rgba(15, 23, 42, 0.10)' },
+  raisedTop: { boxShadow: '0px -4px 16px rgba(15, 23, 42, 0.07)' },
+  overlay: { boxShadow: '0px 12px 32px rgba(15, 23, 42, 0.16)' },
+  modal: { boxShadow: '0px 24px 56px rgba(15, 23, 42, 0.24)' },
   /** Vòng sáng quanh ô nhập khi focus. */
   focusHalo: { boxShadow: `0px 0px 0px 3px ${semantic.focusHalo}` },
 } satisfies Record<string, ViewStyle>;

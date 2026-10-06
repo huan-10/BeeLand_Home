@@ -13,7 +13,7 @@ export default function ForgotPasswordScreen() {
   const inputRef = useRef<TextInput>(null);
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState<string | undefined>();
-  const [sentVia, setSentVia] = useState<'email' | 'sms' | null>(null);
+  const [sent, setSent] = useState(false);
   const { submit, submitting } = useFormSubmit(requestPasswordReset);
 
   const backToLogin = () => (router.canGoBack() ? router.back() : router.replace('/login'));
@@ -27,7 +27,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
     const outcome = await submit(identifier.trim());
-    if (outcome.ok) setSentVia(outcome.result.channel);
+    if (outcome.ok) setSent(true);
     else {
       setError(outcome.error.message);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -43,19 +43,15 @@ export default function ForgotPasswordScreen() {
     </View>
   );
 
-  if (sentVia) {
+  if (sent) {
     return (
-      <AuthLayout title="Kiểm tra hộp thư" footer={footer}>
+      <AuthLayout title="Kiểm tra tin nhắn" footer={footer}>
         <FadeIn>
           <StateView
-            icon={sentVia === 'email' ? 'mailOpen' : 'message'}
+            icon="message"
             tone="success"
             title="Đã gửi hướng dẫn"
-            description={
-              sentVia === 'email'
-                ? `Nếu ${identifier.trim()} đã đăng ký, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu trong vài phút.`
-                : `Nếu số ${identifier.trim()} đã đăng ký, bạn sẽ nhận được tin nhắn SMS hướng dẫn đặt lại mật khẩu.`
-            }
+            description={`Nếu số ${identifier.trim()} đã đăng ký, bạn sẽ nhận được tin nhắn SMS hướng dẫn đặt lại mật khẩu.`}
             role="alert"
             action={<Button title="Quay lại đăng nhập" variant="secondary" onPress={backToLogin} />}
           />
@@ -67,19 +63,17 @@ export default function ForgotPasswordScreen() {
   return (
     <AuthLayout
       title="Quên mật khẩu"
-      subtitle="Nhập số điện thoại hoặc email đã đăng ký, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu."
+      subtitle="Nhập số điện thoại đã đăng ký, chúng tôi sẽ gửi tin nhắn hướng dẫn đặt lại mật khẩu."
       footer={footer}>
       <FadeIn index={1} style={styles.fields}>
         <Input
           ref={inputRef}
-          label="Số điện thoại hoặc email"
-          icon="user"
+          label="Số điện thoại"
+          icon="phone"
           placeholder="VD: 0901 234 567"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="username"
-          textContentType="username"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          textContentType="telephoneNumber"
           returnKeyType="send"
           value={identifier}
           onChangeText={(t) => {

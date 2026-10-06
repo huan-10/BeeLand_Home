@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { clearCustomerDataCache } from '@/services';
 import { getErrorMessage } from '@/services/errors';
 
 export interface AsyncState<T> {
@@ -28,7 +29,11 @@ export function useAsync<T>(fn: () => Promise<T>, deps: readonly unknown[]): Asy
   const run = useCallback(async (mode: 'load' | 'refresh') => {
     const id = ++requestId.current;
     if (mode === 'load') setLoading(true);
-    else setRefreshing(true);
+    else {
+      setRefreshing(true);
+      // Kéo để làm mới → bỏ dữ liệu đệm, đọc lại từ server.
+      clearCustomerDataCache();
+    }
     setError(null);
     try {
       const result = await fnRef.current();

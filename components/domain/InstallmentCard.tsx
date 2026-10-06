@@ -23,11 +23,11 @@ export function InstallmentCard({ installment, showContract, onPress }: Installm
       <View style={styles.row}>
         <IconCircle name={isPaid ? 'checkCircle' : 'calendar'} tone={meta.tone} />
         <View style={styles.main}>
-          <Text variant="bodyStrong" weight="semibold">
+          <Text variant="bodyStrong" weight="semibold" numberOfLines={2}>
             {installment.name}
           </Text>
           {showContract ? (
-            <Text variant="caption" color={semantic.textMuted}>
+            <Text variant="caption" color={semantic.textMuted} numberOfLines={2}>
               {installment.contractCode} · Căn {installment.unitCode}
             </Text>
           ) : null}

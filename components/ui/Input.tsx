@@ -1,5 +1,5 @@
 import { forwardRef, useId, useState } from 'react';
-import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import {
   borderWidth,
@@ -18,6 +18,7 @@ import {
 import { useHover } from '@/hooks/useHover';
 
 import { Icon } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface InputProps extends TextInputProps {
@@ -105,8 +106,8 @@ const styles = StyleSheet.create({
     height: sizes.control.md,
     paddingHorizontal: spacing.md,
     borderWidth: borderWidth.thick,
-    borderRadius: radius.lg,
-    // Ô nhập "mềm": nền cát nhạt, viền cùng màu; focus → nền trắng, viền cam đậm + vòng sáng.
+    borderRadius: radius.xl,
+    // Ô nhập "mềm": nền xám nhạt, viền cùng màu; focus → nền trắng, viền xanh đậm + vòng sáng.
     backgroundColor: semantic.surfaceSunken,
   },
   focusedField: { backgroundColor: semantic.surface },

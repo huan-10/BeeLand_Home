@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import { interactive, motion, opacity, radius as radii, semantic, shadows, spacing, type ShadowLevel, type Spacing } from '@/theme';
+
+import { Pressable } from './Pressable';
 
 export type CardVariant = 'elevated' | 'outlined' | 'sunken';
 

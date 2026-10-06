@@ -16,22 +16,24 @@ import {
   EmptyState,
   ErrorState,
   KeyValueRow,
+  LineTabs,
   ScreenHeader,
   Skeleton,
   TabPanel,
-  Tabs,
   Text,
   useToast,
-  type TabItem,
+  type LineTabItem,
 } from '@/components/ui';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useContract } from '@/hooks/useContracts';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { useReceipts } from '@/hooks/useReceipts';
+import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
 import { contractTypeLabels } from '@/lib/labels';
 import { openDocument } from '@/lib/openDocument';
 import { startPayment, type ContractDetail } from '@/services';
-import { layout, radius, semantic, sizes, spacing } from '@/theme';
+import type { PaymentInstallmentView } from '@/types';
+import { colors, layout, radius, semantic, sizes, spacing } from '@/theme';
 
 type TabKey = 'schedule' | 'receipts' | 'info';
 const TABS_ID = 'contract-detail';
@@ -107,36 +109,36 @@ export default function ContractDetailScreen() {
     toast.show(outcome.result.message, 'info');
   };
 
-  const payButton = payable ? (
-    <Button
-      ref={payButtonRef}
-      title="Thanh toán ngay"
-      leftIcon="card"
-      size="lg"
-      fullWidth
-      onPress={() => setConfirmOpen(true)}
-      accessibilityHint={`Thanh toán ${payable.name}`}
-    />
-  ) : null;
+  const payButton = (fullWidth: boolean) =>
+    payable ? (
+      <Button
+        ref={payButtonRef}
+        title={fullWidth ? 'Thanh toán ngay' : 'Thanh toán'}
+        leftIcon="card"
+        size="lg"
+        fullWidth={fullWidth}
+        onPress={() => setConfirmOpen(true)}
+        accessibilityHint={`Thanh toán ${payable.name}, ${formatCurrency(payable.remainingAmount)}`}
+      />
+    ) : null;
 
   const summary = (
     <ContractSummaryCard
       contract={contract}
-      onOpenDocument={() => void openDocument(detail.data?.document.url ?? '', detail.data?.document.title ?? '')}
-      footer={isDesktop ? payButton : undefined}
+      onOpenDocument={detail.data?.document ? () => void openDocument(detail.data?.document?.url ?? '', detail.data?.document?.title ?? '') : undefined}
+      footer={isDesktop ? payButton(true) : undefined}
     />
   );
 
   const receiptCount = receipts.data?.length;
-  const tabItems: TabItem<TabKey>[] = [
+  const tabItems: LineTabItem<TabKey>[] = [
     { key: 'schedule', label: 'Lịch thanh toán' },
     { key: 'receipts', label: 'Phiếu thu', count: receiptCount },
-    { key: 'info', label: 'Thông tin khác' },
+    { key: 'info', label: 'Thông tin' },
   ];
 
-  const tabs = (
-    <View>
-      <Tabs id={TABS_ID} items={tabItems} value={tab} onChange={setTab} accessibilityLabel="Nội dung hợp đồng" />
+  const tabBar = <LineTabs id={TABS_ID} items={tabItems} value={tab} onChange={setTab} accessibilityLabel="Nội dung hợp đồng" />;
+  const panel = (
       <TabPanel id={TABS_ID} tabKey={tab}>
         {tab === 'schedule' ? (
           <Card padding="ml">
@@ -152,6 +154,11 @@ export default function ContractDetailScreen() {
           <InfoPanel detail={detail.data} />
         )}
       </TabPanel>
+  );
+  const tabs = (
+    <View>
+      {tabBar}
+      {panel}
     </View>
   );
 
@@ -190,12 +197,44 @@ export default function ContractDetailScreen() {
         void receipts.refetch();
       }}
       refreshing={detail.refreshing}
-      footer={payButton ? <StickyActionBar>{payButton}</StickyActionBar> : undefined}>
-      {header(contract.code)}
-      {summary}
-      {tabs}
+      footer={
+        payable ? (
+          <StickyActionBar>
+            <View style={styles.payBar}>
+              <PayInfo installment={payable} />
+              {payButton(false)}
+            </View>
+          </StickyActionBar>
+        ) : undefined
+      }
+      top={
+        <>
+          {header(contract.code)}
+          {summary}
+        </>
+      }
+      sticky={() => tabBar}>
+      {panel}
       {dialog}
     </Screen>
+  );
+}
+
+/** Thanh đáy (mobile): đợt sắp phải trả + số tiền bên trái, nút Thanh toán bên phải — biết trả gì trước khi bấm. */
+function PayInfo({ installment }: { installment: PaymentInstallmentView }) {
+  const overdue = installment.status === 'overdue';
+  return (
+    <View style={styles.payInfo} accessible accessibilityLabel={`${installment.name}, ${formatCurrency(installment.remainingAmount)}, hạn ${formatDate(installment.dueDate)}, ${formatDaysLeft(installment.daysUntilDue)}`}>
+      <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
+        {installment.name}
+      </Text>
+      <Text variant="subhead" weight="bold" numeric numberOfLines={1} adjustsFontSizeToFit>
+        {formatCurrency(installment.remainingAmount)}
+      </Text>
+      <Text variant="caption" weight={overdue ? 'semibold' : undefined} color={overdue ? colors.danger[700] : semantic.textMuted} numberOfLines={1}>
+        {formatDaysLeft(installment.daysUntilDue)}
+      </Text>
+    </View>
   );
 }
 
@@ -233,19 +272,26 @@ function ReceiptsPanel({ state }: { state: ReturnType<typeof useReceipts> }) {
 
 function InfoPanel({ detail }: { detail: ContractDetail }) {
   const { contract, seller, terms } = detail;
+  // Dữ liệu thật có thể thiếu người đại diện / mã số thuế → chỉ hiện dòng có giá trị.
+  const sellerRows = [
+    { label: 'Công ty', value: seller.companyName },
+    { label: 'Người đại diện', value: [seller.representative, seller.position].filter(Boolean).join(' – ') },
+    { label: 'Mã số thuế', value: seller.taxCode, copyable: true, numeric: true },
+    { label: 'Địa chỉ', value: seller.address },
+    { label: 'Hotline', value: seller.hotline, copyable: true, numeric: true },
+    { label: 'Email', value: seller.email, copyable: true },
+  ].filter((r) => r.value);
   return (
     <View style={styles.list}>
       <Card>
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
           Bên bán
         </Text>
-        <KeyValueRow label="Công ty" value={seller.companyName} />
-        <KeyValueRow label="Người đại diện" value={`${seller.representative} – ${seller.position}`} />
-        <KeyValueRow label="Mã số thuế" value={seller.taxCode} copyable numeric />
-        <KeyValueRow label="Địa chỉ" value={seller.address} />
-        <KeyValueRow label="Hotline" value={seller.hotline} copyable numeric />
-        <KeyValueRow label="Email" value={seller.email} copyable last />
+        {sellerRows.map((r, i) => (
+          <KeyValueRow key={r.label} label={r.label} value={r.value} copyable={r.copyable} numeric={r.numeric} last={i === sellerRows.length - 1} />
+        ))}
       </Card>
+      {terms.length > 0 ? (
       <Card>
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
           Điều khoản chính
@@ -261,6 +307,7 @@ function InfoPanel({ detail }: { detail: ContractDetail }) {
           </View>
         ))}
       </Card>
+      ) : null}
       <Card>
         <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
           Thông tin căn hộ
@@ -281,6 +328,8 @@ const styles = StyleSheet.create({
   main: { flexGrow: layout.detailMainFlex, flexShrink: 1, flexBasis: 0 },
   columnContent: { paddingBottom: spacing.lg },
   list: { gap: spacing.sm },
+  payBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  payInfo: { flex: 1, minWidth: 0 },
   term: { paddingVertical: spacing.ms, gap: spacing.xs },
   termDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: semantic.border },
 });

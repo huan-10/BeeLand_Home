@@ -1,12 +1,24 @@
+import { mockSeller } from '@/data/mock/contractDetails';
 import { mockReceipts } from '@/data/mock/receipts';
 import { parseDate } from '@/lib/date';
-import type { Receipt, ReceiptExportResult, ReceiptFilter } from '@/types';
+import { buildReceiptHtml, receiptFileName, receiptShareText } from '@/lib/receiptPdf';
+import type { Receipt, ReceiptFilter } from '@/types';
 
+import { AUTH_BACKEND } from './config';
+import { isNoxhOnlySession } from './session';
 import { ServiceError } from './errors';
 import { clone, simulateLatency } from './mockLatency';
+import { getSellerCompany } from './supabase/customerData';
+import { getCustomerReceipts } from './supabase/customerDomain';
 
+/** Phiếu thu của KHÁCH ĐANG ĐĂNG NHẬP (chỉ theo các hợp đồng thuộc khách). */
 export async function getReceipts(filter: ReceiptFilter = {}): Promise<Receipt[]> {
-  // TODO: thay bằng gọi API/database thật (ví dụ GET /receipts?contractId=&year=&status=)
+  if (isNoxhOnlySession()) return [];
+  if (AUTH_BACKEND === 'api') {
+    return (await getCustomerReceipts('', filter.contractId))
+      .filter((r) => !filter.year || parseDate(r.paidDate).getFullYear() === filter.year)
+      .filter((r) => !filter.status || r.status === filter.status);
+  }
   await simulateLatency();
   return clone(
     mockReceipts
@@ -18,29 +30,35 @@ export async function getReceipts(filter: ReceiptFilter = {}): Promise<Receipt[]
 }
 
 export async function getReceiptById(id: string): Promise<Receipt> {
-  // TODO: thay bằng gọi API/database thật (ví dụ GET /receipts/:id)
+  if (isNoxhOnlySession()) throw new ServiceError('Không tìm thấy phiếu thu.', 'NOT_FOUND');
+  if (AUTH_BACKEND === 'api') {
+    const receipt = (await getCustomerReceipts('')).find((r) => r.id === id);
+    if (!receipt) throw new ServiceError('Không tìm thấy phiếu thu.', 'NOT_FOUND');
+    return receipt;
+  }
   await simulateLatency();
   const receipt = mockReceipts.find((r) => r.id === id);
   if (!receipt) throw new ServiceError('Không tìm thấy phiếu thu.', 'NOT_FOUND');
   return clone(receipt);
 }
 
-/**
- * Xuất phiếu thu ra PDF để tải về.
- * TODO: thay bằng gọi API/database thật (ví dụ GET /receipts/:id/pdf trả về URL tệp đã ký số).
- */
-export async function exportReceiptPdf(id: string): Promise<ReceiptExportResult> {
-  await simulateLatency();
-  if (!mockReceipts.some((r) => r.id === id)) throw new ServiceError('Không tìm thấy phiếu thu.', 'NOT_FOUND');
-  return { status: 'unavailable', message: 'Tính năng tải phiếu thu PDF sắp ra mắt.' };
+/** Phiếu thu + HTML mẫu 01-TT + tên tệp — để lưu / chia sẻ PDF (`receiptFile`). */
+export interface ReceiptDocument {
+  receipt: Receipt;
+  html: string;
+  fileName: string;
+  shareText: string;
 }
 
 /**
- * Tạo liên kết chia sẻ phiếu thu.
- * TODO: thay bằng gọi API/database thật (ví dụ POST /receipts/:id/share trả về URL có thời hạn).
+ * Dựng phiếu thu PDF ngay trên máy từ dữ liệu phiếu (CHỈ ĐỌC): thông tin đơn vị = công ty của tài khoản (`cloud_companies`).
+ * Database chưa có tệp phiếu thu ký số → bản điện tử để tra cứu, ghi rõ trên phiếu.
  */
-export async function shareReceipt(id: string): Promise<ReceiptExportResult> {
-  await simulateLatency(150, 300);
-  if (!mockReceipts.some((r) => r.id === id)) throw new ServiceError('Không tìm thấy phiếu thu.', 'NOT_FOUND');
-  return { status: 'unavailable', message: 'Tính năng chia sẻ phiếu thu sắp ra mắt.' };
+export async function getReceiptDocument(id: string): Promise<ReceiptDocument> {
+  const receipt = await getReceiptById(id);
+  const company =
+    AUTH_BACKEND === 'api'
+      ? await getSellerCompany().then((c) => ({ name: c?.ten_ct ?? '', address: c?.dia_chi ?? '' }))
+      : { name: mockSeller.companyName, address: mockSeller.address };
+  return { receipt, html: buildReceiptHtml(receipt, company), fileName: receiptFileName(receipt.code), shareText: receiptShareText(receipt) };
 }

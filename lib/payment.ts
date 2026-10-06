@@ -154,3 +154,13 @@ export function groupInstallmentsByMonth(items: PaymentInstallmentView[]): Insta
 export function overdueInstallments(items: PaymentInstallmentView[]): PaymentInstallmentView[] {
   return items.filter((i) => i.status === 'overdue').sort((a, b) => a.daysUntilDue - b.daysUntilDue);
 }
+
+/** Trang chủ gom các đợt quá hạn thành một dòng: số đợt, tổng còn phải trả, hạn sớm nhất (không có đợt → null). */
+export function overdueSummary(items: Pick<PaymentInstallmentView, 'remainingAmount' | 'dueDate'>[]): { count: number; amount: number; earliestDue: string } | null {
+  if (items.length === 0) return null;
+  return {
+    count: items.length,
+    amount: items.reduce((t, i) => t + i.remainingAmount, 0),
+    earliestDue: items.reduce((d, i) => (i.dueDate < d ? i.dueDate : d), items[0]!.dueDate),
+  };
+}

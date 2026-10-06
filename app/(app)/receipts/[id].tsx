@@ -8,31 +8,28 @@ import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { useReceipt } from '@/hooks/useReceipts';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { paymentMethodLabels, receiptStatusMeta } from '@/lib/labels';
-import { openDocument } from '@/lib/openDocument';
-import { exportReceiptPdf, shareReceipt } from '@/services';
+import { getReceiptDocument, saveReceiptPdf, shareReceiptPdf } from '@/services';
 import { borderWidth, colors, layout, radius, semantic, sizes, spacing, toneColors } from '@/theme';
-import type { ReceiptExportResult } from '@/types';
 
 export default function ReceiptDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: receipt, loading, error, refetch } = useReceipt(id);
   const toast = useToast();
-  const pdf = useFormSubmit(exportReceiptPdf);
-  const share = useFormSubmit(shareReceipt);
+  // Dựng PDF trên máy (mẫu 01-TT) rồi lưu / chia sẻ — xem services/receiptFile(.web).ts.
+  const pdf = useFormSubmit(async (receiptId: string) => saveReceiptPdf(await getReceiptDocument(receiptId)));
+  const share = useFormSubmit(async (receiptId: string) => shareReceiptPdf(await getReceiptDocument(receiptId)));
 
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/receipts'));
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace({ pathname: '/payments', params: { tab: 'paid' } }));
 
-  /** Xuất / chia sẻ: hiện chỉ có giao diện — services trả `unavailable` (TODO xuất file thật). */
-  const handleExport = async (action: typeof pdf.submit, title: string) => {
+  /** Tải / chia sẻ PDF phiếu thu; hệ thống tự hiện bảng lưu / chia sẻ, chỉ báo toast khi có lời nhắn (web) hoặc lỗi. */
+  const handleExport = async (action: typeof pdf.submit) => {
     if (!receipt) return;
     const outcome = await action(receipt.id);
     if (!outcome.ok) {
       toast.show(outcome.error.message, 'danger');
       return;
     }
-    const result: ReceiptExportResult = outcome.result;
-    if (result.status === 'ready' && result.url) await openDocument(result.url, title);
-    else toast.show(result.message, 'info');
+    if (outcome.result) toast.show(outcome.result, 'info');
   };
 
   const meta = receipt ? receiptStatusMeta[receipt.status] : null;
@@ -97,7 +94,7 @@ export default function ReceiptDetailScreen() {
               variant="secondary"
               leftIcon="download"
               loading={pdf.submitting}
-              onPress={() => void handleExport(pdf.submit, `Phiếu thu ${receipt.code}`)}
+              onPress={() => void handleExport(pdf.submit)}
               style={styles.action}
             />
             <Button
@@ -105,7 +102,7 @@ export default function ReceiptDetailScreen() {
               variant="outline"
               leftIcon="share"
               loading={share.submitting}
-              onPress={() => void handleExport(share.submit, `Phiếu thu ${receipt.code}`)}
+              onPress={() => void handleExport(share.submit)}
               style={styles.action}
             />
           </View>
@@ -125,7 +122,7 @@ const styles = StyleSheet.create({
   paper: { width: '100%', maxWidth: layout.readableMaxWidth, alignSelf: 'center', gap: spacing.md },
   amount: { marginTop: spacing.sm, fontVariant: ['tabular-nums'] },
   strike: { textDecorationLine: 'line-through' },
-  notice: { padding: spacing.ms, borderRadius: radius.md, marginBottom: spacing.sm },
+  notice: { padding: spacing.ms, borderRadius: radius.lg, marginBottom: spacing.sm },
   dashed: {
     borderTopWidth: borderWidth.hairline,
     borderStyle: 'dashed',

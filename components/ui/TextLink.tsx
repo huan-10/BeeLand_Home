@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useHover } from '@/hooks/useHover';
 import { interactive, opacity, semantic, sizes, type TextVariant } from '@/theme';
 
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface TextLinkProps {
@@ -12,7 +13,7 @@ export interface TextLinkProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Liên kết dạng chữ cam đậm (primary-700, 5.4:1); vùng chạm cao ≥ 44; hover gạch chân. */
+/** Liên kết dạng chữ xanh đậm (primary-700, 5.00:1); vùng chạm cao ≥ 44; hover gạch chân. */
 export function TextLink({ label, onPress, variant = 'captionStrong', style }: TextLinkProps) {
   const { hovered, hoverProps } = useHover();
   return (

@@ -8,7 +8,7 @@ export interface LogoProps {
   size?: keyof typeof sizes.logo;
   /** Hiển thị chữ "BeeSky" bên cạnh biểu tượng. */
   withWordmark?: boolean;
-  /** Dùng trên nền cam: biểu tượng trắng, chữ trắng. */
+  /** Dùng trên nền đậm/màu nhấn: biểu tượng trắng, chữ trắng. */
   inverted?: boolean;
 }
 

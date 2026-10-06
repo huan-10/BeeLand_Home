@@ -1,9 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { AccessibilityInfo, Platform, Pressable, StyleSheet, View, findNodeHandle } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet, View, findNodeHandle } from 'react-native';
 
 import { borderWidth, colors, interactive, radius, sizes, spacing, toneColors } from '@/theme';
 
 import { Icon } from './Icon';
+import { Pressable } from './Pressable';
 import { Text } from './Text';
 
 export interface FormErrorItem {
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   box: {
     gap: spacing.xs,
     padding: spacing.ms,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     backgroundColor: toneColors.danger.bg,
     borderWidth: borderWidth.hairline,
     borderColor: toneColors.danger.border,

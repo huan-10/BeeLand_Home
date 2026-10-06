@@ -2,7 +2,7 @@
 
 # BeeSky – Ứng dụng khách hàng
 
-Ứng dụng giúp khách hàng bất động sản tra cứu **hợp đồng**, **lịch thanh toán** và **phiếu thu**.
+Ứng dụng giúp khách hàng bất động sản tra cứu **hợp đồng**, **lịch thanh toán**, **phiếu thu** và đăng ký **nhà ở xã hội** (hồ sơ, giấy tờ, bốc thăm — `docs/superpowers/specs/2026-10-05-noxh-customer-app-design.md`).
 Chạy trên iOS, Android và Web với cùng một giao diện. Toàn bộ chữ hiển thị bằng **tiếng Việt**.
 
 ## Stack
@@ -10,8 +10,8 @@ Chạy trên iOS, Android và Web với cùng một giao diện. Toàn bộ ch�
 - Expo SDK 57, React Native 0.86, React 19, TypeScript (strict)
 - Expo Router (routes nằm ở `app/` ở gốc dự án — dự án này **không** dùng `src/app/`)
 - react-native-web + `@expo/metro-runtime` (web xuất tĩnh), NativeWind v4 + Tailwind 3
-- Font: **chỉ Be Vietnam Pro** (400/500/600/700) qua `expo-font`; icon: **lucide-react-native** qua `<Icon name>` (tên ngữ nghĩa trong `theme/icons.ts`)
-- AsyncStorage cho phiên đăng nhập; **chưa có backend** — dữ liệu giả trong `data/mock/`
+- Font: **chỉ Be Vietnam Pro** (400/500/600/700) qua `expo-font`; icon: **Phosphor (phosphor-react-native)** qua `<Icon name variant>` (tên ngữ nghĩa trong `theme/icons.ts`, import từng icon `phosphor-react-native/src/icons/<Tên>`)
+- AsyncStorage cho phiên đăng nhập; dữ liệu giả trong `data/mock/`. Đã nối database thật (dùng chung với web `beeland` và `beeland-app_2026`) qua `services/supabase/*`: đăng ký/đăng nhập (`docs/auth-flow.md`), hợp đồng / lịch thanh toán / phiếu thu / thông báo **chỉ của khách đang đăng nhập** (`docs/real-data.md`). `AUTH_BACKEND = 'mock'` để chạy offline
 
 Lệnh: `npm run web` · `npm run ios` · `npm run android` · `npm run lint` · `npm run typecheck` · `npm test` (tương phản màu) · `npm run audit:ui` · `npx expo export --platform web`.
 Trong môi trường không truy cập được api.expo.dev, thêm `EXPO_OFFLINE=1` trước `npx expo install` / `npx expo export`.
@@ -32,6 +32,10 @@ lib/                 Logic thuần: định dạng, tính toán thanh toán, nh�
 contexts/            AuthContext
 design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 ```
+
+## Database thật — CHỈ ĐỌC (bắt buộc)
+
+Database / API `https://api-beelandv2.beesky.vn` **chỉ được phép đọc: không thêm, sửa, xoá gì**. Server không có môi trường test, nên mọi thao tác ghi đều đi vào dữ liệu thật. Lệnh được phép và bị cấm, cùng tài khoản đọc (`.env.local`, không commit), xem `docs/database.md`.
 
 ## Kiến trúc dữ liệu (bắt buộc)
 
@@ -59,13 +63,13 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 Áp dụng cho mọi thay đổi ảnh hưởng tới cách màn hình trông hoặc tương tác (màn mới, sửa component, đổi màu, bố cục…):
 
 1. **Đọc `design-system/beesky/MASTER.md`.**
-2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, register, forgot-password, home, contracts, contract-detail, receipts, payments, profile). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
+2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, register, forgot-password, home, contracts, contract-detail, receipts, payments, profile, noxh-home, noxh-round, noxh-applications, noxh-application-detail, noxh-personal-info, noxh-documents, noxh-lottery, noxh-results, noxh-components, handover, handover-schedule, home-modules). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
 3. **Tra cứu skill `ui-ux-pro-max`** (`.claude/skills/ui-ux-pro-max/SKILL.md`) cho vấn đề cụ thể, mỗi truy vấn một ý, 2–5 từ khóa:
    ```bash
    python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<vấn đề UX>" --domain ux
    python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<vấn đề triển khai>" --stack react-native
    ```
-   Kết quả của skill chỉ là khuyến nghị: **mockup/MASTER.md thắng khi mâu thuẫn** (màu cam `#F08A24`, nền sáng, thẻ trắng bo góc, badge pastel, thanh tiến độ, timeline). Không dùng `--design-system --persist --force` để ghi đè MASTER.md.
+   Kết quả của skill chỉ là khuyến nghị: **mockup/MASTER.md thắng khi mâu thuẫn** (bảng màu "Xanh trời": xanh trời `#38BDF8` / nút `#0A74B8`, khối đậm xanh đêm, nền sáng, thẻ trắng bo góc, badge pastel, thanh tiến độ, timeline). Không dùng `--design-system --persist --force` để ghi đè MASTER.md.
 4. Triển khai bằng token và component sẵn có; nếu cần giá trị mới, thêm vào `theme/tokens.json` và ghi vào MASTER.md.
 5. **Tự kiểm tra checklist ở MASTER.md §13** (hình ảnh, tương tác, trạng thái dữ liệu, bố cục 375/768/1024/1440, trợ năng, kỹ thuật) và chạy:
    ```bash

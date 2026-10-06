@@ -4,10 +4,11 @@ import tokens from './tokens.json';
  * Bảng màu BeeSky. Nguồn duy nhất là `tokens.json` (dùng chung với `tailwind.config.js`
  * và `tests/contrast.test.cjs`), nên className, style và test tương phản luôn đồng bộ.
  *
- * - `primary`: cam thương hiệu #F08A24 (500) — chỉ để trang trí, viền, thanh tiến độ, icon.
- * - `primary.700` (#A9520A, "cam mật ong đậm"): nền nút chính, chữ trắng 5.4:1.
- * - `gray`: thang "cát" ấm (hơi ngả nâu) — khác thang slate xanh xám.
- * - `ink`: nâu đen "cà phê" cho thẻ tổng tiền, chip đang chọn, toast — hợp với cam (ong: đen + mật).
+ * Bảng màu "Xanh trời" cho app khách hàng (không dùng cam của công ty):
+ * - `primary`: xanh trời #38BDF8 (500) — chỉ để trang trí, viền, thanh tiến độ, icon.
+ * - `primary.700` (#0A74B8): nền nút chính (chữ trắng 5.00:1) và chữ nhấn `textBrand`.
+ * - `gray`: thang slate xanh xám.
+ * - `ink`: xanh đêm (#0B2A44) cho thẻ tổng tiền, chip đang chọn, toast.
  */
 export const colors = tokens.colors;
 
@@ -29,9 +30,9 @@ function resolveAll<T extends Record<string, string>>(refs: T): { [K in keyof T]
  * Màu theo vai trò (khai báo ở `tokens.json` → `semantic`). Component dùng các token này thay vì chọn trực tiếp từ thang màu.
  * Mọi cặp chữ/nền được kiểm ≥ 4.5:1 bởi `npm test` (tests/contrast.test.cjs).
  * - Nút chính: nền `action` (primary-700) → hover `actionHover` → nhấn `actionPressed`, chữ `textOnAction` (trắng).
- * - Chữ cam: `textBrand` (primary-700). Chữ mờ: `textMuted` (gray-600). gray-400 chỉ cho icon trang trí.
- * - Nền cam sáng `brand` (#F08A24) chỉ đặt chữ `textOnBrand` (gray-900), không đặt chữ trắng.
- * - Nền tối `inverse` (ink-800): chữ `onInverse`, `onInverseMuted`, số tiền `onInverseAccent`.
+ * - Chữ nhấn: `textBrand` (primary-700). Chữ mờ: `textMuted` (gray-600). gray-400 chỉ cho icon trang trí.
+ * - Nền xanh sáng `brand` (#38BDF8) chỉ đặt chữ `textOnBrand` (gray-900), không đặt chữ trắng.
+ * - Nền tối `inverse` (ink-800): chữ `onInverse`, `onInverseMuted`, số tiền `onInverseAccent` (xanh nhạt).
  */
 export const semantic = resolveAll(tokens.semantic);
 

@@ -54,4 +54,7 @@ export const notificationTypeMeta: Record<NotificationType, { tone: Tone; icon: 
   receipt: { tone: 'success', icon: 'receipt' },
   contract: { tone: 'info', icon: 'document' },
   project: { tone: 'info', icon: 'building' },
+  noxh_lottery: { tone: 'primary', icon: 'timer' },
+  noxh_result: { tone: 'success', icon: 'trophy' },
+  noxh_cancel: { tone: 'danger', icon: 'closeCircle' },
 };
