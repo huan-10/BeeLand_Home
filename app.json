@@ -2,7 +2,7 @@
   "expo": {
     "name": "BeeSky",
     "slug": "beeland-app-KH",
-    "version": "1.0.0",
+    "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "beelandappkh",
@@ -54,6 +54,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "683ee023-0d13-43e5-b566-65bd437ba581"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/683ee023-0d13-43e5-b566-65bd437ba581"
     }
   }
 }
