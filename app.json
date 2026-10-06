@@ -1,14 +1,18 @@
 {
   "expo": {
-    "name": "BeeSky",
-    "slug": "beeland-app-KH",
+    "name": "Beeland Home",
+    "slug": "beeland-home",
     "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "beelandappkh",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.beesky.beelandhome",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,8 +27,8 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "name": "BeeSky – Khách hàng",
-      "shortName": "BeeSky",
+      "name": "Beeland – Khách hàng",
+      "shortName": "Beeland",
       "description": "Tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản.",
       "themeColor": "#0A74B8",
       "backgroundColor": "#F3F8FC",
