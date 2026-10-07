@@ -1,7 +1,7 @@
 import { MOCK_NOXH_SITES } from '@/data/mock/noxh';
 import { DEMO_CREDENTIALS, MOCK_OTP, mockCustomerRecords, mockNoxhOnlyUsers, mockUsers } from '@/data/mock/user';
 import { addCompanies, missingFromSession, planCompanyLogins, sessionCompanies, sessionTokens, type CompanyLoginPlan } from '@/lib/companySession';
-import { normalizePhone, parseLoginId } from '@/lib/validation';
+import { ACCOUNT_NOT_FOUND, WRONG_PASSWORD, loginRejectMessage, normalizePhone, parseLoginId } from '@/lib/validation';
 import type { AuthSession, CompanyOption, CompanySession, User } from '@/types';
 
 import { AUTH_BACKEND } from './config';
@@ -160,10 +160,10 @@ async function mockLogin(identifier: string, password: string): Promise<LoginRes
   await simulateLatency();
   const id = parseLoginId(identifier);
   if (!id) throw new ServiceError('Nhập số điện thoại 10 số hoặc CCCD 12 số', 'UNKNOWN', 'identifier');
-  const matched = mockAccounts.filter(
-    (a) => (id.kind === 'phone' ? samePhone(a.phone, id.value) : digits(a.idNumber) === id.value) && a.password === password,
-  );
-  if (matched.length === 0) throw new ServiceError('Số điện thoại / CCCD hoặc mật khẩu không đúng', 'UNAUTHORIZED', 'password');
+  const owned = mockAccounts.filter((a) => (id.kind === 'phone' ? samePhone(a.phone, id.value) : digits(a.idNumber) === id.value));
+  if (owned.length === 0) throw new ServiceError(ACCOUNT_NOT_FOUND, 'NOT_FOUND', 'identifier');
+  const matched = owned.filter((a) => a.password === password);
+  if (matched.length === 0) throw new ServiceError(WRONG_PASSWORD, 'UNAUTHORIZED', 'password');
   const phone = normalizePhone(matched[0].phone);
   // Tự liên kết hồ sơ ở công ty chưa có tài khoản (giống apiLogin) — chỉ khi đã có tài khoản hợp đồng.
   if (matched.some((a) => !a.noxhOnly)) matched.push(...mockLinkRecords(phone, password, new Set()));
@@ -304,7 +304,10 @@ async function loadCompanyPlan(
  * Đăng nhập các công ty đã có tài khoản; công ty có mật khẩu khác (đăng ký riêng trước đây) thì bỏ qua.
  * `rejected`: công ty `fn_portal_login` từ chối — có thể là tài khoản tự đăng ký qua website (R21) → thử `fn_portal_site_login`.
  */
-async function loginExisting(targets: CompanyLoginPlan['login'], password: string): Promise<{ rows: PortalLoginRow[]; rejected: CompanyLoginPlan['login'] }> {
+async function loginExisting(
+  targets: CompanyLoginPlan['login'],
+  password: string,
+): Promise<{ rows: PortalLoginRow[]; rejected: CompanyLoginPlan['login']; errors: string[] }> {
   const attempts = await Promise.all(
     targets.map((t) => portalLogin(t.companyId, t.username, password).then((row) => row, (e: unknown) => e)),
   );
@@ -313,6 +316,7 @@ async function loginExisting(targets: CompanyLoginPlan['login'], password: strin
   return {
     rows: attempts.filter((a): a is PortalLoginRow => !(a instanceof Error)),
     rejected: targets.filter((_, i) => attempts[i] instanceof Error),
+    errors: attempts.flatMap((a) => (a instanceof Error ? [a.message] : [])),
   };
 }
 
@@ -332,13 +336,19 @@ async function linkCompanies(targets: CompanyLoginPlan['link'], username: string
 }
 
 /** Tài khoản tự đăng ký qua website NOXH → `fn_portal_site_login`; sai mật khẩu bỏ qua, lỗi mạng ném. */
-async function loginSites(targets: CompanyLoginPlan['siteLogin'], password: string): Promise<{ row: PortalLoginRow; slug: string }[]> {
+async function loginSites(
+  targets: CompanyLoginPlan['siteLogin'],
+  password: string,
+): Promise<{ rows: { row: PortalLoginRow; slug: string }[]; errors: string[] }> {
   const attempts = await Promise.all(
     targets.map((t) => siteLogin(t.slug, t.login, password).then((row) => ({ row, slug: t.slug }), (e: unknown) => e)),
   );
   const network = attempts.find((a) => a instanceof ServiceError && a.code === 'NETWORK');
   if (network) throw network;
-  return attempts.filter((a): a is { row: PortalLoginRow; slug: string } => !(a instanceof Error));
+  return {
+    rows: attempts.filter((a): a is { row: PortalLoginRow; slug: string } => !(a instanceof Error)),
+    errors: attempts.flatMap((a) => (a instanceof Error ? [a.message] : [])),
+  };
 }
 
 /** Token NOXH cho công ty đã có phiên hợp đồng (cùng tài khoản, cùng mật khẩu) — lỗi thì bỏ qua (kết nối lại sau). */
@@ -381,13 +391,18 @@ async function apiLogin(identifier: string, password: string): Promise<LoginResu
   if (!id) throw new ServiceError('Nhập số điện thoại 10 số hoặc CCCD 12 số', 'UNKNOWN', 'identifier');
   const { customers, plan, phone, sites } = await loadCompanyPlan(id);
   if (plan.login.length === 0 && plan.siteLogin.length === 0) {
-    throw new ServiceError('Chưa có tài khoản. Vui lòng chọn "Đăng ký" để tạo tài khoản.', 'NOT_FOUND', 'identifier');
+    throw new ServiceError(ACCOUNT_NOT_FOUND, 'NOT_FOUND', 'identifier');
   }
-  const [{ rows, rejected }, siteRows] = await Promise.all([loginExisting(plan.login, password), loginSites(plan.siteLogin, password)]);
+  const [{ rows, rejected, errors }, sites1] = await Promise.all([loginExisting(plan.login, password), loginSites(plan.siteLogin, password)]);
+  const siteRows = sites1.rows;
   // fn_portal_login từ chối mà công ty có website NOXH → có thể là tài khoản tự đăng ký (máy chủ không trả nguồn) → thử site login.
   const fallback = rejected.flatMap((t) => (sites[t.companyId] ? [{ companyId: t.companyId, customerId: t.customerId, slug: sites[t.companyId], login: t.username }] : []));
-  siteRows.push(...(await loginSites(fallback, password)));
-  if (rows.length === 0 && siteRows.length === 0) throw new ServiceError('Số điện thoại / CCCD hoặc mật khẩu không đúng', 'UNAUTHORIZED', 'password');
+  const sites2 = await loginSites(fallback, password);
+  siteRows.push(...sites2.rows);
+  // Tài khoản đã có (kiểm ở trên) mà mọi lần đăng nhập bị từ chối → sai mật khẩu (hoặc khoá tạm), không báo "sai tài khoản".
+  if (rows.length === 0 && siteRows.length === 0) {
+    throw new ServiceError(loginRejectMessage([...errors, ...sites1.errors, ...sites2.errors]), 'UNAUTHORIZED', 'password');
+  }
   // Mật khẩu đúng ở công ty có tài khoản hợp đồng → tự liên kết hồ sơ ở công ty chưa có tài khoản.
   if (rows.length > 0 && phone) rows.push(...(await linkCompanies(plan.link, phone, password)));
   return buildSession(phone, await toCompanySessions(rows, customers, { noxhOnly: siteRows, sites, login: phone, password }));
@@ -432,7 +447,7 @@ async function apiLinkNewCompanies(session: AuthSession, password: string): Prom
   const { customers, plan, sites } = await loadCompanyPlan({ kind: 'phone', value: phone });
   const missing = missingFromSession(plan, sessionCompanies(session).map((c) => c.companyId));
   const rows = [...(await loginExisting(missing.login, password)).rows, ...(await linkCompanies(missing.link, phone, password))];
-  const siteRows = await loginSites(missing.siteLogin, password);
+  const siteRows = (await loginSites(missing.siteLogin, password)).rows;
   if (rows.length === 0 && siteRows.length === 0) throw new ServiceError('Chưa liên kết được công ty mới. Vui lòng thử lại sau.', 'UNKNOWN');
   const entries = await toCompanySessions(rows, customers, { noxhOnly: siteRows, sites, login: phone, password });
   return { session: addCompanies(session, entries), added: entries.map(toOption) };

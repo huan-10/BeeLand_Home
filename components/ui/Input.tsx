@@ -40,6 +40,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const toggleHover = useHover();
   const hoverField = useHover();
 
+  // Nhiều dòng (nội dung yêu cầu…): ô cao tối thiểu `sizes.textarea`, chữ bắt đầu từ trên.
+  const multi = !!rest.multiline;
   const borderColor = error ? colors.danger[600] : focused ? semantic.focusRing : hoverField.hovered ? semantic.borderStrong : semantic.surfaceSunken;
 
   return (
@@ -49,7 +51,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           {label}
         </Text>
       ) : null}
-      <View {...hoverField.hoverProps} style={[styles.field, { borderColor }, focused && styles.focusedField, focused && !error && styles.focused, !editable && styles.disabled]}>
+      <View {...hoverField.hoverProps} style={[styles.field, multi && styles.multiField, { borderColor }, focused && styles.focusedField, focused && !error && styles.focused, !editable && styles.disabled]}>
         {icon ? <Icon name={icon} color={focused ? semantic.textBrand : semantic.textMuted} /> : null}
         <TextInput
           ref={ref}
@@ -67,7 +69,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             setFocused(false);
             onBlur?.(e);
           }}
-          style={[styles.input, style]}
+          style={[styles.input, multi && styles.multiInput, style]}
           {...rest}
         />
         {password ? (
@@ -110,6 +112,7 @@ const styles = StyleSheet.create({
     // Ô nhập "mềm": nền xám nhạt, viền cùng màu; focus → nền trắng, viền xanh đậm + vòng sáng.
     backgroundColor: semantic.surfaceSunken,
   },
+  multiField: { height: undefined, minHeight: sizes.textarea, alignItems: 'flex-start', paddingVertical: spacing.ms },
   focusedField: { backgroundColor: semantic.surface },
   focused: shadows.focusHalo,
   disabled: { backgroundColor: semantic.surfaceMuted },
@@ -124,6 +127,7 @@ const styles = StyleSheet.create({
     ...fontSizes.body,
     ...(Platform.OS === 'web' ? { outlineWidth: 0 } : null),
   },
+  multiInput: { height: undefined, minHeight: sizes.textarea - spacing.ms * 2, textAlignVertical: 'top' },
   // Vùng chạm 44×44; lề âm để icon vẫn thẳng hàng mép phải ô nhập.
   toggle: {
     width: sizes.touchTarget,

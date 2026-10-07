@@ -13,6 +13,8 @@ export interface ListRowProps {
   icon: IconName;
   tone: Tone;
   title: string;
+  /** Mặc định 1 dòng; tiêu đề do khách tự đặt (yêu cầu…) dùng 2. */
+  titleLines?: number;
   subtitle?: string;
   /** Mặc định 1 dòng (cắt bớt); nội dung dài như thông báo dùng 2. */
   subtitleLines?: number;
@@ -42,7 +44,7 @@ export interface ListRowProps {
  * Một dòng trong thẻ danh sách ở Trang chủ (thanh toán, thông báo): icon tròn nhỏ · tiêu đề 1 dòng + dòng phụ ·
  * khối phải · mũi tên. Cả dòng là nút ≥ 44; nhấn / hover nền nhạt. Cùng một kiểu cho mọi danh sách gọn để màn đồng bộ.
  */
-export function ListRow({ icon, tone, title, subtitle, subtitleLines = 1, subtitleColor, footnote, value, aside, unread, divider, card, chevron, onPress, accessibilityLabel }: ListRowProps) {
+export function ListRow({ icon, tone, title, titleLines = 1, subtitle, subtitleLines = 1, subtitleColor, footnote, value, aside, unread, divider, card, chevron, onPress, accessibilityLabel }: ListRowProps) {
   const showChevron = chevron ?? (!!onPress && !card);
   const { hovered, hoverProps } = useHover();
   return (
@@ -56,7 +58,7 @@ export function ListRow({ icon, tone, title, subtitle, subtitleLines = 1, subtit
       <IconCircle name={icon} tone={tone} size={card ? 'lg' : 'sm'} />
       <View style={styles.main}>
         <View style={styles.titleRow}>
-          <Text variant="captionStrong" weight="semibold" numberOfLines={1} style={styles.flex}>
+          <Text variant="captionStrong" weight="semibold" numberOfLines={titleLines} style={styles.flex}>
             {title}
           </Text>
           {unread ? <View style={styles.dot} /> : null}

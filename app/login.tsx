@@ -42,12 +42,22 @@ export default function LoginScreen() {
   /** SĐT là khách của nhiều công ty (đã đăng nhập + tự liên kết) → hỏi chọn công ty để vào app. */
   const [companies, setCompanies] = useState<CompanyOption[] | null>(null);
 
-  // Điền sẵn khi quay lại từ màn Đăng ký (cập nhật state theo params ngay trong render).
+  // Quay lại từ màn Đăng ký (đăng ký xong, điền sẵn SĐT): màn Đăng nhập cũ vẫn đang mở → xoá lỗi cũ
+  // ("chưa có tài khoản"…) và mật khẩu cũ (cập nhật state theo params ngay trong render).
   const [prefilledFrom, setPrefilledFrom] = useState(params.identifier);
   if (params.identifier !== prefilledFrom) {
     setPrefilledFrom(params.identifier);
-    if (params.identifier) setIdentifier(params.identifier);
+    if (params.identifier) {
+      setIdentifier(params.identifier);
+      setPassword('');
+      setErrors({});
+    }
   }
+  /** Rời màn (Đăng ký / Quên mật khẩu) → xoá lỗi để quay lại không còn thông báo cũ. */
+  const leave = (href: '/register' | '/forgot-password') => {
+    setErrors({});
+    router.push(href);
+  };
 
   const focusField = (field: string) => (field === 'password' ? passwordRef : identifierRef).current?.focus();
 
@@ -113,7 +123,7 @@ export default function LoginScreen() {
           <Text variant="caption" color={semantic.textMuted}>
             Chưa có tài khoản?
           </Text>
-          <TextLink label="Đăng ký" onPress={() => router.push('/register')} />
+          <TextLink label="Đăng ký" onPress={() => leave('/register')} />
         </View>
       }>
       <FormErrorSummary ref={summaryRef} errors={summaryItems.length > 1 ? summaryItems : []} onSelect={focusField} />
@@ -160,7 +170,7 @@ export default function LoginScreen() {
 
         <View style={styles.optionsRow}>
           <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
-          <TextLink label="Quên mật khẩu?" onPress={() => router.push('/forgot-password')} />
+          <TextLink label="Quên mật khẩu?" onPress={() => leave('/forgot-password')} />
         </View>
 
         <Button title="Đăng nhập" size="lg" loading={submitting} onPress={() => void handleSubmit()} fullWidth />

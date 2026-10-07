@@ -98,3 +98,18 @@ export function validateOtp(otp: string, length: number): string | undefined {
   if (!value) return 'Vui lòng nhập mã OTP';
   return new RegExp(`^\\d{${length}}$`).test(value) ? undefined : `Mã OTP gồm ${length} chữ số`;
 }
+
+/** Đã kiểm tra có tài khoản nhưng đăng nhập bị từ chối (máy chủ trả chung "tên đăng nhập hoặc mật khẩu") → là sai mật khẩu. */
+export const WRONG_PASSWORD = 'Mật khẩu không đúng. Vui lòng thử lại hoặc chọn "Quên mật khẩu?".';
+/** SĐT / CCCD không có tài khoản cổng khách hàng ở công ty nào. */
+export const ACCOUNT_NOT_FOUND = 'Số điện thoại / CCCD chưa có tài khoản. Vui lòng chọn "Đăng ký" để tạo tài khoản.';
+
+/**
+ * Câu báo khi mọi lần đăng nhập (các công ty của khách) đều bị từ chối. App đã biết tài khoản TỒN TẠI trước bước này,
+ * nên lỗi chung của máy chủ ("Tên đăng nhập hoặc mật khẩu không đúng") nghĩa là sai mật khẩu. Riêng khoá tạm (sai 5 lần)
+ * và tài khoản không dùng được trên website thì giữ câu của máy chủ.
+ */
+export function loginRejectMessage(serverMessages: string[]): string {
+  const specific = serverMessages.find((m) => /tạm khoá|tạm khóa|không được dùng/i.test(m));
+  return specific ?? WRONG_PASSWORD;
+}

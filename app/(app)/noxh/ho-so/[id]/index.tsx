@@ -11,7 +11,7 @@ import { useNoxhApplication } from '@/hooks/useNoxh';
 import { khachHangPayload } from '@/lib/noxhForm';
 import { useServerClock } from '@/hooks/useServerClock';
 import { formatDate } from '@/lib/format';
-import { applicationSteps, docProgress, latestReason, missingRequiredDocs, personalInfoMissing, processTimeline, isMissingCccdError } from '@/lib/noxh';
+import { applicationSteps, docProgress, docProgressHint, latestReason, missingRequiredDocs, personalInfoMissing, processTimeline, isMissingCccdError } from '@/lib/noxh';
 import { deleteApplication, saveApplication } from '@/services';
 import { getErrorMessage } from '@/services/errors';
 import { radius, semantic, sizes, spacing } from '@/theme';
@@ -170,10 +170,10 @@ export default function ApplicationDetailScreen() {
 function stepItems(d: NoxhApplicationDetail, goInfo: () => void, goDocs: () => void): StepListItem[] {
   const steps = applicationSteps(d);
   const missingInfo = personalInfoMissing(d.kh_snapshot, d.loai_can_id).length;
-  const { submitted, required } = docProgress(d.giay_to);
+  const progress = docProgress(d.giay_to);
   return steps.map((s) => {
     if (s.key === 'thong_tin') return { ...s, hint: missingInfo ? `Còn thiếu ${missingInfo} mục` : undefined, onPress: goInfo };
-    if (s.key === 'giay_to') return { ...s, hint: `Đã nộp ${submitted}/${required} giấy tờ bắt buộc`, onPress: goDocs };
+    if (s.key === 'giay_to') return { ...s, hint: docProgressHint(d.trang_thai, progress), onPress: goDocs };
     return s;
   });
 }

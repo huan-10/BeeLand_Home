@@ -14,3 +14,5 @@
 ## Đã nộp
 - Cột đọc tối đa `layout.readableMaxWidth` (560), căn giữa: `IconCircle checkCircle` cỡ `hero` tông `success`, "Đã nộp hồ sơ" `title`, mô tả; thẻ `KeyValueRow` (số hồ sơ sao chép được, dự án, ngày nộp); thẻ "Các bước tiếp theo" (3 bước có icon); primary "Xem hồ sơ" + ghost "Về trang Nhà ở xã hội".
 - Native: chọn nguồn trong `UploadSourceSheet` → đóng hộp, đợi tương tác xong + `motion.slow` rồi mới mở trình chọn (iOS không mở được picker khi Modal đang đóng). Web vẫn mở ngay trong thao tác bấm.
+
+- 2026-10-06 (đồng bộ web): nhãn giấy tờ = web `NOXH_DOC_STATUS` — Chưa nộp · **Chờ thẩm định** (đã tải tệp, chờ chủ đầu tư duyệt; trước ghi "Đã nộp") · **Đạt** · **Chưa đạt**. Dòng tiến độ (`docProgressHint`): nháp "Đã nộp n/m giấy tờ bắt buộc"; đã nộp hồ sơ "Đã nộp n/m · Đạt k/m — chờ chủ đầu tư thẩm định"; đạt hết "Đạt m/m giấy tờ bắt buộc". Lý do: web chỉ cho chuyển "Đủ điều kiện" khi mọi giấy tờ bắt buộc "Đạt".

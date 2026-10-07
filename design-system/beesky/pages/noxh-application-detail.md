@@ -20,3 +20,5 @@
 - Nháp: primary "Nộp hồ sơ" — **tắt** khi còn thiếu thông tin / giấy tờ bắt buộc, chữ gợi ý "Còn thiếu n …" dưới nút; bấm → `Dialog` cam kết "Tôi cam đoan…" (ghost "Xem lại" · primary "Nộp hồ sơ") → màn Đã nộp. Máy chủ báo thiếu giấy tờ/thông tin → Toast + mở màn tương ứng.
 - Nháp: `danger` "Xoá hồ sơ" → `Dialog` xác nhận "Xoá hồ sơ chưa nộp?".
 - Trạng thái khác: ẩn thẻ Thao tác.
+
+- 2026-10-06 (đồng bộ web): nhãn giấy tờ = web `NOXH_DOC_STATUS` — Chưa nộp · **Chờ thẩm định** (đã tải tệp, chờ chủ đầu tư duyệt; trước ghi "Đã nộp") · **Đạt** · **Chưa đạt**. Dòng tiến độ (`docProgressHint`): nháp "Đã nộp n/m giấy tờ bắt buộc"; đã nộp hồ sơ "Đã nộp n/m · Đạt k/m — chờ chủ đầu tư thẩm định"; đạt hết "Đạt m/m giấy tờ bắt buộc". Lý do: web chỉ cho chuyển "Đủ điều kiện" khi mọi giấy tờ bắt buộc "Đạt".

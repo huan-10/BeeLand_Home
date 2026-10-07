@@ -40,11 +40,15 @@ export const noxhStatusMeta: Record<NoxhStatus, StatusMeta> = {
   RUT_HO_SO: { label: 'Đã rút hồ sơ', tone: 'neutral' },
 };
 
+/**
+ * Trạng thái giấy tờ — cùng nhãn với web (`NOXH_DOC_STATUS`): tải tệp lên → "Chờ thẩm định"; chủ đầu tư duyệt từng giấy tờ
+ * → "Đạt" / "Chưa đạt". Chỉ khi mọi giấy tờ bắt buộc "Đạt" thì hồ sơ mới chuyển "Đủ điều kiện" được.
+ */
 export const docStatusMeta: Record<NoxhDocStatus, StatusMeta> = {
   CHUA_CUNG_CAP: { label: 'Chưa nộp', tone: 'neutral' },
-  CHO_THAM_DINH: { label: 'Đã nộp', tone: 'primary' },
-  DAT: { label: 'Hợp lệ', tone: 'success' },
-  CHUA_DAT: { label: 'Chưa đạt yêu cầu', tone: 'danger' },
+  CHO_THAM_DINH: { label: 'Chờ thẩm định', tone: 'primary' },
+  DAT: { label: 'Đạt', tone: 'success' },
+  CHUA_DAT: { label: 'Chưa đạt', tone: 'danger' },
 };
 
 export const roundStatusMeta: Record<NoxhRoundStatus, StatusMeta> = {
@@ -78,10 +82,10 @@ export function docsNeedingSupplement(docs: NoxhDoc[]): NoxhDoc[] {
   return docs.filter((d) => d.trang_thai === 'CHUA_DAT' || (d.bat_buoc && d.trang_thai === 'CHUA_CUNG_CAP'));
 }
 
-/** Tiến độ nộp trên giấy tờ bắt buộc. */
-export function docProgress(docs: NoxhDoc[]): { submitted: number; required: number } {
+/** Tiến độ trên giấy tờ bắt buộc: đã nộp tệp / đã được chủ đầu tư chấm "Đạt". */
+export function docProgress(docs: NoxhDoc[]): { submitted: number; required: number; approved: number } {
   const required = docs.filter((d) => d.bat_buoc);
-  return { submitted: required.filter(hasFile).length, required: required.length };
+  return { submitted: required.filter(hasFile).length, required: required.length, approved: required.filter((d) => d.trang_thai === 'DAT').length };
 }
 
 /** Dung lượng tệp: `801 KB`, `2,5 MB`. */
@@ -544,4 +548,14 @@ export function noxhToAppNotification(n: NoxhNotification): AppNotification {
 /** Id gốc của thông báo NOXH (null nếu không phải thông báo NOXH). */
 export function noxhNotificationId(appId: string): string | null {
   return appId.startsWith(NOXH_PREFIX) ? appId.slice(NOXH_PREFIX.length) : null;
+}
+
+/**
+ * Dòng tiến độ giấy tờ cho khách. Nháp: số đã nộp. Đã nộp hồ sơ: thêm số giấy tờ chủ đầu tư đã chấm "Đạt" — nộp đủ chưa
+ * có nghĩa là xong (web cần "Đạt" hết mới cho hồ sơ "Đủ điều kiện").
+ */
+export function docProgressHint(status: NoxhStatus, p: { submitted: number; required: number; approved: number }): string {
+  if (status === 'NHAP') return `Đã nộp ${p.submitted}/${p.required} giấy tờ bắt buộc`;
+  if (p.required > 0 && p.approved >= p.required) return `Đạt ${p.approved}/${p.required} giấy tờ bắt buộc`;
+  return `Đã nộp ${p.submitted}/${p.required} · Đạt ${p.approved}/${p.required} — chờ chủ đầu tư thẩm định`;
 }

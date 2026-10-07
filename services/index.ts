@@ -14,6 +14,7 @@ export * from './notificationService';
 export * from './noxhService';
 export * from './paymentService';
 export * from './receiptService';
+export * from './requestService';
 export * from './receiptFile';
 export { setActiveSession } from './session';
 export { clearCustomerDataCache } from './supabase/customerData';

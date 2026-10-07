@@ -87,3 +87,8 @@ Một SĐT có thể là khách của **nhiều công ty** (mỗi công ty một
 - `AUTH_BACKEND = 'mock'` (`services/config.ts`) để chạy offline với dữ liệu giả: OTP `8888`, demo `0901 234 567` / `123456` (khách của Sunshine Group, còn có hồ sơ BlueSky Land chưa liên kết → đăng nhập tự liên kết rồi hỏi chọn công ty).
 - **Tự liên kết có ghi vào database** (tạo dòng `cloud_portal_accounts`, như bước đăng ký). Khi kiểm thử, chỉ đăng nhập bằng SĐT thử nghiệm.
 - Hợp đồng, thanh toán, phiếu thu, thông báo đã nối dữ liệu thật, chỉ của khách đang đăng nhập: xem `docs/real-data.md`.
+
+## Thông báo lỗi đăng nhập (2026-10-06)
+- SĐT / CCCD không có tài khoản ở công ty nào → **"Số điện thoại / CCCD chưa có tài khoản. Vui lòng chọn "Đăng ký" để tạo tài khoản."** (dưới ô SĐT; `ACCOUNT_NOT_FOUND`).
+- Có tài khoản nhưng mọi lần đăng nhập bị từ chối → **"Mật khẩu không đúng. Vui lòng thử lại hoặc chọn "Quên mật khẩu?"."** (dưới ô mật khẩu; `WRONG_PASSWORD`). App đã kiểm tra tài khoản tồn tại trước bước này nên câu chung của máy chủ ("Tên đăng nhập hoặc mật khẩu không đúng") nghĩa là sai mật khẩu. Riêng "Tài khoản tạm khoá, thử lại sau 15 phút" (sai 5 lần, `fn_portal_site_login`) và "Tài khoản không được dùng trên website này…" giữ nguyên câu máy chủ (`loginRejectMessage`, `lib/validation.ts`, test `tests/login-id.test.cjs`).
+- Bấm "Đăng ký" / "Quên mật khẩu?" → xoá lỗi trước khi chuyển màn; đăng ký xong quay về (điền sẵn SĐT) → xoá lỗi + mật khẩu cũ.

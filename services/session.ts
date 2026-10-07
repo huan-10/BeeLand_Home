@@ -30,6 +30,8 @@ let noxhLinks: CompanyNoxhLink[] = [];
 let companyIds: string[] = [];
 let companyInfo: SessionCompany[] = [];
 let noxhOnly = false;
+/** Token phiên cổng khách hàng của công ty đang xem (phiên hợp đồng, không có thì phiên NOXH) — các hàm `fn_portal_*`. */
+let portalToken: string | null = null;
 const listeners = new Set<() => void>();
 const noxhExpiredListeners = new Set<(companyId: string) => void>();
 
@@ -45,6 +47,7 @@ export function setActiveSession(session: AuthSession | null): void {
   companyIds = companies.map((c) => c.companyId);
   companyInfo = companies.map((c) => ({ companyId: c.companyId, companyName: c.companyName, noxhSite: c.noxh?.slug ?? c.noxhSite }));
   noxhLinks = companies.flatMap((c) => (c.noxh ? [{ ...c.noxh, companyId: c.companyId, companyName: c.companyName }] : []));
+  portalToken = session?.token ?? companies.find((c) => c.companyId === session?.companyId)?.noxh?.token ?? null;
   listeners.forEach((l) => l());
 }
 
@@ -89,6 +92,12 @@ export function emitNoxhSessionExpired(companyId: string): void {
 export function requireCustomerScope(): CustomerScope {
   if (!active) throw new ServiceError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'UNAUTHORIZED');
   return active;
+}
+
+/** Token phiên cổng khách hàng (`_portal_session`) của công ty đang xem — dùng cho yêu cầu khách hàng. */
+export function requirePortalToken(): string {
+  if (!portalToken) throw new ServiceError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'UNAUTHORIZED');
+  return portalToken;
 }
 
 /** Đăng ký nhận báo khi đổi phiên (để xoá bộ nhớ đệm dữ liệu của khách cũ). */

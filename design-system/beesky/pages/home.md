@@ -60,3 +60,4 @@ Kéo để làm mới (mobile): làm mới cả hai khối.
 - 2026-10-06 (kiểu "Booking gần đây" của beeland-app_2026): **Thanh toán sắp tới** và **Thông báo** là danh sách thẻ rời `ListRow card` (cách nhau `ms`), tiêu đề khối có viên thuốc "Xem tất cả" nền `primary.100` (`Section`).
   - Thanh toán: thẻ đỏ nhạt bo 24 "n đợt quá hạn · tổng ›" (bấm mở Thanh toán) → 3 đợt quá hạn + đợt tiếp theo: icon tròn · tên đợt · "Căn · HĐ" · "Hạn dd/MM/yyyy" | số tiền + `Badge` "Quá hạn n ngày" (đỏ) / "Còn n ngày" (xanh). Bỏ dòng "Xem tất cả n đợt" cuối (đã có ở tiêu đề).
   - Thông báo: icon theo loại · tiêu đề · nội dung 1 dòng · thời gian | `Badge` "Mới" khi chưa đọc. Màn Thông báo dùng cùng kiểu (nội dung 3 dòng).
+- 2026-10-06: 4 ô mặc định đổi thành Hợp đồng · Thanh toán · **Yêu cầu** (`/yeu-cau`) · Bàn giao căn hộ (`DEFAULT_HOME_MODULES`); Lịch bàn giao vẫn thêm được qua Tuỳ chỉnh.

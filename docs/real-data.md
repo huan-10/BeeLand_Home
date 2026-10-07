@@ -36,6 +36,12 @@ Bộ nhớ đệm 20 giây để Trang chủ / Hợp đồng / Thanh toán khôn
 - Lưu ý dữ liệu: màn Lịch bàn giao trên web **tự chèn dữ liệu mẫu** khi công ty chưa có lịch (60 dòng hiện tại là mẫu, SĐT 092…) → khách thật chưa thấy lịch nào cho tới khi nhân viên nhập lịch với đúng số HĐMB.
 - Đã thử trên dữ liệu thật 2026-10-05: khách 0859021385 nhận đúng QBG-2026-0001 (A1-1103, Đã bàn giao); lịch: truy vấn hợp lệ, 0 dòng.
 
+## Yêu cầu khách hàng (`services/requestService.ts`, `lib/requests.ts`, test `tests/requests.test.cjs`) — 2026-10-06
+- Cùng luồng web khách hàng (`beeland/docs-claude/08-features/customer-requests.md`): token phiên cổng khách hàng của công ty đang xem (`requirePortalToken`: phiên hợp đồng, không có thì phiên NOXH) → `fn_portal_request_options` (loại + hợp đồng của khách), `fn_portal_my_requests` (yêu cầu + lịch sử, không có ghi chú nội bộ), `fn_portal_request_create` (**ghi** `cloud_customer_requests` + 1 dòng log khi KHÁCH bấm "Gửi yêu cầu" — người dùng duyệt 2026-10-06; Claude không tự gọi).
+- Tệp: edge `portal-request-files` `upload-url {token, ten, size, type}` → `uploadToSignedUrl('drive-files', path, token)` → gửi `drive-files:<path>`; `download-url {token, path}` → link 10 phút.
+- Máy chủ: tiêu đề 3–300, nội dung ≤ 5000, ≤ 5 tệp 10 MB, 10 yêu cầu / khách / 24 giờ; nguồn tự gán "website/portal", trạng thái "Mới", số phiếu `YEUCAU`.
+- **Triển khai:** đã chạy 0141 + 0142 và deploy edge `portal-request-files` trên self-host ngày 2026-10-06 (kiểm bằng token giả: RPC và edge trả "Phiên đăng nhập đã hết hạn…"). Nếu máy chủ thiếu hàm (PGRST202) app báo "Tính năng gửi yêu cầu chưa được bật trên máy chủ…" (`requestErrorMessage`).
+
 ## Ánh xạ (`lib/portalMapping.ts`, test `tests/portal-mapping.test.cjs`)
 - **Loại:** `giai_doan` HDMB / HDGV / THANHLY → HĐ mua bán; DATCOC → đặt cọc; GIUCHO → phiếu giữ chỗ.
 - **Trạng thái** (`cloud_catalogs` `pgc_trang_thai`, `item_code`):

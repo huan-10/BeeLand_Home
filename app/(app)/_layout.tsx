@@ -30,6 +30,7 @@ export default function AppLayout() {
         <Tabs.Screen name="profile" options={{ title: 'Cá nhân' }} />
         <Tabs.Screen name="notifications" options={{ title: 'Thông báo', href: null }} />
         <Tabs.Screen name="contract/[id]" options={{ title: 'Hợp đồng', href: null }} />
+        <Tabs.Screen name="yeu-cau" options={{ title: 'Yêu cầu', href: null }} />
         <Tabs.Screen name="ban-giao" options={{ title: 'Bàn giao căn hộ', href: null }} />
         <Tabs.Screen name="lich-ban-giao" options={{ title: 'Lịch bàn giao', href: null }} />
         <Tabs.Screen name="tuy-chinh-trang-chu" options={{ title: 'Tuỳ chỉnh Trang chủ', href: null }} />

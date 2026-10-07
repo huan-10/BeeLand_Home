@@ -30,6 +30,7 @@ export const APP_MODULES: AppModule[] = [
   { id: 'receipts', group: 'bds', label: 'Phiếu thu', short: 'Phiếu thu', icon: 'receipt', href: { pathname: '/payments', params: { tab: 'paid' } } },
   { id: 'handover', group: 'bds', label: 'Bàn giao căn hộ', short: 'Bàn giao\ncăn hộ', icon: 'key', href: '/ban-giao' },
   { id: 'handover-schedule', group: 'bds', label: 'Lịch bàn giao', short: 'Lịch\nbàn giao', icon: 'calendarCheck', href: '/lich-ban-giao' },
+  { id: 'requests', group: 'bds', label: 'Yêu cầu', short: 'Yêu cầu', icon: 'message', href: '/yeu-cau' },
   { id: 'notifications', group: 'bds', label: 'Thông báo', short: 'Thông báo', icon: 'bell', href: '/notifications' },
   { id: 'noxh', group: 'noxh', label: 'Nhà ở xã hội', short: 'Nhà ở\nxã hội', icon: 'building', href: '/noxh' },
   { id: 'noxh-applications', group: 'noxh', label: 'Hồ sơ nhà ở xã hội', short: 'Hồ sơ\nNOXH', icon: 'idCard', href: '/noxh/ho-so' },
@@ -38,8 +39,8 @@ export const APP_MODULES: AppModule[] = [
   { id: 'noxh-guide', group: 'noxh', label: 'Hướng dẫn nhà ở xã hội', short: 'Hướng dẫn', icon: 'book', href: '/noxh/huong-dan' },
 ];
 
-/** Trang chủ mặc định: 4 chức năng bất động sản. */
-export const DEFAULT_HOME_MODULES = ['contracts', 'payments', 'handover', 'handover-schedule'];
+/** Trang chủ mặc định: Hợp đồng · Thanh toán · Yêu cầu · Bàn giao căn hộ. */
+export const DEFAULT_HOME_MODULES = ['contracts', 'payments', 'requests', 'handover'];
 /** Tối đa 2 hàng × 4 cột. */
 export const HOME_MODULE_MAX = 8;
 

@@ -10,7 +10,7 @@ import { useNoxhApplication } from '@/hooks/useNoxh';
 import { khachHangPayload } from '@/lib/noxhForm';
 import { formatDate } from '@/lib/format';
 import { openDocument } from '@/lib/openDocument';
-import { docProgress, docsNeedingSupplement, missingRequiredDocs, nearestDueDate, personalInfoMissing, isMissingCccdError } from '@/lib/noxh';
+import { docProgress, docProgressHint, docsNeedingSupplement, missingRequiredDocs, nearestDueDate, personalInfoMissing, isMissingCccdError } from '@/lib/noxh';
 import { openDoc, pickFile, pickSources, removeDoc, saveApplication, sendSupplement, uploadDoc, type PickSource } from '@/services';
 import { getErrorMessage } from '@/services/errors';
 import { motion, semantic, spacing, toneColors } from '@/theme';
@@ -196,7 +196,7 @@ export default function DocumentsScreen() {
               accessibilityLabel={`Đã nộp ${progress.submitted}/${progress.required} giấy tờ bắt buộc`}
             />
             <Text variant="caption" color={semantic.textMuted} style={styles.progressNote}>
-              Đã nộp {progress.submitted}/{progress.required} giấy tờ bắt buộc. Ảnh chụp cần rõ nét, đủ 4 góc.
+              {d ? docProgressHint(d.trang_thai, progress) : ''}. Ảnh chụp cần rõ nét, đủ 4 góc.
             </Text>
           </Card>
 

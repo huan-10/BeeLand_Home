@@ -8,7 +8,7 @@ const m = loadModule('lib/appModules.ts');
 test('danh mục: mã không trùng, mặc định là 4 chức năng bất động sản', () => {
   const ids = m.APP_MODULES.map((x) => x.id);
   assert.equal(new Set(ids).size, ids.length);
-  assert.deepEqual(m.DEFAULT_HOME_MODULES, ['contracts', 'payments', 'handover', 'handover-schedule']);
+  assert.deepEqual(m.DEFAULT_HOME_MODULES, ['contracts', 'payments', 'requests', 'handover']);
   assert.equal(m.HOME_MODULE_MAX, 8);
 });
 

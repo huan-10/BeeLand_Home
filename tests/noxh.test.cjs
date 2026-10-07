@@ -14,8 +14,10 @@ test('nhãn trạng thái cho khách đúng nguyên văn tài liệu web', () =>
   assert.equal(m.noxhStatusMeta.SXD_CHAP_THUAN.label, 'Đủ điều kiện tham gia bốc thăm');
   assert.equal(m.noxhStatusMeta.SXD_CHAP_THUAN.tone, 'success');
   assert.equal(m.noxhStatusMeta.CAN_BO_SUNG.tone, 'warning');
-  assert.equal(m.docStatusMeta.CHUA_DAT.label, 'Chưa đạt yêu cầu');
-  assert.equal(m.docStatusMeta.CHO_THAM_DINH.label, 'Đã nộp');
+  // Cùng nhãn với web (NOXH_DOC_STATUS): khách thấy giấy tờ đang chờ chủ đầu tư thẩm định, chưa phải đã xong.
+  assert.equal(m.docStatusMeta.CHUA_DAT.label, 'Chưa đạt');
+  assert.equal(m.docStatusMeta.CHO_THAM_DINH.label, 'Chờ thẩm định');
+  assert.equal(m.docStatusMeta.DAT.label, 'Đạt');
 });
 
 test('missingRequiredDocs bỏ qua giấy tờ không bắt buộc và giấy tờ đã có tệp', () => {
@@ -25,7 +27,8 @@ test('missingRequiredDocs bỏ qua giấy tờ không bắt buộc và giấy t�
 });
 
 test('docProgress đếm trên giấy tờ bắt buộc', () => {
-  assert.deepEqual(m.docProgress([submitted(), doc(), doc({ bat_buoc: false, tep_ten: 'x.pdf' })]), { submitted: 1, required: 2 });
+  assert.deepEqual(m.docProgress([submitted(), doc(), doc({ bat_buoc: false, tep_ten: 'x.pdf' })]), { submitted: 1, required: 2, approved: 0 });
+  assert.deepEqual(m.docProgress([submitted({ trang_thai: 'DAT' }), submitted(), doc({ bat_buoc: false, tep_ten: 'x.pdf', trang_thai: 'DAT' })]), { submitted: 2, required: 2, approved: 1 });
 });
 
 test('docsNeedingSupplement: giấy tờ chưa đạt và giấy tờ bắt buộc chưa nộp', () => {
@@ -344,4 +347,10 @@ test('nextBoundaryMs: số ms tới mốc đổi giai đoạn kế tiếp (mở 
 test('isMissingCccdError nhận thông điệp máy chủ khi tài khoản chưa có CCCD', () => {
   assert.equal(m.isMissingCccdError('Tài khoản chưa có CCCD, vui lòng liên hệ chủ đầu tư để cập nhật trước khi nộp hồ sơ online'), true);
   assert.equal(m.isMissingCccdError('Chưa nộp giấy tờ bắt buộc: Đơn'), false);
+});
+
+test('docProgressHint: nháp → đã nộp; đã nộp hồ sơ → kèm số Đạt và chờ thẩm định; đạt hết → đã đạt', () => {
+  assert.equal(m.docProgressHint('NHAP', { submitted: 3, required: 5, approved: 0 }), 'Đã nộp 3/5 giấy tờ bắt buộc');
+  assert.equal(m.docProgressHint('MOI_TIEP_NHAN', { submitted: 5, required: 5, approved: 0 }), 'Đã nộp 5/5 · Đạt 0/5 — chờ chủ đầu tư thẩm định');
+  assert.equal(m.docProgressHint('DANG_THAM_DINH', { submitted: 5, required: 5, approved: 5 }), 'Đạt 5/5 giấy tờ bắt buộc');
 });
