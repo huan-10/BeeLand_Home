@@ -33,9 +33,9 @@
 | Token | Hex | Dùng cho |
 |-------|-----|----------|
 | `primary.50` / `100` / `200` | `#F0F9FF` / `#E0F2FE` / `#BAE6FD` | Nền pastel (badge, nút phụ, thông báo chưa đọc, nút "Xem tất cả") / hover / viền hover |
-| `primary.300` / `400` | `#7DD3FC` / `#5CC8FA` | Gradient logo |
+| `primary.300` / `400` | `#7DD3FC` / `#5CC8FA` | Gradient ảnh dự án giữ chỗ (`ProjectImage`) |
 | **`primary.500`** | **`#38BDF8`** | **Nhấn**: thanh tiến độ, chấm chưa đọc, gradient — không đặt chữ trắng lên (2.14:1) |
-| `primary.600` | `#0EA5E9` | Cuối gradient logo, `brandPressed` |
+| `primary.600` | `#0EA5E9` | `brandPressed` |
 | **`primary.700`** | **`#0A74B8`** | **Nút chính** (`action`), chữ nhấn (`textBrand`), viền focus, icon tab đang chọn |
 | `primary.800` / `900` | `#08629C` / `#0C4A6E` | Nút chính hover / nhấn, chữ badge `primary`, lớp phủ banner |
 | `gray.50 … 900` | `#F8FAFC` `#F1F5F9` `#E4E7EC` `#CBD5E1` `#94A3B8` `#64748B` `#475569` `#334155` `#1E293B` `#0F172A` | Nền, viền, chữ |
@@ -255,6 +255,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **TextLink** | `captionStrong` semibold `textBrand`, cao ≥ 44, hover gạch chân. | [Skill] |
 | **Skeleton** | Khối `border` nhấp nháy; dừng khi giảm chuyển động. | [Skill] |
 | **EmptyState / ErrorState** | Icon tròn 72 pastel, tiêu đề `heading`, mô tả `caption`, một hành động. | [Skill] |
+| **Logo** | Ảnh `assets/images/logo.png` (nền trắng, ngôi nhà cam ôm chữ B; cắt sát từ nguồn `anh-logo.png` để biểu tượng lấp ~90% ô, bo `radius.sm`) + chữ "Bee" `gray.900` / "Sky" `primary.500`. `inverted`: chữ trắng / `primary.100`, ảnh giữ nguyên màu. Cỡ ảnh `sizes.logo` 32/36/44/48. Icon app, splash, favicon, adaptive icon Android dùng cùng hình. | [Người dùng] |
 | **BrandBanner** | Ảnh khu đô thị + gradient xanh đêm → xanh đậm, bo 28, logo inverted, chữ trắng. Trang trí. | [Mockup] |
 | **FormErrorSummary** | Hộp `danger` pastel bo `lg` đầu form, danh sách lỗi dạng link tới ô. | [Skill] |
 | **AuthLayout** | Xem `pages/login.md`. | [Mockup] |
@@ -296,7 +297,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 - ❌ Placeholder thay cho nhãn; lỗi chỉ hiện ở đầu form — [Skill]
 - ❌ Spinner chặn toàn màn hình khi tải danh sách (dùng Skeleton) — [Skill]
 - ❌ Màn hình trống không lời giải thích; lỗi không có nút thử lại — [Skill]
-- ❌ Glassmorphism / blur ngoài **thanh tab nổi mobile**; gradient ngoài logo / ảnh nền màn xác thực / banner thương hiệu — [Mockup] + [Làm mới]
+- ❌ Glassmorphism / blur ngoài **thanh tab nổi mobile**; gradient ngoài ảnh nền màn xác thực / banner thương hiệu — [Mockup] + [Làm mới]
 - ❌ Modal không đóng được bằng Esc/Back, không giữ focus, hoặc không trả focus về nút mở — [Skill]
 - ❌ Thanh/nút cố định che nội dung hoặc phần tử đang focus — [Skill]
 - ❌ Bảng dữ liệu trên màn hẹp (tràn / cuộn ngang) — dùng thẻ — [Skill]

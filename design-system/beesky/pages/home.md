@@ -9,7 +9,7 @@
 - **Thẻ tổng quan nền xanh đêm (`ink`)** (`MoneySummaryCard`, desktop 7 cột cạnh banner 5 cột; mobile trên banner): "Tổng quan thanh toán" + "a/b hợp đồng đang hiệu lực", tổng giá trị `display`, thanh tiến độ + chữ %, Đã thanh toán / Còn lại — số liệu từ `useDashboard` (đã có sẵn). Đang tải: Skeleton bo 28; lỗi: `ErrorState`.
 - Tiêu đề khối dùng `Section`: nút **viên thuốc nhỏ** "Xem tất cả" / "Lịch thanh toán" nền `primary.50` (chữ `label`, không đẩy xuống dòng).
 - Chuông: **chấm đỏ** (`danger.600`, viền trắng) khi có thông báo chưa đọc — **không hiển thị số**; tên truy cập là cụm từ đầy đủ: "Thông báo, 2 thông báo chưa đọc" (`lib/notification.ts` → `unreadLabel`).
-- **Banner thương hiệu** (`BrandBanner`): ảnh khu đô thị + gradient xanh đêm → xanh đậm (`brandTintStrong` → `brandTint`, đủ đậm cho chữ trắng ≥ 4.5:1), bo `xl`, logo `sm` inverted, tiêu đề + mô tả trắng. Chỉ trang trí, không bấm được.
+- **Banner thương hiệu** (`BrandBanner`): ảnh khu đô thị + gradient xanh đêm → xanh đậm (`brandTintStrong` → `brandTint`, đủ đậm cho chữ trắng ≥ 4.5:1), bo `xl`, logo `md` inverted (2026-10-07: tăng từ `sm`, ảnh logo cắt sát), tiêu đề + mô tả trắng. Chỉ trang trí, không bấm được.
 - Không còn thẻ tổng quan gradient và danh sách hợp đồng trên Trang chủ (đã có ở Hợp đồng / Thanh toán).
 
 ## Bố cục — lưới 12 cột (`Grid` / `Col`) trong container tối đa 1100px

@@ -31,7 +31,7 @@ export function BrandBanner({ title, subtitle, fill }: BrandBannerProps) {
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[styles.content, fill && styles.fill, { minHeight: isWide ? sizes.banner.wide : sizes.banner.mobile }]}>
-        <Logo size="sm" inverted />
+        <Logo size="md" inverted />
         <View style={styles.text}>
           <Text variant="title" color={semantic.textInverse}>
             {title}

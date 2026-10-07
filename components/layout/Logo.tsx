@@ -1,14 +1,15 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui';
-import { colors, fontSizes, resolveFontFamily, sizes, spacing } from '@/theme';
+import { colors, fontSizes, radius, resolveFontFamily, sizes, spacing } from '@/theme';
+
+const logoMark = require('@/assets/images/logo.png');
 
 export interface LogoProps {
   size?: keyof typeof sizes.logo;
   /** Hiển thị chữ "BeeSky" bên cạnh biểu tượng. */
   withWordmark?: boolean;
-  /** Dùng trên nền đậm/màu nhấn: biểu tượng trắng, chữ trắng. */
+  /** Dùng trên nền đậm/màu nhấn: chữ trắng (biểu tượng giữ nguyên màu). */
   inverted?: boolean;
 }
 
@@ -24,15 +25,8 @@ export function Logo({ size = 'md', withWordmark = true, inverted = false }: Log
   const textStyle = [fontSizes[wordmarkSize[size]], { fontFamily: resolveFontFamily('bold') }];
   return (
     <View style={styles.row} accessibilityRole="image" accessibilityLabel="BeeSky">
-      <LinearGradient
-        colors={inverted ? [colors.white, colors.primary[50]] : [colors.primary[400], colors.primary[600]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.mark, { width: box, height: box, borderRadius: box * 0.3 }]}>
-        <Text style={textStyle} color={inverted ? colors.primary[600] : colors.white}>
-          B
-        </Text>
-      </LinearGradient>
+      {/* Ảnh biểu tượng nền trắng, cắt sát từ assets/images/anh-logo.png; bo góc để thành ô trắng gọn trên nền đậm. */}
+      <Image source={logoMark} style={[styles.mark, { width: box, height: box }]} resizeMode="contain" accessibilityIgnoresInvertColors />
       {withWordmark ? (
         <Text style={textStyle}>
           <Text style={textStyle} color={inverted ? colors.white : colors.gray[900]}>
@@ -49,5 +43,5 @@ export function Logo({ size = 'md', withWordmark = true, inverted = false }: Log
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  mark: { alignItems: 'center', justifyContent: 'center' },
+  mark: { borderRadius: radius.sm },
 });
