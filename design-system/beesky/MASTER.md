@@ -255,7 +255,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 | **TextLink** | `captionStrong` semibold `textBrand`, cao ≥ 44, hover gạch chân. | [Skill] |
 | **Skeleton** | Khối `border` nhấp nháy; dừng khi giảm chuyển động. | [Skill] |
 | **EmptyState / ErrorState** | Icon tròn 72 pastel, tiêu đề `heading`, mô tả `caption`, một hành động. | [Skill] |
-| **Logo** | Ảnh `assets/images/logo.png` (nền trắng, ngôi nhà cam ôm chữ B; cắt sát từ nguồn `anh-logo.png` để biểu tượng lấp ~90% ô, bo `radius.sm`) + chữ "Bee" `gray.900` / "Sky" `primary.500`. `inverted`: chữ trắng / `primary.100`, ảnh giữ nguyên màu. Cỡ ảnh `sizes.logo` 32/36/44/48. Icon app, splash, favicon, adaptive icon Android dùng cùng hình. | [Người dùng] |
+| **Logo** | Ảnh `assets/images/logo.png` (nền trắng, ngôi nhà cam ôm chữ B; cắt sát từ nguồn `anh-logo.png` để biểu tượng lấp ~90% ô, bo `radius.sm`) + chữ "Bee" `gray.900` / "Sky" `primary.500`. `inverted`: chữ trắng / `primary.100`, ảnh giữ nguyên màu. Cỡ ảnh `sizes.logo` 32/36/44/48. Icon app, splash, favicon, adaptive icon Android (nền trắng `#FFFFFF`) dùng cùng hình chữ B — tạo lại từ `anh-logo.png` mỗi khi đổi logo. | [Người dùng] |
 | **BrandBanner** | Ảnh khu đô thị + gradient xanh đêm → xanh đậm, bo 28, logo inverted, chữ trắng. Trang trí. | [Mockup] |
 | **FormErrorSummary** | Hộp `danger` pastel bo `lg` đầu form, danh sách lỗi dạng link tới ô. | [Skill] |
 | **AuthLayout** | Xem `pages/login.md`. | [Mockup] |
