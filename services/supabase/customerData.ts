@@ -1,4 +1,5 @@
 import { rpc, str } from './client';
+import { chooseProfile } from './portal';
 import { onSessionChange, requireCustomerScope, requirePortalToken, type CustomerScope } from '../session';
 import { ServiceError } from '../errors';
 
@@ -161,7 +162,16 @@ interface RecordRpcRow {
 }
 
 async function loadRecords(scope: CustomerScope): Promise<PgcRecord[]> {
-  const rows = unwrap(await rpc<Envelope<RecordRpcRow[]>>('fn_portal_app_hop_dong', { p_token: requirePortalToken() }), []);
+  const token = requirePortalToken();
+  const fetchOnce = () => rpc<Envelope<RecordRpcRow[]> & { khach_hang_id?: string }>('fn_portal_app_hop_dong', { p_token: token });
+  let res = await fetchOnce();
+  // Server đang dùng hồ sơ khác hồ sơ của app (đổi hồ sơ dở dang / nhân viên đổi hồ sơ gốc) → đặt lại cho phiên rồi tải lại,
+  // để yêu cầu / thanh toán online (đọc hồ sơ trên server) cùng hồ sơ với màn hình.
+  if (res?.khach_hang_id && res.khach_hang_id !== scope.customerId) {
+    await chooseProfile(token, scope.customerId).catch(() => undefined);
+    res = await fetchOnce();
+  }
+  const rows = unwrap(res, []);
   return (Array.isArray(rows) ? rows : [])
     // Lọc lại phía app: tuyệt đối không giữ dòng của khách / công ty khác.
     .filter((r) => r?.pgc && r.pgc.khach_hang_id === scope.customerId && r.pgc.ma_ctdk_uid === scope.companyId)
@@ -197,14 +207,20 @@ export async function requireOwnedPgc(pgcId: string): Promise<PgcRecord> {
 
 /** Lịch thanh toán từng đợt (đã có Đã thu / Còn lại) của một phiếu thuộc khách. */
 export async function getPgcSchedule(pgcId: string, force = false): Promise<ScheduleRpcRow[]> {
+  // Lấy token CÙNG lúc với hồ sơ (đổi hồ sơ giữa chừng → không gọi phiếu cũ bằng token mới rồi lưu đệm lịch rỗng).
+  const token = requirePortalToken();
   const { row } = await requireOwnedPgc(pgcId);
   return cached(
     scheduleCache,
     pgcId,
     async () => {
-      const rows = await rpc<Envelope<ScheduleRpcRow[]>>('fn_portal_app_lich_tt', { p_token: requirePortalToken(), p_pgc_id: row.id })
+      // Phiên hết hạn → báo đăng nhập lại; lỗi khác → rỗng (màn dùng lịch lưu trên phiếu).
+      const rows = await rpc<Envelope<ScheduleRpcRow[]>>('fn_portal_app_lich_tt', { p_token: token, p_pgc_id: row.id })
         .then((r) => unwrap(r, []))
-        .catch(() => [] as ScheduleRpcRow[]);
+        .catch((e: unknown) => {
+          if (e instanceof ServiceError && (e.code === 'UNAUTHORIZED' || e.code === 'NETWORK')) throw e;
+          return [] as ScheduleRpcRow[];
+        });
       return Array.isArray(rows) ? rows : [];
     },
     force,
@@ -213,12 +229,13 @@ export async function getPgcSchedule(pgcId: string, force = false): Promise<Sche
 
 /** Phiếu thu của một phiếu thuộc khách (tiền = phần thuộc phiếu này). */
 export async function getPgcVouchers(pgcId: string, force = false): Promise<VoucherRow[]> {
+  const token = requirePortalToken();
   const { row } = await requireOwnedPgc(pgcId);
   return cached(
     voucherCache,
     pgcId,
     async () => {
-      const rows = unwrap(await rpc<Envelope<VoucherRow[]>>('fn_portal_app_phieu_thu', { p_token: requirePortalToken(), p_pgc_id: row.id }), []);
+      const rows = unwrap(await rpc<Envelope<VoucherRow[]>>('fn_portal_app_phieu_thu', { p_token: token, p_pgc_id: row.id }), []);
       return Array.isArray(rows) ? rows : [];
     },
     force,

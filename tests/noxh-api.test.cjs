@@ -112,7 +112,7 @@ const cs = (companyId, extra) => ({ companyId, companyName: companyId, token: `t
 
 test('kết nối NOXH: sai mật khẩu ở công ty đang thiếu token → báo lỗi dù công ty khác đã kết nối', async () => {
   handlers = { fn_portal_site_login: () => ({ error: 'Sai mật khẩu' }) };
-  const s = { token: 't-A', userId: 'u', createdAt: '', companyId: 'A', customerId: 'kh-A', user, phone: PHONE, companies: [cs('A', { noxh: { slug: 'a', token: 'na' } }), cs('B', { noxhSite: 'b-noxh' })] };
+  const s = { token: 't-A', userId: 'u', createdAt: '', companyId: 'A', customerId: 'kh-A', user, phone: PHONE, companies: [cs('A', { noxh: { slug: 'a', token: 'na' } }), cs('B', { noxhSite: 'b-noxh', loginName: PHONE })] };
   await assert.rejects(auth.connectNoxh(s, 'sai'), { message: 'Mật khẩu không đúng.' });
 });
 
@@ -443,4 +443,10 @@ test('dò công ty mới: fn_portal_app_cong_ty_moi theo token phiên, gửi kè
   const s = { token: 'hd-c1', userId: 'acc-c1', createdAt: '', companyId: 'c1', customerId: 'kh-c1', user, phone: PHONE, companies: [cs('c1', { token: 'hd-c1' })] };
   assert.deepEqual(await auth.findNewCompanies(s), [{ companyId: 'c2', companyName: 'MSR', customerId: 'kh-c2', customerName: 'Lê Thu Hà', customerCode: 'KH-9' }]);
   assert.ok(!calls.some(([fn]) => NO_SERVICE_JWT.includes(fn)));
+});
+
+test('kết nối NOXH: phiên cũ chưa lưu tên đăng nhập, sai mật khẩu → gợi ý đăng nhập lại', async () => {
+  handlers = { fn_portal_site_login: () => ({ error: 'Sai' }) };
+  const s = { token: 't-B', userId: 'u', createdAt: '', companyId: 'B', customerId: 'kh-B', user, phone: PHONE, companies: [cs('B', { noxhSite: 'b-noxh' })] };
+  await assert.rejects(auth.connectNoxh(s, 'pass1234'), (e) => /đăng nhập lại/.test(e.message));
 });

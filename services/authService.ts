@@ -450,7 +450,15 @@ export async function connectNoxh(session: AuthSession, password: string): Promi
       }
     }),
   );
-  if (attempted.length > 0 && connected === 0) throw new ServiceError('Mật khẩu không đúng.', 'UNAUTHORIZED', 'password');
+  if (attempted.length > 0 && connected === 0) {
+    // Phiên lưu trước 2026-10-08 chưa có tên đăng nhập (username nhân viên đặt có thể khác SĐT) → đăng nhập lại để lấy.
+    const legacy = attempted.some((c) => !c.loginName);
+    throw new ServiceError(
+      legacy ? 'Mật khẩu không đúng. Nếu chắc chắn mật khẩu đúng, vui lòng đăng xuất rồi đăng nhập lại.' : 'Mật khẩu không đúng.',
+      'UNAUTHORIZED',
+      'password',
+    );
+  }
   return { ...session, companies: next };
 }
 

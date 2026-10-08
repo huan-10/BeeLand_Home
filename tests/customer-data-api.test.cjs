@@ -109,3 +109,23 @@ test('website NOXH theo công ty: fn_portal_app_noxh_sites (anon), không JWT h�
   assert.equal(calls.find(([fn]) => fn === 'fn_portal_app_noxh_sites')[2], undefined);
   noServiceJwt();
 });
+
+test('hợp đồng: server đang dùng hồ sơ khác hồ sơ của app (đổi hồ sơ dở dang) → đặt lại hồ sơ cho phiên rồi tải lại', async () => {
+  calls.length = 0;
+  let serverProfile = 'kh-khac';
+  handlers.fn_portal_app_chon_ho_so = (a) => {
+    serverProfile = a.p_khach_hang_id;
+    return { data: { ok: true } };
+  };
+  handlers.fn_portal_app_hop_dong = () => ({ khach_hang_id: serverProfile, data: serverProfile === 'kh-1' ? [{ pgc: pgc('p1'), product: null, project: null, status: null, booking: null }] : [] });
+  const records = await data.getCustomerRecords(true);
+  assert.deepEqual(records.map((r) => r.row.id), ['p1']);
+  assert.deepEqual(calls.find(([fn]) => fn === 'fn_portal_app_chon_ho_so')?.[1], { p_token: 'tok-1', p_khach_hang_id: 'kh-1' });
+});
+
+test('lịch thanh toán: phiên hết hạn → báo đăng nhập lại (UNAUTHORIZED), không lặng lẽ trả rỗng', async () => {
+  handlers.fn_portal_app_hop_dong = () => ({ khach_hang_id: 'kh-1', data: [{ pgc: pgc('p1'), product: null, project: null, status: null, booking: null }] });
+  await data.getCustomerRecords(true);
+  handlers.fn_portal_app_lich_tt = () => ({ error: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại' });
+  await assert.rejects(data.getPgcSchedule('p1', true), (e) => e.code === 'UNAUTHORIZED');
+});

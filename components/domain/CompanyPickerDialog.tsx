@@ -51,8 +51,13 @@ export function CompanyPickerDialog({
     }
   };
 
-  const isActive = (o: CompanyOption) =>
-    o.companyId === activeCompanyId && (!o.customerId || !activeCustomerId || o.customerId === activeCustomerId);
+  // Chỉ một dòng ✓: đúng hồ sơ đang xem; chưa biết hồ sơ (phiên cũ) → dòng đầu tiên của công ty đang xem.
+  const activeKey = (() => {
+    const inCompany = companies.filter((o) => o.companyId === activeCompanyId);
+    const hit = inCompany.find((o) => !!activeCustomerId && o.customerId === activeCustomerId) ?? inCompany[0];
+    return hit ? optionKey(hit) : null;
+  })();
+  const isActive = (o: CompanyOption) => optionKey(o) === activeKey;
 
   return (
     <Dialog visible={visible} title="Chọn hồ sơ khách hàng" onClose={onClose}>
