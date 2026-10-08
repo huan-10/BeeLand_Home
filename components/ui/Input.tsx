@@ -105,14 +105,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.ms,
-    height: sizes.control.md,
+    // minHeight (không cố định height): iOS (Fabric, RN 0.86) tái sử dụng view của ô NHIỀU dòng (UITextView) cho ô một dòng
+    // khi màn đổi — prepareForRecycle không đổi lại sang UITextField nên chữ dài xuống dòng; khung tự giãn thay vì để chữ tràn ra ngoài.
+    minHeight: sizes.control.md,
     paddingHorizontal: spacing.md,
     borderWidth: borderWidth.thick,
     borderRadius: radius.xl,
     // Ô nhập "mềm": nền xám nhạt, viền cùng màu; focus → nền trắng, viền xanh đậm + vòng sáng.
     backgroundColor: semantic.surfaceSunken,
   },
-  multiField: { height: undefined, minHeight: sizes.textarea, alignItems: 'flex-start', paddingVertical: spacing.ms },
+  multiField: { minHeight: sizes.textarea, alignItems: 'flex-start', paddingVertical: spacing.ms },
   focusedField: { backgroundColor: semantic.surface },
   focused: shadows.focusHalo,
   disabled: { backgroundColor: semantic.surfaceMuted },
@@ -120,14 +122,16 @@ const styles = StyleSheet.create({
     flex: 1,
     // Web: <input> có độ rộng tối thiểu nội tại, cần 0 để không đẩy nút ẩn/hiện ra ngoài.
     minWidth: 0,
-    height: '100%',
+    // Cao tối thiểu bằng khung (bỏ viền) để vùng chạm / web <input> vẫn phủ cả ô; nội dung dài hơn thì giãn theo.
+    minHeight: sizes.control.md - borderWidth.thick * 2,
+    alignSelf: 'stretch',
     color: semantic.text,
     fontFamily: resolveFontFamily('regular'),
     // 16px trở lên để iOS không tự phóng to khi focus.
     ...fontSizes.body,
     ...(Platform.OS === 'web' ? { outlineWidth: 0 } : null),
   },
-  multiInput: { height: undefined, minHeight: sizes.textarea - spacing.ms * 2, textAlignVertical: 'top' },
+  multiInput: { minHeight: sizes.textarea - spacing.ms * 2, textAlignVertical: 'top' },
   // Vùng chạm 44×44; lề âm để icon vẫn thẳng hàng mép phải ô nhập.
   toggle: {
     width: sizes.touchTarget,
