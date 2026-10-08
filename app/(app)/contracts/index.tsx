@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { ContractCard, ContractCardSkeleton, UnitFilterBar } from '@/components/domain';
 import { Col, Grid, Screen } from '@/components/layout';
-import { Card, CompactSummary, EmptyState, ErrorState, Input, ScreenHeader, Text } from '@/components/ui';
+import { Card, CompactSummary, EmptyState, ErrorState, Input, Text } from '@/components/ui';
 import { summarizeContractList } from '@/lib/contract';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { activeUnit, filterByUnit, unitCodesOf } from '@/lib/unitFilter';
