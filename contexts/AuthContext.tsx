@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppState } from 'react-native';
 
 import { companyOptions, noxhMissing, sessionCompanies, withActiveCompany } from '@/lib/companySession';
-import { clearSession, loadSession, saveSession, updateSession } from '@/lib/sessionStorage';
+import type { RememberedLogin } from '@/lib/rememberedLogin';
+import { clearRememberedLogin, clearSession, loadRememberedLogin, loadSession, saveRememberedLogin, saveSession, updateSession } from '@/lib/sessionStorage';
 import {
   clearAllPersonalDrafts,
   connectNoxh as connectNoxhService,
@@ -33,6 +34,8 @@ interface AuthContextValue {
    * SĐT là khách của nhiều công ty → trả danh sách công ty (chưa vào app); gọi `selectCompany` để vào.
    */
   signIn: (phone: string, password: string, remember: boolean) => Promise<CompanyOption[] | null>;
+  /** SĐT + mật khẩu đã "Ghi nhớ đăng nhập" (Keychain; web chỉ SĐT) — màn Đăng nhập điền sẵn sau khi đăng xuất. */
+  rememberedLogin: () => Promise<RememberedLogin | null>;
   /**
    * Chọn hồ sơ (công ty + hồ sơ khách hàng) sau khi đăng nhập, hoặc chuyển hồ sơ khi đang ở trong app — không cần nhập lại mật khẩu.
    * `customerId` vắng → hồ sơ đang xem của công ty đó.
@@ -131,6 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (pending.current) void logout(pending.current.session).catch(() => undefined);
       pending.current = null;
       const result = await login(phone, password);
+      // "Ghi nhớ đăng nhập": nhớ SĐT + mật khẩu (Keychain) để đăng xuất xong vẫn điền sẵn; bỏ tick → xoá.
+      if (remember) void saveRememberedLogin({ identifier: phone, password });
+      else void clearRememberedLogin();
       const options = companyOptions(result.session);
       if (options.length > 1) {
         pending.current = { session: result.session, remember };
@@ -230,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       activeCompanyId: session?.companyId ?? null,
       activeCustomerId: session?.customerId ?? null,
       signIn,
+      rememberedLogin: loadRememberedLogin,
       selectCompany,
       signOut,
       newCompanies,

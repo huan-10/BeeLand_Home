@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View, type TextInput } from 'react-native';
 
 import { CompanyPickerDialog } from '@/components/domain';
@@ -28,7 +28,7 @@ import { borderWidth, interactive, opacity, radius, semantic, spacing, toneColor
 
 
 export default function LoginScreen() {
-  const { signIn, selectCompany } = useAuth();
+  const { signIn, selectCompany, rememberedLogin } = useAuth();
   const toast = useToast();
   const params = useLocalSearchParams<{ identifier?: string }>();
 
@@ -39,6 +39,23 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState(params.identifier ?? '');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
+
+  // "Ghi nhớ đăng nhập": điền sẵn SĐT + mật khẩu đã nhớ (Keychain) — trừ khi vừa quay lại từ Đăng ký / Quên mật khẩu với SĐT mới.
+  useEffect(() => {
+    let cancelled = false;
+    void rememberedLogin().then((saved) => {
+      if (cancelled || !saved) return;
+      if (params.identifier && params.identifier !== saved.identifier) return;
+      setIdentifier((current) => current || saved.identifier);
+      setPassword((current) => current || saved.password);
+      setRemember(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Chỉ đọc một lần khi mở màn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [errors, setErrors] = useState<FormErrors<LoginField>>({});
   const { submit, submitting } = useFormSubmit(signIn);
   /** SĐT là khách của nhiều công ty (đã đăng nhập + tự liên kết) → hỏi chọn công ty để vào app. */

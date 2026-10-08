@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { parseRememberedLogin, serializeRememberedLogin, type RememberedLogin } from '@/lib/rememberedLogin';
 import type { AuthSession } from '@/types';
 
 const SESSION_KEY = 'beesky.session';
@@ -76,4 +78,38 @@ export async function clearSession(): Promise<void> {
   memorySession = null;
   webSessionStorage()?.removeItem(SESSION_KEY);
   await AsyncStorage.removeItem(SESSION_KEY);
+}
+
+const REMEMBERED_LOGIN_KEY = 'beesky.rememberedLogin';
+
+/** Native: Keychain / Keystore (expo-secure-store, mã hoá). Web: localStorage, KHÔNG có mật khẩu. */
+export async function saveRememberedLogin(value: RememberedLogin): Promise<void> {
+  try {
+    if (Platform.OS === 'web') {
+      window.localStorage?.setItem(REMEMBERED_LOGIN_KEY, serializeRememberedLogin(value, false));
+      return;
+    }
+    await SecureStore.setItemAsync(REMEMBERED_LOGIN_KEY, serializeRememberedLogin(value));
+  } catch {
+    // Không lưu được → lần sau khách tự nhập, không chặn đăng nhập.
+  }
+}
+
+export async function loadRememberedLogin(): Promise<RememberedLogin | null> {
+  try {
+    if (Platform.OS === 'web') return parseRememberedLogin(window.localStorage?.getItem(REMEMBERED_LOGIN_KEY));
+    return parseRememberedLogin(await SecureStore.getItemAsync(REMEMBERED_LOGIN_KEY));
+  } catch {
+    return null;
+  }
+}
+
+/** Bỏ tick "Ghi nhớ" khi đăng nhập → xoá thông tin đã nhớ. */
+export async function clearRememberedLogin(): Promise<void> {
+  try {
+    if (Platform.OS === 'web') window.localStorage?.removeItem(REMEMBERED_LOGIN_KEY);
+    else await SecureStore.deleteItemAsync(REMEMBERED_LOGIN_KEY);
+  } catch {
+    // bỏ qua
+  }
 }
