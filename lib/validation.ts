@@ -2,6 +2,11 @@
 const PHONE_PATTERN = /^(0|\+?84)(3|5|7|8|9)\d{8}$/;
 
 export const MIN_PASSWORD_LENGTH = 6;
+/** Mật khẩu MỚI (đăng ký / đặt lại qua OTP) — khớp luật server `fn_portal_app_otp_xac_minh` (giống web NOXH). Đăng nhập vẫn nhận mật khẩu cũ 6 ký tự. */
+export const NEW_PASSWORD_MIN_LENGTH = 6;
+export const NEW_PASSWORD_MAX_LENGTH = 72;
+const NEW_PASSWORD_RANGE = `Mật khẩu phải từ ${NEW_PASSWORD_MIN_LENGTH} đến ${NEW_PASSWORD_MAX_LENGTH} ký tự`;
+const badNewPassword = (p: string) => p.trim().length < NEW_PASSWORD_MIN_LENGTH || p.trim().length > NEW_PASSWORD_MAX_LENGTH;
 
 /** Bỏ khoảng trắng, dấu chấm, gạch ngang và chuẩn hóa +84 → 0. */
 export function normalizePhone(value: string): string {
@@ -60,8 +65,7 @@ export function validateRegisterForm(values: RegisterFormValues): FormErrors<Reg
   const errors: FormErrors<RegisterField> = {};
   errors.phone = validatePhone(values.phone);
   if (!values.password) errors.password = 'Vui lòng nhập mật khẩu';
-  else if (values.password.length < MIN_PASSWORD_LENGTH)
-    errors.password = `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự`;
+  else if (badNewPassword(values.password)) errors.password = NEW_PASSWORD_RANGE;
   if (!values.confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
   else if (values.confirmPassword !== values.password) errors.confirmPassword = 'Mật khẩu nhập lại không khớp';
   if (!values.acceptTerms) errors.acceptTerms = 'Bạn cần đồng ý với điều khoản sử dụng';
@@ -70,6 +74,18 @@ export function validateRegisterForm(values: RegisterFormValues): FormErrors<Reg
 
 export function validateForgotForm(identifier: string): FormErrors<'identifier'> {
   return { identifier: validatePhone(identifier) };
+}
+
+export type ResetField = 'otp' | 'password' | 'confirmPassword';
+
+/** Quên mật khẩu bước 2: mã OTP + mật khẩu mới + nhập lại. */
+export function validateResetForm(values: Record<ResetField, string>, otpLength: number): FormErrors<ResetField> {
+  const errors: FormErrors<ResetField> = { otp: validateOtp(values.otp, otpLength) };
+  if (!values.password) errors.password = 'Vui lòng nhập mật khẩu mới';
+  else if (badNewPassword(values.password)) errors.password = NEW_PASSWORD_RANGE;
+  if (!values.confirmPassword) errors.confirmPassword = 'Vui lòng nhập lại mật khẩu mới';
+  else if (values.confirmPassword !== values.password) errors.confirmPassword = 'Mật khẩu nhập lại không khớp';
+  return errors;
 }
 
 export type ChangePasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';

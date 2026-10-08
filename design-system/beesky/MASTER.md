@@ -89,7 +89,7 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`tokens
 | `textOnBrand` (gray-900) trên xanh trời `#38BDF8` | 8.33:1 |
 | ~~Chữ trắng trên `#38BDF8`~~ | 2.14:1 ❌ không dùng |
 
-**Miễn trừ:** logo/wordmark "BeeSky" (WCAG 1.4.3 không áp dụng cho logotype); phần tử `disabled`.
+**Miễn trừ:** logo/wordmark "Beeland Plus" (WCAG 1.4.3 không áp dụng cho logotype); phần tử `disabled`.
 
 ---
 
@@ -175,6 +175,7 @@ Thẻ cần ảnh tràn góc: **cắt ảnh ở lớp riêng** (`imageWrap` bo g
 | `sizes.tabBar` | cao 54 · mỗi ô 64 · đệm 5 · blur 95 | Thanh tab kính nổi (mobile), chỉ icon — giống Beeland Sales |
 | `sizes.moneyCard.statMinWidth` | 120 | Cột số liệu trong thẻ tổng tiền (xuống dòng khi hẹp) |
 | `sizes.projectImage` | 184 | Ảnh dự án trên thẻ (ảnh thật, phủ gradient `overlay.imageScrim*`, chữ trắng đè ảnh) |
+| `sizes.qrCode` | 232 | Ảnh mã VietQR ở màn Thanh toán QR (`pages/pay.md`), trong khung trắng viền mảnh |
 | `sizes.roundImage` · `pickerList` · `formColumnMin` | 140 · 320 · 240 | Nhà ở xã hội: ảnh thẻ đợt · danh sách chọn tỉnh/xã · bề rộng tối thiểu một cột form 2 cột |
 | `sizes.lotteryDrum` | mobile 200 · wide 260 | Lồng cầu bốc thăm NOXH |
 | `layout.contentMaxWidth` / `sidebarWidth` | 1100 / 248 | [Dự án] |

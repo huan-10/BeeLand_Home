@@ -14,6 +14,7 @@ import {
   Pressable,
   Text,
   TextLink,
+  useToast,
   type FormErrorItem,
   type FormErrorSummaryHandle,
 } from '@/components/ui';
@@ -28,6 +29,7 @@ import { borderWidth, interactive, opacity, radius, semantic, spacing, toneColor
 
 export default function LoginScreen() {
   const { signIn, selectCompany } = useAuth();
+  const toast = useToast();
   const params = useLocalSearchParams<{ identifier?: string }>();
 
   const identifierRef = useRef<TextInput>(null);
@@ -96,8 +98,14 @@ export default function LoginScreen() {
     // Thành công: AuthContext đổi trạng thái → route guard chuyển vào Trang chủ.
   };
 
-  const chooseCompany = async (companyId: string) => {
-    await selectCompany(companyId);
+  const chooseCompany = async (companyId: string, customerId?: string) => {
+    try {
+      await selectCompany(companyId, customerId);
+    } catch (e) {
+      // Không chọn được hồ sơ (mạng lỗi…) → báo, giữ hộp chọn để thử lại.
+      toast.show(e instanceof Error && e.message ? e.message : 'Không chọn được hồ sơ. Vui lòng thử lại.', 'danger');
+      return;
+    }
     setCompanies(null);
   };
 
@@ -203,7 +211,7 @@ export default function LoginScreen() {
       <CompanyPickerDialog
         visible={!!companies}
         companies={companies ?? []}
-        description="Số điện thoại của bạn là khách hàng của nhiều chủ đầu tư. Chọn công ty muốn xem và quản lý — bạn có thể chuyển công ty bất cứ lúc nào trong mục Cá nhân."
+        description="Số điện thoại của bạn có nhiều hồ sơ khách hàng. Chọn hồ sơ muốn xem và quản lý — bạn có thể chuyển hồ sơ bất cứ lúc nào trong mục Cá nhân."
         onSelect={chooseCompany}
         onClose={() => setCompanies(null)}
       />

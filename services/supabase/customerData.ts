@@ -1,9 +1,12 @@
-import { inList, restGet, rpc, str } from './client';
-import { withServiceJwt } from './portal';
-import { onSessionChange, requireCustomerScope, type CustomerScope } from '../session';
+import { rpc, str } from './client';
+import { onSessionChange, requireCustomerScope, requirePortalToken, type CustomerScope } from '../session';
 import { ServiceError } from '../errors';
 
 /**
+ * Đọc THEO PHIÊN KHÁCH (2026-10-08, giai đoạn 2 bỏ tài khoản hệ thống): `fn_portal_app_hop_dong` / `fn_portal_app_lich_tt` /
+ * `fn_portal_app_phieu_thu` / `fn_portal_app_cong_ty` (`beeland/supabase/migrations/20261009200000_portal_app_du_lieu.sql`) bằng
+ * token phiên — server chỉ trả dữ liệu của hồ sơ đang xem; không đọc bảng bằng JWT tài khoản hệ thống nữa.
+ *
  * Dữ liệu giao dịch của KHÁCH ĐANG ĐĂNG NHẬP trên database dùng chung — y như app 2026
  * (`CustomerService.getCustomerTransactions`, `PaymentProgressService`) và web (`ContractScheduleService`,
  * `PgcCashVouchersTab`):
@@ -61,36 +64,19 @@ export function absFileUrl(path: unknown): string {
   return /^https?:\/\//i.test(s) ? s : FILE_SERVER + s.replace(/^\/+/, '');
 }
 
-/**
- * Ảnh dự án như app 2026: `cloud_catalogs` loại `du_an_anh` (item_code = ma_da_code, theo công ty) →
- * `anh_background` → `anh_icon`; không có thì `da_projects.image_url`.
- */
-async function attachProjectImages(jwt: string, companyId: string, projects: Record<string, ProjectRow>): Promise<void> {
-  const list = Object.values(projects);
-  const codes = uniq(list.map((p) => (p.ma_da_code == null ? null : String(p.ma_da_code))));
-  let byCode: Record<string, Record<string, unknown>> = {};
-  if (codes.length) {
-    try {
-      const rows = await restGet<{ item_code: string | null; raw: Record<string, unknown> | null }[]>(
-        `cloud_catalogs?select=item_code,raw&catalog_type=eq.du_an_anh&ma_ctdk_uid=eq.${encodeURIComponent(companyId)}` +
-          `&item_code=in.${encodeURIComponent(inList(codes))}`,
-        jwt,
-      );
-      byCode = Object.fromEntries((rows ?? []).filter((r) => r.item_code != null).map((r) => [String(r.item_code), r.raw ?? {}]));
-    } catch {
-      // Không đọc được ảnh → dùng ảnh dự phòng của giao diện.
-    }
-  }
-  for (const p of list) {
-    const anh = byCode[String(p.ma_da_code ?? '')] ?? {};
-    p.imageUrl = absFileUrl(anh.anh_background) || absFileUrl(anh.anh_icon) || absFileUrl(p.image_url);
-  }
-}
-
 export interface StatusRow {
   id: string;
   item_code: string | null;
   item_name: string | null;
+}
+
+/** Booking mới nhất của phiếu giữ chỗ (`cloud_bookings`, bỏ dòng LOCK) — số tiền + hạn giữ chỗ để thanh toán QR. */
+export interface BookingRow {
+  ma_pgc_id: string | null;
+  tien_giu_cho: number | null;
+  het_han_luc: string | null;
+  loai_ct: string | null;
+  created_at: string | null;
 }
 
 /** Một giao dịch của khách kèm thông tin tra cứu. */
@@ -99,6 +85,8 @@ export interface PgcRecord {
   product: ProductRow | null;
   project: ProjectRow | null;
   status: StatusRow | null;
+  /** Chỉ phiếu giữ chỗ đang chờ duyệt (mã 1). */
+  booking?: BookingRow | null;
 }
 
 /** Dòng `fn_contract_payment_schedule`. */
@@ -127,9 +115,6 @@ export interface VoucherRow {
   ky_hieu: string | null;
 }
 
-const PGC_COLUMNS =
-  'id,so_phieu_gc,giai_doan,gia_tri_hd,gia_tri_hd_sau_ck,tien_coc,da_thu,dien_tich,san_pham_id,project_id,trang_thai_id,khach_hang_id,ma_ctdk_uid,ngay_giu_cho,created_at,tt_hop_dong,lich_thanh_toan';
-
 /** Bộ nhớ đệm ngắn: Trang chủ / Hợp đồng / Thanh toán gọi cùng lúc nhiều service trên cùng dữ liệu. */
 const TTL_MS = 20_000;
 type Entry<T> = { at: number; value: Promise<T> };
@@ -156,43 +141,38 @@ function cached<T>(map: Map<string, Entry<T>>, key: string, load: () => Promise<
 
 const scopeKey = (s: CustomerScope) => `${s.companyId}:${s.customerId}`;
 
-async function lookup<T extends { id: string }>(jwt: string, table: string, select: string, ids: string[]): Promise<Record<string, T>> {
-  if (ids.length === 0) return {};
-  try {
-    const rows = await restGet<T[]>(`${table}?select=${select}&id=in.${encodeURIComponent(inList(ids))}`, jwt);
-    return Object.fromEntries((rows ?? []).map((r) => [r.id, r]));
-  } catch {
-    // Thiếu tên dự án / căn không chặn cả danh sách (như app 2026).
-    return {};
+type Envelope<T> = { data?: T; error?: string } | null;
+
+/** Kết quả `fn_portal_app_*`: lỗi `{ error }` → ServiceError (phiên hết hạn → UNAUTHORIZED). */
+function unwrap<T>(res: Envelope<T>, fallback: T): T {
+  if (res && typeof res === 'object' && typeof res.error === 'string' && res.error) {
+    throw new ServiceError(res.error, /hết hạn/i.test(res.error) ? 'UNAUTHORIZED' : 'NOT_FOUND');
   }
+  return res?.data ?? fallback;
 }
 
-const uniq = (values: (string | null)[]) => [...new Set(values.filter((v): v is string => !!v))];
+/** Một dòng `fn_portal_app_hop_dong`. */
+interface RecordRpcRow {
+  pgc: PgcRow;
+  product: ProductRow | null;
+  project: (ProjectRow & { anh_background?: string | null; anh_icon?: string | null }) | null;
+  status: StatusRow | null;
+  booking: BookingRow | null;
+}
 
 async function loadRecords(scope: CustomerScope): Promise<PgcRecord[]> {
-  return withServiceJwt(async (jwt) => {
-    const rows = await restGet<PgcRow[]>(
-      `cloud_pgc_phieu_giucho?select=${PGC_COLUMNS}` +
-        `&khach_hang_id=eq.${encodeURIComponent(scope.customerId)}` +
-        `&ma_ctdk_uid=eq.${encodeURIComponent(scope.companyId)}` +
-        `&deleted_at=is.null&order=created_at.desc&limit=200`,
-      jwt,
-    );
+  const rows = unwrap(await rpc<Envelope<RecordRpcRow[]>>('fn_portal_app_hop_dong', { p_token: requirePortalToken() }), []);
+  return (Array.isArray(rows) ? rows : [])
     // Lọc lại phía app: tuyệt đối không giữ dòng của khách / công ty khác.
-    const own = (rows ?? []).filter((r) => r.khach_hang_id === scope.customerId && r.ma_ctdk_uid === scope.companyId);
-    const [products, projects, statuses] = await Promise.all([
-      lookup<ProductRow>(jwt, 'bds_products', 'id,ky_hieu,ma_sp,so_tang,dien_tich_thong_thuy,dien_tich', uniq(own.map((r) => r.san_pham_id))),
-      lookup<ProjectRow>(jwt, 'da_projects', 'id,ten_da,dia_chi,ma_da_code,image_url', uniq(own.map((r) => r.project_id))),
-      lookup<StatusRow>(jwt, 'cloud_catalogs', 'id,item_code,item_name', uniq(own.map((r) => r.trang_thai_id))),
-    ]);
-    await attachProjectImages(jwt, scope.companyId, projects);
-    return own.map((row) => ({
-      row,
-      product: (row.san_pham_id && products[row.san_pham_id]) || null,
-      project: (row.project_id && projects[row.project_id]) || null,
-      status: (row.trang_thai_id && statuses[row.trang_thai_id]) || null,
+    .filter((r) => r?.pgc && r.pgc.khach_hang_id === scope.customerId && r.pgc.ma_ctdk_uid === scope.companyId)
+    .map(({ pgc, product, project, status, booking }) => ({
+      row: pgc,
+      product: product ?? null,
+      // Ảnh dự án như app 2026: cloud_catalogs du_an_anh → anh_background → anh_icon; không có thì da_projects.image_url.
+      project: project ? { ...project, imageUrl: absFileUrl(project.anh_background) || absFileUrl(project.anh_icon) || absFileUrl(project.image_url) } : null,
+      status: status ?? null,
+      booking: booking ?? null,
     }));
-  });
 }
 
 /** Mọi giao dịch (giữ chỗ / đặt cọc / hợp đồng) của khách đang đăng nhập. */
@@ -218,17 +198,15 @@ export async function requireOwnedPgc(pgcId: string): Promise<PgcRecord> {
 /** Lịch thanh toán từng đợt (đã có Đã thu / Còn lại) của một phiếu thuộc khách. */
 export async function getPgcSchedule(pgcId: string, force = false): Promise<ScheduleRpcRow[]> {
   const { row } = await requireOwnedPgc(pgcId);
-  const scope = requireCustomerScope();
   return cached(
     scheduleCache,
     pgcId,
-    () =>
-      withServiceJwt(async (jwt) => {
-        const rows = await rpc<ScheduleRpcRow[]>('fn_contract_payment_schedule', { p_ma_ctdk_uid: scope.companyId, p_pgc_id: row.id }, jwt).catch(
-          () => [] as ScheduleRpcRow[],
-        );
-        return Array.isArray(rows) ? rows : [];
-      }),
+    async () => {
+      const rows = await rpc<Envelope<ScheduleRpcRow[]>>('fn_portal_app_lich_tt', { p_token: requirePortalToken(), p_pgc_id: row.id })
+        .then((r) => unwrap(r, []))
+        .catch(() => [] as ScheduleRpcRow[]);
+      return Array.isArray(rows) ? rows : [];
+    },
     force,
   );
 }
@@ -236,31 +214,23 @@ export async function getPgcSchedule(pgcId: string, force = false): Promise<Sche
 /** Phiếu thu của một phiếu thuộc khách (tiền = phần thuộc phiếu này). */
 export async function getPgcVouchers(pgcId: string, force = false): Promise<VoucherRow[]> {
   const { row } = await requireOwnedPgc(pgcId);
-  const scope = requireCustomerScope();
   return cached(
     voucherCache,
     pgcId,
-    () =>
-      withServiceJwt(async (jwt) => {
-        const rows = await rpc<VoucherRow[]>('fn_cash_vouchers_by_pgc', { p_ma_ctdk_uid: scope.companyId, p_pgc_id: row.id, p_loai: 'THU' }, jwt);
-        return Array.isArray(rows) ? rows : [];
-      }),
+    async () => {
+      const rows = unwrap(await rpc<Envelope<VoucherRow[]>>('fn_portal_app_phieu_thu', { p_token: requirePortalToken(), p_pgc_id: row.id }), []);
+      return Array.isArray(rows) ? rows : [];
+    },
     force,
   );
 }
 
 /** Thông tin công ty (bên bán) của tài khoản đang đăng nhập. */
 export async function getSellerCompany(): Promise<{ ten_ct: string; dia_chi: string; dien_thoai: string; email: string } | null> {
-  const scope = requireCustomerScope();
+  requireCustomerScope();
   try {
-    return await withServiceJwt(async (jwt) => {
-      const rows = await restGet<Record<string, unknown>[]>(
-        `cloud_companies?select=ten_ct,dia_chi,dien_thoai,email&id=eq.${encodeURIComponent(scope.companyId)}&limit=1`,
-        jwt,
-      );
-      const r = rows?.[0];
-      return r ? { ten_ct: str(r.ten_ct), dia_chi: str(r.dia_chi), dien_thoai: str(r.dien_thoai), email: str(r.email) } : null;
-    });
+    const r = unwrap(await rpc<Envelope<Record<string, unknown> | null>>('fn_portal_app_cong_ty', { p_token: requirePortalToken() }), null);
+    return r ? { ten_ct: str(r.ten_ct), dia_chi: str(r.dia_chi), dien_thoai: str(r.dien_thoai), email: str(r.email) } : null;
   } catch {
     return null;
   }

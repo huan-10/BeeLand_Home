@@ -46,7 +46,7 @@ export function LinkCompanyDialog({ companies, onLink, onDismiss }: LinkCompanyD
       return;
     }
     const names = outcome.result.map((c) => c.companyName).filter(Boolean).join(', ');
-    toast.show(`Đã liên kết ${names || 'công ty mới'}. Chuyển công ty trong mục Cá nhân.`, 'success');
+    toast.show(`Đã liên kết ${names || 'công ty mới'}. Chuyển hồ sơ trong mục Cá nhân.`, 'success');
     setPassword('');
     setError(undefined);
   };

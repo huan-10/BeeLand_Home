@@ -1,8 +1,9 @@
 import { MOCK_NOXH_SITES } from '@/data/mock/noxh';
 import { DEMO_CREDENTIALS, MOCK_OTP, mockCustomerRecords, mockNoxhOnlyUsers, mockUsers } from '@/data/mock/user';
 import { addCompanies, missingFromSession, planCompanyLogins, sessionCompanies, sessionTokens, type CompanyLoginPlan } from '@/lib/companySession';
+import type { OtpPurpose } from '@/lib/appOtp';
 import { ACCOUNT_NOT_FOUND, WRONG_PASSWORD, loginRejectMessage, normalizePhone, parseLoginId } from '@/lib/validation';
-import type { AuthSession, CompanyOption, CompanySession, User } from '@/types';
+import type { AuthSession, CompanyOption, CompanySession, CustomerProfile, User } from '@/types';
 
 import { AUTH_BACKEND } from './config';
 import { ServiceError } from './errors';
@@ -10,17 +11,19 @@ import { clone, simulateLatency } from './mockLatency';
 import { mockNoxhToken } from './noxhService';
 import { str } from './supabase/client';
 import {
-  findCustomersByCccd,
-  findCustomersByPhone,
-  getCompanyNames,
+  appSignIn,
+  chooseProfile,
+  findNewCompaniesByToken,
   getNoxhSites,
-  getPortalAccount,
   listMyContracts,
+  listMyProfiles,
   noxhSessionAlive,
   portalLogin,
   portalLogout,
-  setPortalPassword,
+  sendAppOtp,
   siteLogin,
+  verifyAppOtp,
+  type AppSignInCompany,
   type CustomerRow,
   type PortalLoginRow,
 } from './supabase/portal';
@@ -130,6 +133,25 @@ async function mockConfirmRegistration(requestId: string, otp: string, password:
   }
 }
 
+async function mockStartPasswordReset(phone: string): Promise<RegistrationStart> {
+  await simulateLatency();
+  if (!mockAccounts.some((a) => samePhone(a.phone, phone))) {
+    throw new ServiceError('Số điện thoại chưa đăng ký tài khoản.', 'NOT_FOUND', 'phone');
+  }
+  const requestId = `otp-reset-${Date.now()}`;
+  mockOtpRequests.set(requestId, { phone: normalizePhone(phone), createdAt: Date.now(), attempts: 0 });
+  return { requestId, phone: normalizePhone(phone), otpLength: MOCK_OTP.length, resendIn: 60 };
+}
+
+async function mockConfirmPasswordReset(requestId: string, otp: string, password: string): Promise<void> {
+  await simulateLatency();
+  const req = mockOtpRequests.get(requestId);
+  if (!req) throw new ServiceError('Phiên xác nhận không hợp lệ. Vui lòng gửi lại mã.', 'UNKNOWN', 'otp');
+  if (otp !== MOCK_OTP) throw new ServiceError('Mã OTP không đúng.', 'UNAUTHORIZED', 'otp');
+  mockOtpRequests.delete(requestId);
+  for (const a of mockAccounts) if (samePhone(a.phone, req.phone)) a.password = password;
+}
+
 /** Phiên của một công ty: token hợp đồng (trừ tài khoản tự đăng ký NOXH) + token NOXH nếu công ty có website `mau4`. */
 const mockCompanySession = (a: MockAccount): CompanySession => {
   const slug = MOCK_NOXH_SITES[a.companyId];
@@ -215,20 +237,6 @@ async function mockConnectNoxh(session: AuthSession, password: string): Promise<
 
 /* ------------------------------------------------------------------ API (database dùng chung) ------------------------------------------------------------------ */
 
-/**
- * TẠM THỜI: OTP cố định "8888", chưa gửi Zalo (2026-10-02, chờ template Zalo của BeeSky).
- * TODO: sinh mã ngẫu nhiên và gửi qua Zalo ZNS (FPT FNS, failover SMS) như rork-home-stay-app.
- */
-const TEMP_OTP = '8888';
-const OTP_TTL_MS = 5 * 60 * 1000;
-const OTP_MAX_ATTEMPTS = 5;
-
-/** Phiên xác nhận OTP đang chờ: các hồ sơ khách hàng (mỗi công ty một hồ sơ) sẽ được tạo tài khoản. */
-const pendingRegistrations = new Map<
-  string,
-  { phone: string; customers: { companyId: string; customerId: string }[]; createdAt: number; attempts: number }
->();
-
 function userFromCustomer(c: CustomerRow | null, login: PortalLoginRow, companyName?: string): User {
   return {
     id: login.account_id,
@@ -242,214 +250,116 @@ function userFromCustomer(c: CustomerRow | null, login: PortalLoginRow, companyN
   };
 }
 
-async function apiStartRegistration(phone: string): Promise<RegistrationStart> {
-  const customers = await findCustomersByPhone(phone);
-  if (customers.length === 0) {
-    throw new ServiceError(
-      'Số điện thoại chưa có trong hệ thống khách hàng. Vui lòng dùng số đã đăng ký khi ký hợp đồng hoặc liên hệ chủ đầu tư.',
-      'NOT_FOUND',
-      'phone',
-    );
-  }
-  const accounts = await Promise.all(customers.map((c) => getPortalAccount(c.ma_ctdk, c.id)));
-  const plan = planCompanyLogins(customers, accounts, normalizePhone(phone));
-  // Đã có tài khoản đang hoạt động ở một công ty → đăng nhập (tự liên kết công ty mới với CÙNG mật khẩu).
-  // Không cho đăng ký lại, tránh mỗi công ty một mật khẩu khác nhau.
-  if (plan.login.length > 0) throw new ServiceError(ALREADY_REGISTERED, 'CONFLICT', 'phone');
-  if (plan.link.length === 0) {
-    throw new ServiceError('Tài khoản của số điện thoại này đang bị khoá. Vui lòng liên hệ chủ đầu tư.', 'CONFLICT', 'phone');
-  }
-
-  const requestId = `reg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  pendingRegistrations.set(requestId, {
-    phone: normalizePhone(phone),
-    customers: plan.link,
-    createdAt: Date.now(),
-    attempts: 0,
-  });
-  return { requestId, phone: normalizePhone(phone), otpLength: TEMP_OTP.length, resendIn: 60 };
+/** OTP thật (`fn_portal_app_otp_gui` / `_xac_minh`): server tìm hồ sơ theo SĐT, gửi mã qua ZNS → SMS và tự kiểm mã. */
+async function apiStartOtp(phone: string, purpose: OtpPurpose): Promise<RegistrationStart> {
+  const otp = await sendAppOtp(normalizePhone(phone), purpose);
+  return { requestId: otp.otpId, phone: normalizePhone(phone), otpLength: otp.length, resendIn: otp.resendIn };
 }
 
-async function apiConfirmRegistration(requestId: string, otp: string, password: string): Promise<void> {
-  const req = pendingRegistrations.get(requestId);
-  if (!req) throw new ServiceError('Phiên xác nhận không hợp lệ. Vui lòng gửi lại mã.', 'UNKNOWN', 'otp');
-  if (Date.now() - req.createdAt > OTP_TTL_MS) throw new ServiceError('Mã OTP đã hết hạn. Vui lòng gửi lại mã.', 'UNKNOWN', 'otp');
-  if (req.attempts >= OTP_MAX_ATTEMPTS) throw new ServiceError('Nhập sai quá nhiều lần. Vui lòng gửi lại mã.', 'UNKNOWN', 'otp');
-  if (otp.trim() !== TEMP_OTP) {
-    req.attempts += 1;
-    throw new ServiceError('Mã OTP không đúng.', 'UNAUTHORIZED', 'otp');
-  }
-  // Tên đăng nhập = SĐT đã chuẩn hoá (0xxxxxxxxx) cho mọi công ty, cùng một mật khẩu.
-  for (const c of req.customers) {
-    await setPortalPassword({ companyId: c.companyId, customerId: c.customerId, password, username: req.phone });
-  }
-  pendingRegistrations.delete(requestId);
-}
-
-/** Hồ sơ theo SĐT hoặc CCCD + kế hoạch đăng nhập / tự liên kết / đăng nhập website NOXH từng công ty. */
-async function loadCompanyPlan(
-  id: { kind: 'phone' | 'cccd'; value: string },
-): Promise<{ customers: CustomerRow[]; plan: CompanyLoginPlan; phone: string; sites: Record<string, string> }> {
-  // `sites` = slug website NOXH theo công ty.
-  const customers = id.kind === 'phone' ? await findCustomersByPhone(id.value) : await findCustomersByCccd(id.value);
-  const phone = id.kind === 'phone' ? id.value : normalizePhone(str(customers[0]?.dien_thoai || customers[0]?.di_dong));
-  const [accounts, sites] = await Promise.all([
-    Promise.all(customers.map((c) => getPortalAccount(c.ma_ctdk, c.id))),
-    getNoxhSites([...new Set(customers.map((c) => c.ma_ctdk))]),
-  ]);
-  return { customers, plan: planCompanyLogins(customers, accounts, phone, sites.byCompany, sites.byConfig), phone, sites: sites.byCompany };
+async function apiConfirmOtp(requestId: string, otp: string, password: string): Promise<void> {
+  await verifyAppOtp(requestId, otp.trim(), password);
 }
 
 /**
- * Đăng nhập các công ty đã có tài khoản; công ty có mật khẩu khác (đăng ký riêng trước đây) thì bỏ qua.
- * `rejected`: công ty `fn_portal_login` từ chối — có thể là tài khoản tự đăng ký qua website (R21) → thử `fn_portal_site_login`.
+ * Mọi hồ sơ cùng SĐT ở công ty của phiên (`fn_portal_app_ho_so_list`) — chung 1 tài khoản, khách chọn hồ sơ đang xem.
+ * Lỗi (server chưa có hàm, mạng…) → `undefined`: chỉ dùng hồ sơ của tài khoản, đăng nhập không bị chặn.
  */
-async function loginExisting(
-  targets: CompanyLoginPlan['login'],
-  password: string,
-): Promise<{ rows: PortalLoginRow[]; rejected: CompanyLoginPlan['login']; errors: string[] }> {
-  const attempts = await Promise.all(
-    targets.map((t) => portalLogin(t.companyId, t.username, password).then((row) => row, (e: unknown) => e)),
-  );
-  const network = attempts.find((a) => a instanceof ServiceError && a.code === 'NETWORK');
-  if (network) throw network;
-  return {
-    rows: attempts.filter((a): a is PortalLoginRow => !(a instanceof Error)),
-    rejected: targets.filter((_, i) => attempts[i] instanceof Error),
-    errors: attempts.flatMap((a) => (a instanceof Error ? [a.message] : [])),
-  };
-}
-
-/** Tự liên kết: tạo tài khoản (cùng SĐT, cùng mật khẩu) cho hồ sơ ở công ty chưa có tài khoản, rồi đăng nhập. */
-async function linkCompanies(targets: CompanyLoginPlan['link'], username: string, password: string): Promise<PortalLoginRow[]> {
-  const rows: PortalLoginRow[] = [];
-  for (const t of targets) {
-    try {
-      await setPortalPassword({ companyId: t.companyId, customerId: t.customerId, password, username });
-      rows.push(await portalLogin(t.companyId, username, password));
-    } catch (e) {
-      // Một công ty lỗi không chặn các công ty còn lại; lần sau sẽ thử liên kết lại.
-      if (__DEV__) console.log('[auth] tự liên kết công ty lỗi:', t.companyId, e);
-    }
-  }
-  return rows;
-}
-
-/** Tài khoản tự đăng ký qua website NOXH → `fn_portal_site_login`; sai mật khẩu bỏ qua, lỗi mạng ném. */
-async function loginSites(
-  targets: CompanyLoginPlan['siteLogin'],
-  password: string,
-): Promise<{ rows: { row: PortalLoginRow; slug: string }[]; errors: string[] }> {
-  const attempts = await Promise.all(
-    targets.map((t) => siteLogin(t.slug, t.login, password).then((row) => ({ row, slug: t.slug }), (e: unknown) => e)),
-  );
-  const network = attempts.find((a) => a instanceof ServiceError && a.code === 'NETWORK');
-  if (network) throw network;
-  return {
-    rows: attempts.filter((a): a is { row: PortalLoginRow; slug: string } => !(a instanceof Error)),
-    errors: attempts.flatMap((a) => (a instanceof Error ? [a.message] : [])),
-  };
-}
-
-/** Token NOXH cho công ty đã có phiên hợp đồng (cùng tài khoản, cùng mật khẩu) — lỗi thì bỏ qua (kết nối lại sau). */
-async function noxhTokenFor(slug: string | undefined, login: string, password: string): Promise<CompanySession['noxh']> {
-  if (!slug) return undefined;
+async function profilesFor(
+  row: PortalLoginRow,
+  companyName: string | undefined,
+): Promise<(CustomerProfile[] & { activeId: string | null }) | undefined> {
   try {
-    return { slug, token: (await siteLogin(slug, login, password)).session_token };
+    const { rows, activeId } = await listMyProfiles(row.session_token);
+    if (rows.length === 0) return undefined;
+    return Object.assign(
+      rows.map((c) => ({ customerId: c.id, user: userFromCustomer(c, row, companyName) })),
+      { activeId },
+    );
   } catch {
+    // Không có danh sách (migration chưa áp, mạng…) → giữ hồ sơ của tài khoản; lần đăng nhập sau thử lại.
     return undefined;
   }
 }
 
-async function toCompanySessions(
-  rows: PortalLoginRow[],
-  customers: CustomerRow[],
-  extra: { noxhOnly?: { row: PortalLoginRow; slug: string }[]; sites?: Record<string, string>; login?: string; password?: string } = {},
-): Promise<CompanySession[]> {
-  const siteRows = extra.noxhOnly ?? [];
-  const names = await getCompanyNames([...new Set([...rows, ...siteRows.map((x) => x.row)].map((r) => r.ma_ctdk))]);
-  const entry = (row: PortalLoginRow): Omit<CompanySession, 'token' | 'noxh' | 'noxhSite'> => ({
-    companyId: row.ma_ctdk,
-    companyName: names[row.ma_ctdk] ?? '',
-    userId: row.account_id,
-    customerId: row.khach_hang_id,
-    user: userFromCustomer(customers.find((c) => c.id === row.khach_hang_id) ?? null, row, names[row.ma_ctdk]),
-  });
-  const contract = await Promise.all(
-    rows.map(async (row) => ({
-      ...entry(row),
-      token: row.session_token,
-      noxh: extra.password ? await noxhTokenFor(extra.sites?.[row.ma_ctdk], row.username || extra.login || '', extra.password) : undefined,
-      noxhSite: extra.sites?.[row.ma_ctdk],
-    })),
+/** Kết quả `fn_portal_app_dang_nhap` → phiên từng công ty (+ danh sách hồ sơ); công ty có phiên hợp đồng đứng trước. */
+async function toCompanySessions(companies: AppSignInCompany[]): Promise<CompanySession[]> {
+  const sessions = await Promise.all(
+    companies.map(async (c): Promise<CompanySession> => {
+      const companyName = str(c.ten_ct);
+      const row: PortalLoginRow = {
+        session_token: c.token ?? c.noxh_token ?? '',
+        account_id: c.account_id,
+        khach_hang_id: c.khach_hang_id,
+        ma_ctdk: c.company_id,
+        username: c.username,
+        email: null,
+        ten_kh: null,
+        di_dong: null,
+        ma_so_kh: null,
+      };
+      const profiles = c.token ? await profilesFor(row, companyName) : undefined;
+      const active = profiles?.find((p) => p.customerId === profiles.activeId);
+      return {
+        companyId: c.company_id,
+        companyName,
+        userId: c.account_id,
+        customerId: active?.customerId ?? c.khach_hang_id,
+        accountCustomerId: c.khach_hang_id,
+        user: active?.user ?? userFromCustomer(c.khach_hang, row, companyName),
+        ...(profiles && profiles.length > 1 ? { profiles: profiles.map(({ customerId, user }) => ({ customerId, user })) } : {}),
+        ...(c.username ? { loginName: c.username } : {}),
+        ...(c.token ? { token: c.token } : {}),
+        ...(c.noxh_slug ? { noxhSite: c.noxh_slug } : {}),
+        ...(c.noxh_slug && c.noxh_token ? { noxh: { slug: c.noxh_slug, token: c.noxh_token } } : {}),
+      };
+    }),
   );
-  return [...contract, ...siteRows.map(({ row, slug }) => ({ ...entry(row), noxh: { slug, token: row.session_token }, noxhSite: slug }))];
+  return [...sessions.filter((c) => c.token), ...sessions.filter((c) => !c.token)];
 }
 
 async function apiLogin(identifier: string, password: string): Promise<LoginResult> {
-  const id = parseLoginId(identifier);
-  if (!id) throw new ServiceError('Nhập số điện thoại 10 số hoặc CCCD 12 số', 'UNKNOWN', 'identifier');
-  const { customers, plan, phone, sites } = await loadCompanyPlan(id);
-  if (plan.login.length === 0 && plan.siteLogin.length === 0) {
-    throw new ServiceError(ACCOUNT_NOT_FOUND, 'NOT_FOUND', 'identifier');
-  }
-  const [{ rows, rejected, errors }, sites1] = await Promise.all([loginExisting(plan.login, password), loginSites(plan.siteLogin, password)]);
-  const siteRows = sites1.rows;
-  // fn_portal_login từ chối mà công ty có website NOXH → có thể là tài khoản tự đăng ký (máy chủ không trả nguồn) → thử site login.
-  const fallback = rejected.flatMap((t) => (sites[t.companyId] ? [{ companyId: t.companyId, customerId: t.customerId, slug: sites[t.companyId], login: t.username }] : []));
-  const sites2 = await loginSites(fallback, password);
-  siteRows.push(...sites2.rows);
-  // Tài khoản đã có (kiểm ở trên) mà mọi lần đăng nhập bị từ chối → sai mật khẩu (hoặc khoá tạm), không báo "sai tài khoản".
-  if (rows.length === 0 && siteRows.length === 0) {
-    throw new ServiceError(loginRejectMessage([...errors, ...sites1.errors, ...sites2.errors]), 'UNAUTHORIZED', 'password');
-  }
-  // Mật khẩu đúng ở công ty có tài khoản hợp đồng → tự liên kết hồ sơ ở công ty chưa có tài khoản.
-  if (rows.length > 0 && phone) rows.push(...(await linkCompanies(plan.link, phone, password)));
-  return buildSession(phone, await toCompanySessions(rows, customers, { noxhOnly: siteRows, sites, login: phone, password }));
+  if (!parseLoginId(identifier)) throw new ServiceError('Nhập số điện thoại 10 số hoặc CCCD 12 số', 'UNKNOWN', 'identifier');
+  const { phone, companies } = await appSignIn(identifier.trim(), password);
+  return buildSession(phone, await toCompanySessions(companies));
 }
 
 async function apiFindNewCompanies(session: AuthSession): Promise<CompanyOption[]> {
-  const phone = sessionPhone(session);
-  if (!phone) return [];
-  const { customers, plan } = await loadCompanyPlan({ kind: 'phone', value: phone });
-  const missing = missingFromSession(plan, sessionCompanies(session).map((c) => c.companyId));
-  const targets = [...missing.login, ...missing.link];
-  if (targets.length === 0) return [];
-  const names = await getCompanyNames([...new Set(targets.map((t) => t.companyId))]);
-  return targets.map((t) => {
-    const c = customers.find((x) => x.id === t.customerId);
-    return {
-      companyId: t.companyId,
-      companyName: names[t.companyId] ?? '',
-      customerName: str(c?.ten_kh || c?.ten_cong_ty),
-      customerCode: str(c?.ma_so_kh),
-    };
-  });
+  const companies = sessionCompanies(session);
+  const token = session.token ?? companies.find((c) => c.token)?.token;
+  if (!token) return [];
+  return findNewCompaniesByToken(token, companies.map((c) => c.companyId));
 }
 
+/** Liên kết công ty mới: đăng nhập lại trên server bằng SĐT của phiên + mật khẩu khách vừa nhập; chỉ giữ công ty mới. */
 async function apiLinkNewCompanies(session: AuthSession, password: string): Promise<LinkResult> {
   const phone = sessionPhone(session);
-  if (!session.companyId || !session.customerId || !phone) {
-    throw new ServiceError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'UNAUTHORIZED');
+  if (!phone) throw new ServiceError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', 'UNAUTHORIZED');
+  // Kiểm mật khẩu ở công ty đang xem trước (1 lượt sai nếu gõ nhầm) — rồi mới đăng nhập lại mọi công ty trên server.
+  const active = sessionCompanies(session).find((c) => c.companyId === session.companyId);
+  if (session.companyId) {
+    let check: PortalLoginRow;
+    try {
+      check = await portalLogin(session.companyId, active?.loginName || phone, password);
+    } catch (e) {
+      if (e instanceof ServiceError && e.code === 'NETWORK') throw e;
+      throw new ServiceError(loginRejectMessage([e instanceof Error ? e.message : '']), 'UNAUTHORIZED', 'password');
+    }
+    // Phiên vừa tạo chỉ để kiểm tra mật khẩu → huỷ ngay.
+    void portalLogout(check.session_token).catch(() => undefined);
   }
-  // Xác minh mật khẩu bằng tài khoản của công ty đang xem (tên đăng nhập có thể khác SĐT nếu nhân viên tạo trên web).
-  const current = await getPortalAccount(session.companyId, session.customerId);
-  let check: PortalLoginRow;
+  let result: Awaited<ReturnType<typeof appSignIn>>;
   try {
-    check = await portalLogin(session.companyId, current?.username || phone, password);
+    result = await appSignIn(phone, password);
   } catch (e) {
     if (e instanceof ServiceError && e.code === 'NETWORK') throw e;
-    throw new ServiceError('Mật khẩu không đúng.', 'UNAUTHORIZED', 'password');
+    throw new ServiceError(e instanceof ServiceError && e.field === 'password' ? e.message : 'Chưa liên kết được công ty mới. Vui lòng thử lại sau.', 'UNAUTHORIZED', 'password');
   }
-  // Phiên vừa tạo chỉ để kiểm tra mật khẩu → huỷ ngay.
-  void portalLogout(check.session_token).catch(() => undefined);
-
-  const { customers, plan, sites } = await loadCompanyPlan({ kind: 'phone', value: phone });
-  const missing = missingFromSession(plan, sessionCompanies(session).map((c) => c.companyId));
-  const rows = [...(await loginExisting(missing.login, password)).rows, ...(await linkCompanies(missing.link, phone, password))];
-  const siteRows = (await loginSites(missing.siteLogin, password)).rows;
-  if (rows.length === 0 && siteRows.length === 0) throw new ServiceError('Chưa liên kết được công ty mới. Vui lòng thử lại sau.', 'UNKNOWN');
-  const entries = await toCompanySessions(rows, customers, { noxhOnly: siteRows, sites, login: phone, password });
+  const known = new Set(sessionCompanies(session).map((c) => c.companyId));
+  // Phiên vừa tạo ở công ty đã có trong phiên là thừa → huỷ ngay.
+  const extra = result.companies.filter((c) => known.has(c.company_id)).flatMap((c) => [c.token, c.noxh_token]);
+  extra.forEach((t) => t && void portalLogout(t).catch(() => undefined));
+  const entries = await toCompanySessions(result.companies.filter((c) => !known.has(c.company_id)));
+  if (entries.length === 0) throw new ServiceError('Chưa liên kết được công ty mới. Vui lòng thử lại sau.', 'UNKNOWN');
   return { session: addCompanies(session, entries), added: entries.map(toOption) };
 }
 
@@ -463,16 +373,26 @@ export const demoAccountHint: { phone: string; password: string } | null =
   AUTH_BACKEND === 'mock' ? { phone: DEMO_CREDENTIALS.phone, password: DEMO_CREDENTIALS.password } : null;
 
 /**
- * Đăng ký bước 1: SĐT phải có trong hồ sơ khách hàng (cloud_customers.dien_thoai, mọi công ty) và chưa có tài khoản;
- * hợp lệ thì gửi OTP (tạm thời: mã cố định 8888, chưa gửi Zalo).
+ * Đăng ký bước 1: SĐT phải có trong hồ sơ khách hàng (mọi công ty) và chưa có tài khoản — server kiểm, gửi OTP 6 số qua Zalo (ZNS → SMS).
+ * `requestId` = id mã (`otp_id`).
  */
 export async function startRegistration(phone: string): Promise<RegistrationStart> {
-  return AUTH_BACKEND === 'mock' ? mockStartRegistration(phone) : apiStartRegistration(phone);
+  return AUTH_BACKEND === 'mock' ? mockStartRegistration(phone) : apiStartOtp(phone, 'DANG_KY');
 }
 
-/** Đăng ký bước 2: đúng OTP thì tạo tài khoản (cloud_portal_accounts) với mật khẩu đã nhập ở bước 1. */
+/** Đăng ký bước 2: server kiểm OTP rồi tạo tài khoản (mọi công ty có hồ sơ chưa có tài khoản) với mật khẩu đã nhập ở bước 1. */
 export async function confirmRegistration(requestId: string, otp: string, password: string): Promise<void> {
-  return AUTH_BACKEND === 'mock' ? mockConfirmRegistration(requestId, otp, password) : apiConfirmRegistration(requestId, otp, password);
+  return AUTH_BACKEND === 'mock' ? mockConfirmRegistration(requestId, otp, password) : apiConfirmOtp(requestId, otp, password);
+}
+
+/** Quên mật khẩu bước 1: SĐT phải đã đăng ký tài khoản (server báo rõ nếu chưa), gửi OTP qua Zalo. */
+export async function startPasswordReset(phone: string): Promise<RegistrationStart> {
+  return AUTH_BACKEND === 'mock' ? mockStartPasswordReset(phone) : apiStartOtp(phone, 'QUEN_MK');
+}
+
+/** Quên mật khẩu bước 2: đúng OTP → đặt mật khẩu mới cho tài khoản ở mọi công ty có SĐT này, mở khoá và huỷ phiên cũ. */
+export async function confirmPasswordReset(requestId: string, otp: string, password: string): Promise<void> {
+  return AUTH_BACKEND === 'mock' ? mockConfirmPasswordReset(requestId, otp, password) : apiConfirmOtp(requestId, otp, password);
 }
 
 /**
@@ -507,7 +427,10 @@ export async function linkNewCompanies(session: AuthSession, password: string): 
 export async function connectNoxh(session: AuthSession, password: string): Promise<AuthSession> {
   if (AUTH_BACKEND === 'mock') return mockConnectNoxh(session, password);
   const companies = sessionCompanies(session);
-  const sites = (await getNoxhSites(companies.map((c) => c.companyId))).byCompany;
+  // Website NOXH lưu trong phiên lúc đăng nhập; phiên cũ chưa có thì tra (tạm, bỏ ở giai đoạn 2).
+  const sites: Record<string, string> = Object.fromEntries(companies.flatMap((c) => (c.noxhSite ? [[c.companyId, c.noxhSite]] : [])));
+  const unknown = companies.filter((c) => !c.noxhSite).map((c) => c.companyId);
+  if (unknown.length > 0) Object.assign(sites, (await getNoxhSites(unknown)).byCompany);
   const phone = sessionPhone(session);
   // Chỉ thử các công ty có website NOXH mà chưa có token; kết quả tính trên đúng các công ty này.
   const attempted = companies.filter((c) => !c.noxh && sites[c.companyId]);
@@ -517,9 +440,8 @@ export async function connectNoxh(session: AuthSession, password: string): Promi
     companies.map(async (c) => {
       const slug = sites[c.companyId];
       if (c.noxh || !slug) return slug ? { ...c, noxhSite: slug } : c;
-      const account = await getPortalAccount(c.companyId, c.customerId).catch(() => null);
       try {
-        const row = await siteLogin(slug, account?.username || phone, password);
+        const row = await siteLogin(slug, c.loginName || phone, password);
         connected += 1;
         return { ...c, noxh: { slug, token: row.session_token }, noxhSite: slug };
       } catch (e) {
@@ -530,13 +452,6 @@ export async function connectNoxh(session: AuthSession, password: string): Promi
   );
   if (attempted.length > 0 && connected === 0) throw new ServiceError('Mật khẩu không đúng.', 'UNAUTHORIZED', 'password');
   return { ...session, companies: next };
-}
-
-/** Gửi hướng dẫn đặt lại mật khẩu qua SMS. Không tiết lộ tài khoản có tồn tại hay không. */
-export async function requestPasswordReset(_phone: string): Promise<{ channel: 'sms' }> {
-  // TODO: thay bằng gọi API/database thật (ví dụ POST /auth/forgot-password)
-  await simulateLatency();
-  return { channel: 'sms' };
 }
 
 export interface ChangePasswordResult {
@@ -554,6 +469,17 @@ export async function changePassword(userId: string, currentPassword: string, _n
     throw new ServiceError('Mật khẩu hiện tại không đúng.', 'UNAUTHORIZED', 'currentPassword');
   }
   return { status: 'unavailable', message: 'Đổi mật khẩu sẽ hoạt động khi ứng dụng kết nối hệ thống. Mật khẩu của bạn chưa thay đổi.' };
+}
+
+/**
+ * Chọn hồ sơ đang xem ở một công ty: đặt cho phiên server (`fn_portal_app_chon_ho_so`) để yêu cầu / thanh toán online theo
+ * cùng hồ sơ. Gọi TRƯỚC `withActiveCompany`. Hồ sơ đang là hồ sơ của công ty / phiên chỉ NOXH / mock → không gọi server.
+ */
+export async function selectProfile(session: AuthSession, companyId: string, customerId: string): Promise<void> {
+  if (AUTH_BACKEND === 'mock') return;
+  const entry = sessionCompanies(session).find((c) => c.companyId === companyId);
+  if (!entry?.token || entry.customerId === customerId) return;
+  await chooseProfile(entry.token, customerId);
 }
 
 export async function logout(session: AuthSession | null): Promise<void> {

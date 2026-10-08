@@ -38,19 +38,23 @@ Cập nhật: 2026-10-05 (một SĐT ở nhiều công ty: tự liên kết + ch
 
 ## Luồng
 
-**Đăng ký** (`app/register.tsx` → `startRegistration` / `confirmRegistration`)
-1. **Bước 1:** khách nhập SĐT và mật khẩu.
-   - App đọc `cloud_customers` với `dien_thoai` trùng SĐT (dùng LIKE `*3*3*9*…` rồi lọc lại bằng `normalizePhone`).
-   - Với từng hồ sơ, gọi `fn_portal_account_get(ma_ctdk, id)` để biết đã có tài khoản chưa.
-   - Không có hồ sơ → "chưa có trong hệ thống khách hàng".
-   - **Đã có tài khoản đang hoạt động ở bất kỳ công ty nào** → chặn: "Số điện thoại đã có tài khoản. Vui lòng đăng nhập — hồ sơ ở công ty mới sẽ được tự liên kết." (từ 2026-10-05; trước đó app cho đăng ký thêm công ty mới với mật khẩu khác → mỗi công ty một mật khẩu).
-   - Chỉ có tài khoản bị khoá, không còn hồ sơ nào để tạo → "Tài khoản … đang bị khoá. Vui lòng liên hệ chủ đầu tư".
-   - Hợp lệ → sang bước OTP.
-2. **Bước 2:** nhập OTP đúng → với mỗi hồ sơ chưa có tài khoản, gọi **`fn_portal_account_set_password(ma_ctdk, khach_hang_id, password, username = SĐT chuẩn hoá)`**.
-   - Đây là hàm có sẵn mà nhân viên dùng trên web. Nó tạo dòng `cloud_portal_accounts` với mật khẩu băm bcrypt trên server.
-   - Xong → về màn Đăng nhập, điền sẵn SĐT.
+**Đăng ký** (`app/register.tsx` → `startRegistration` / `confirmRegistration`) — **OTP thật từ 2026-10-08**
+Server tự kiểm mọi thứ (`beeland/supabase/migrations/20261009170000_portal_app_otp.sql`, bảng `cloud_portal_app_otp`, test `beeland/supabase/tests/portal_app_otp.sql`); app chỉ gọi 2 RPC anon (`services/supabase/portal.ts` → `sendAppOtp` / `verifyAppOtp`, đọc kết quả ở `lib/appOtp.ts`).
+1. **Bước 1:** khách nhập SĐT + mật khẩu (6–72 ký tự, `NEW_PASSWORD_MIN_LENGTH`; server `20261009170100_portal_app_otp_mk6`) → **`fn_portal_app_otp_gui(sdt, 'DANG_KY')`**:
+   - Tìm `cloud_customers` theo `dien_thoai` / `di_dong` (chuẩn hoá) ở mọi công ty. Không có → "Số điện thoại chưa có trong hệ thống khách hàng…".
+   - Đã có tài khoản đang hoạt động ở bất kỳ công ty nào → "Số điện thoại đã có tài khoản. Vui lòng đăng nhập — hồ sơ ở công ty mới sẽ được tự liên kết.". Chỉ còn tài khoản khoá → "…đang bị khoá…".
+   - SĐT đã là `username`/`di_dong` của tài khoản **khách khác** cùng công ty ở mọi công ty cần tạo → "Số điện thoại đã dùng cho tài khoản khác, vui lòng liên hệ chủ đầu tư" (ca 0913994696 ngày 2026-10-08 — trước đây lỗi `duplicate key … ux_portal_accounts_username` lúc xác nhận).
+   - Hợp lệ → mã 6 số ngẫu nhiên (bcrypt, hạn 5 phút), xếp tin `OTP_DANG_KY` vào hàng đợi C2 (`_tb_them`: ZNS → SMS) bằng kênh của công ty đầu tiên có kênh; không công ty nào có kênh → "Chủ đầu tư chưa cấu hình gửi tin xác thực…". Giới hạn: cách nhau 60 giây, tối đa 5 mã / SĐT / giờ; gửi mã mới huỷ mã cũ.
+2. **Bước 2:** nhập mã → **`fn_portal_app_otp_xac_minh(otp_id, mã, mật khẩu)`**: sai 5 lần huỷ mã; đúng → tạo `cloud_portal_accounts` (`username` = SĐT, `pham_vi = 'TAT_CA'`, `phone_verified_at`) cho mỗi công ty chưa có tài khoản (hồ sơ tạo sớm nhất). Xong → về màn Đăng nhập, điền sẵn SĐT.
+
+**Quên mật khẩu** (`app/forgot-password.tsx` → `startPasswordReset` / `confirmPasswordReset`, 2026-10-08)
+1. SĐT → `fn_portal_app_otp_gui(sdt, 'QUEN_MK')`: chưa có tài khoản → **báo rõ** "Số điện thoại chưa đăng ký tài khoản." (màn kèm link Đăng ký); chỉ tài khoản khoá → "…đang bị khoá…"; còn lại gửi mã `OTP_QUEN_MK`.
+2. Mã + mật khẩu mới + nhập lại → `fn_portal_app_otp_xac_minh`: đặt mật khẩu mới cho tài khoản đang hoạt động ở **mọi công ty** có hồ sơ khớp SĐT **và chính tài khoản dùng SĐT này** (`username` hoặc `di_dong`) — SĐT người thân/sale ghi trên hồ sơ không lấy được tài khoản; `failed_count = 0`, mở khoá, xoá mọi phiên cũ. Không ghi `phone_verified_at` (giữ chính sách quên MK của web). Trần chống bơm tin: `tb_cau_hinh_he_thong.tran_otp_cong_ty_gio` mã / giờ / công ty gửi (mặc định 200).
+3. Xong → nút Đăng nhập (điền sẵn SĐT).
 
 **Đăng nhập** (`app/login.tsx` → `login` → `apiLogin`)
+
+> **Từ 2026-10-08 (giai đoạn 1 bỏ tài khoản hệ thống):** cả luồng dưới đây chạy **trên server** trong một hàm anon **`fn_portal_app_dang_nhap(p_login, p_password)`** (`beeland/supabase/migrations/20261009190000_portal_app_dang_nhap.sql`, test `supabase/tests/portal_app_dang_nhap.sql`). App (`services/supabase/portal.ts` → `appSignIn`) không còn tra `cloud_customers`, `fn_portal_account_get`, tên công ty bằng JWT tài khoản hệ thống, và **không còn gọi `fn_portal_account_set_password`** (tự liên kết làm trên server, chỉ sau khi mật khẩu đúng). Lỗi: `ma = KHONG_CO_TAI_KHOAN` → ô SĐT/CCCD; `SAI_MAT_KHAU` → `loginRejectMessage(errors)` ô mật khẩu. Dò công ty mới: `fn_portal_app_cong_ty_moi(token, công ty đã có)`; liên kết công ty mới: gọi lại `fn_portal_app_dang_nhap` bằng SĐT phiên + mật khẩu, chỉ giữ công ty mới, huỷ phiên thừa. Kết nối NOXH dùng `noxhSite` + `loginName` lưu trong phiên. Mô tả các bước bên dưới vẫn đúng về nghiệp vụ (nay là logic của hàm server). Giai đoạn 2 (đọc dữ liệu theo phiên) cũng đã xong — xem mục "App KHÔNG còn tài khoản hệ thống".
 
 Một SĐT có thể là khách của **nhiều công ty** (mỗi công ty một hồ sơ `cloud_customers`). Khách chỉ nhập mật khẩu **một lần**, app đăng nhập ở mọi công ty.
 1. Tìm mọi hồ sơ khách hàng theo SĐT, lấy tài khoản cổng của từng hồ sơ (`fn_portal_account_get`). Chia việc bằng `planCompanyLogins` (`lib/companySession.ts`):
@@ -58,15 +62,18 @@ Một SĐT có thể là khách của **nhiều công ty** (mỗi công ty một
    - công ty **chưa có** tài khoản → tự liên kết (bước 3);
    - mỗi công ty tối đa một phiên; tài khoản **bị khoá** → bỏ qua công ty đó (không tự mở khoá, không tạo tài khoản thứ hai).
    - Không công ty nào có tài khoản → gợi ý "Đăng ký".
-2. Gọi **`fn_portal_login(company_id, username, password)`** (anon, giống web) ở mọi công ty đã có tài khoản → `session_token` (7 ngày).
+2. Gọi **`fn_portal_app_login(company_id, username, password)`** (anon) ở mọi công ty đã có tài khoản → `session_token` (7 ngày).
+   - 2026-10-07: `fn_portal_login` cũ bị thu quyền anon (`20261008180300_revoke_fn_portal_login`, S-M10 — không khoá khi sai) → app báo `permission denied for function fn_portal_login`. Thay bằng `fn_portal_app_login` (`beeland/supabase/migrations/20261009160000_portal_app_login.sql`): cùng phạm vi tài khoản (TAT_CA, không tự đăng ký qua website, phiên không gắn website), **sai 5 lần → khoá 15 phút**, lỗi trả `{ error }`. Web không dùng hàm này.
    - Sai ở mọi công ty → "Số điện thoại hoặc mật khẩu không đúng". Công ty có mật khẩu khác (đăng ký riêng trước đây) → bỏ qua công ty đó.
-3. **Tự liên kết** (chỉ khi mật khẩu đã đúng ở ít nhất một công ty): hồ sơ ở công ty chưa có tài khoản → `fn_portal_account_set_password` (username = SĐT chuẩn hoá, cùng mật khẩu) rồi `fn_portal_login`.
+3. **Tự liên kết** (chỉ khi mật khẩu đã đúng ở ít nhất một công ty): hồ sơ ở công ty chưa có tài khoản → `fn_portal_account_set_password` (username = SĐT chuẩn hoá, cùng mật khẩu) rồi `fn_portal_app_login`.
    - Ví dụ 2026-10-05: `0859021385` có hồ sơ ở **Công ty BRG** (KH-89348, đã có tài khoản) và **MSR** (KH-89349, thêm 05/10 sau khi đã có tài khoản BRG). Trước đây app chỉ thấy BRG. Nay lần đăng nhập tiếp theo tự tạo tài khoản MSR.
    - Một công ty lỗi không chặn đăng nhập các công ty khác; lần sau sẽ thử lại.
 4. Phiên (`AuthSession`) giữ `companies`: phiên của từng công ty (token, tài khoản, hồ sơ khách, tên công ty từ `cloud_companies.ten_ct`). Các trường `token` / `companyId` / `customerId` / `user` là của **công ty đang xem**.
    - **1 công ty** → vào app luôn.
-   - **Từ 2 công ty** → modal **"Chọn công ty"** (`CompanyPickerDialog`), chọn xong vào app ngay, không gọi server thêm.
-- **Chuyển công ty**: tab Cá nhân → "Chuyển công ty" (chỉ hiện khi có từ 2 công ty) → cùng modal. `selectCompany` đổi phiên đang xem (`withActiveCompany`), xoá bộ nhớ đệm dữ liệu (`onSessionChange`) và dựng lại các tab (`key` theo công ty ở `app/(app)/_layout.tsx`) → hợp đồng, thanh toán, phiếu thu, thông báo của hồ sơ ở công ty mới.
+   - **Hồ sơ khách hàng (2026-10-08):** mỗi công ty 1 tài khoản; công ty có nhiều hồ sơ `cloud_customers` cùng SĐT vẫn 1 tài khoản. Sau khi có phiên, app gọi **`fn_portal_app_ho_so_list(token)`** (hồ sơ cùng công ty + cùng SĐT tài khoản) → `CompanySession.profiles`; phiên theo hồ sơ server đang xem (`dang_xem`). Lỗi (server chưa có hàm) → chỉ hồ sơ của tài khoản.
+   - **1 hồ sơ** → vào app luôn. **Từ 2 hồ sơ** (mọi công ty) → modal **"Chọn hồ sơ khách hàng"** (`CompanyPickerDialog`, nhóm theo công ty, mỗi dòng "tên · mã KH · công ty").
+   - Chọn hồ sơ → **`fn_portal_app_chon_ho_so(token, khach_hang_id)`** (server kiểm cùng công ty + cùng SĐT, ghi `cloud_portal_sessions.khach_hang_id`) rồi `withActiveCompany(session, companyId, customerId)`. `_portal_session` trả hồ sơ của phiên (không có thì của tài khoản) → yêu cầu, thanh toán online theo hồ sơ đang chọn; hợp đồng / thanh toán / phiếu thu / bàn giao app lọc theo `customerId`. Phiên web không đặt cột → web không đổi. Migration `beeland/supabase/migrations/20261009180000_portal_app_chon_ho_so.sql` (áp bằng `supabase_admin` — bảng phiên thuộc role này).
+- **Chuyển hồ sơ**: tab Cá nhân → "Chuyển hồ sơ" (chỉ hiện khi có từ 2 hồ sơ) → cùng modal. `selectCompany` đổi phiên đang xem (`withActiveCompany`), xoá bộ nhớ đệm dữ liệu (`onSessionChange`) và dựng lại các tab (`key` theo công ty ở `app/(app)/_layout.tsx`) → hợp đồng, thanh toán, phiếu thu, thông báo của hồ sơ ở công ty mới.
 - Mở lại app: nhớ công ty đang xem; kiểm tra token bằng `fn_portal_my_contracts`; hết hạn thì về màn đăng nhập. Phiên lưu trước 2026-10-05 (không có `companies`) vẫn dùng được, chỉ không có mục chuyển công ty tới lần đăng nhập sau.
 - Đăng xuất: `fn_portal_logout(token)` cho phiên của **mọi** công ty.
 
@@ -79,12 +86,9 @@ Một SĐT có thể là khách của **nhiều công ty** (mỗi công ty một
 - **Hướng lâu dài (cần sửa server, chưa làm vì DB chỉ đọc):** khi nhân viên thêm khách có SĐT đã có tài khoản cổng, server tự tạo tài khoản ở công ty mới bằng `password_hash` sẵn có → app không phải hỏi lại mật khẩu.
 
 ## ⚠ Cần biết
-- **OTP tạm thời cố định `8888`**, sinh và kiểm ngay trong app (giống cách rork làm), chưa gửi Zalo. TODO trong `services/authService.ts` (`TEMP_OTP`).
-- **Tài khoản hệ thống nằm trong app:** biến `EXPO_PUBLIC_*` được đóng gói vào bản build, ai giải nén app cũng đọc được.
-  - Nên dùng một tài khoản riêng, quyền tối thiểu, đổi mật khẩu định kỳ.
-  - Hướng an toàn lâu dài: edge function `portal-auth` + migration đã viết sẵn trong `../beeland` (`supabase/functions/portal-auth`, `supabase/migrations/20261002120000_portal_phone_register.sql`). Hai file này chưa deploy và hiện không dùng.
-  - Khi chuyển sang hướng đó, OTP cũng do server kiểm.
-- `AUTH_BACKEND = 'mock'` (`services/config.ts`) để chạy offline với dữ liệu giả: OTP `8888`, demo `0901 234 567` / `123456` (khách của Sunshine Group, còn có hồ sơ BlueSky Land chưa liên kết → đăng nhập tự liên kết rồi hỏi chọn công ty).
+- **OTP thật** (2026-10-08): server sinh, gửi và kiểm mã (mục Đăng ký / Quên mật khẩu ở trên). Thử thật cần SĐT có hồ sơ ở công ty đã cấu hình kênh ZNS/SMS (BRG có). Migration phải được áp lên server trước khi dùng bản app này.
+- **App KHÔNG còn tài khoản hệ thống (2026-10-08):** đăng nhập (`fn_portal_app_dang_nhap`), dò/liên kết công ty mới, hồ sơ (`fn_portal_app_ho_so_list` / `_chon_ho_so`), hợp đồng / lịch thanh toán / phiếu thu / công ty bán / bàn giao (`fn_portal_app_hop_dong`, `_lich_tt`, `_phieu_thu`, `_cong_ty`, `_ban_giao`), website NOXH (`fn_portal_app_noxh_sites`) đều là hàm anon theo token phiên khách (`beeland/supabase/migrations/20261009170000…20261009200000`). Đã xoá `SERVICE_ACCOUNT`, `services/supabase/serviceAuth.ts`, `lib/serviceJwtCache.ts`; app xoá JWT cũ `beesky.serviceJwt` khỏi máy lúc mở. Việc còn lại phía người dùng: xoá biến `EXPO_PUBLIC_KH_SERVICE_*` khỏi `.env.local` + EAS, **đổi mật khẩu `beesky1/admin`** sau khi mọi người đã lên bản mới (bản cũ vẫn chứa tài khoản này).
+- `AUTH_BACKEND = 'mock'` (`services/config.ts`) để chạy offline với dữ liệu giả: OTP giả `8888` (đăng ký + quên mật khẩu), demo `0901 234 567` / `123456` (khách của Sunshine Group, còn có hồ sơ BlueSky Land chưa liên kết → đăng nhập tự liên kết rồi hỏi chọn công ty).
 - **Tự liên kết có ghi vào database** (tạo dòng `cloud_portal_accounts`, như bước đăng ký). Khi kiểm thử, chỉ đăng nhập bằng SĐT thử nghiệm.
 - Hợp đồng, thanh toán, phiếu thu, thông báo đã nối dữ liệu thật, chỉ của khách đang đăng nhập: xem `docs/real-data.md`.
 

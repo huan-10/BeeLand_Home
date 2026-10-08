@@ -8,43 +8,74 @@ import { borderWidth, interactive, radius, semantic, sizes, spacing, toneColors 
 
 export interface CompanyPickerDialogProps {
   visible: boolean;
+  /** Mỗi hồ sơ khách hàng một dòng (`companyOptions`), theo thứ tự công ty. */
   companies: CompanyOption[];
-  /** Công ty đang xem (đánh dấu ✓). Không truyền khi chọn lần đầu lúc đăng nhập. */
+  /** Hồ sơ đang xem (đánh dấu ✓). Không truyền khi chọn lần đầu lúc đăng nhập. */
   activeCompanyId?: string | null;
+  activeCustomerId?: string | null;
   description?: string;
-  onSelect: (companyId: string) => Promise<void> | void;
+  onSelect: (companyId: string, customerId?: string) => Promise<void> | void;
   onClose: () => void;
 }
 
-/** Chọn / chuyển công ty khi một SĐT là khách của nhiều chủ đầu tư — dùng ở Đăng nhập và Cá nhân. */
-export function CompanyPickerDialog({ visible, companies, activeCompanyId, description, onSelect, onClose }: CompanyPickerDialogProps) {
-  const [busyId, setBusyId] = useState<string | null>(null);
+const optionKey = (o: CompanyOption) => `${o.companyId}:${o.customerId ?? ''}`;
 
-  const select = async (companyId: string) => {
-    if (busyId) return;
-    setBusyId(companyId);
+/**
+ * Chọn / chuyển hồ sơ khách hàng khi một SĐT có nhiều hồ sơ (nhiều chủ đầu tư, hoặc nhiều hồ sơ trong một công ty — chung 1 tài khoản).
+ * Nhóm theo công ty; dùng ở Đăng nhập và Cá nhân.
+ */
+export function CompanyPickerDialog({
+  visible,
+  companies,
+  activeCompanyId,
+  activeCustomerId,
+  description,
+  onSelect,
+  onClose,
+}: CompanyPickerDialogProps) {
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const groups = companies.reduce<{ companyId: string; companyName: string; items: CompanyOption[] }[]>((acc, o) => {
+    const last = acc[acc.length - 1];
+    if (last && last.companyId === o.companyId) last.items.push(o);
+    else acc.push({ companyId: o.companyId, companyName: o.companyName, items: [o] });
+    return acc;
+  }, []);
+
+  const select = async (o: CompanyOption) => {
+    if (busyKey) return;
+    setBusyKey(optionKey(o));
     try {
-      await onSelect(companyId);
+      await onSelect(o.companyId, o.customerId);
     } finally {
-      setBusyId(null);
+      setBusyKey(null);
     }
   };
 
+  const isActive = (o: CompanyOption) =>
+    o.companyId === activeCompanyId && (!o.customerId || !activeCustomerId || o.customerId === activeCustomerId);
+
   return (
-    <Dialog visible={visible} title="Chọn công ty" onClose={onClose}>
+    <Dialog visible={visible} title="Chọn hồ sơ khách hàng" onClose={onClose}>
       <Text variant="caption" color={semantic.textMuted}>
-        {description ?? 'Số điện thoại của bạn là khách hàng của nhiều chủ đầu tư. Chọn công ty muốn xem và quản lý hợp đồng.'}
+        {description ?? 'Số điện thoại của bạn có nhiều hồ sơ khách hàng. Chọn hồ sơ muốn xem và quản lý hợp đồng.'}
       </Text>
       <View style={styles.list}>
-        {companies.map((c) => (
-          <CompanyRow
-            key={c.companyId}
-            company={c}
-            active={c.companyId === activeCompanyId}
-            busy={busyId === c.companyId}
-            disabled={!!busyId}
-            onPress={() => void select(c.companyId)}
-          />
+        {groups.map((g) => (
+          <View key={g.companyId} style={styles.group}>
+            <Text variant="label" color={semantic.textMuted} accessibilityRole="header">
+              {g.companyName || 'Công ty'}
+            </Text>
+            {g.items.map((o) => (
+              <CompanyRow
+                key={optionKey(o)}
+                company={o}
+                active={isActive(o)}
+                busy={busyKey === optionKey(o)}
+                disabled={!!busyKey}
+                onPress={() => void select(o)}
+              />
+            ))}
+          </View>
         ))}
       </View>
     </Dialog>
@@ -65,8 +96,8 @@ function CompanyRow({
   onPress: () => void;
 }) {
   const { hovered, hoverProps } = useHover();
-  const name = company.companyName || 'Công ty';
-  const customer = [company.customerName, company.customerCode].filter(Boolean).join(' · ');
+  const name = company.customerName || company.companyName || 'Khách hàng';
+  const customer = [company.customerCode, company.companyName].filter(Boolean).join(' · ');
   return (
     <Pressable
       onPress={onPress}
@@ -76,7 +107,7 @@ function CompanyRow({
       accessibilityState={{ selected: active, busy, disabled }}
       accessibilityLabel={`${name}${customer ? `, ${customer}` : ''}${active ? ', đang xem' : ''}`}
       style={({ pressed }) => [styles.row, interactive, active && styles.rowActive, (pressed || hovered) && !disabled && styles.rowHover]}>
-      <IconCircle name="building" tone="primary" size="sm" />
+      <IconCircle name="user" tone="primary" size="sm" />
       <View style={styles.flex}>
         <Text variant="bodyStrong">{name}</Text>
         {customer ? (
@@ -97,7 +128,8 @@ function CompanyRow({
 }
 
 const styles = StyleSheet.create({
-  list: { gap: spacing.sm, marginTop: spacing.ms },
+  list: { gap: spacing.md, marginTop: spacing.ms },
+  group: { gap: spacing.sm },
   flex: { flex: 1, minWidth: 0, gap: spacing.xs },
   row: {
     flexDirection: 'row',

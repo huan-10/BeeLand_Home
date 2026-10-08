@@ -61,7 +61,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
                 {AUTH_SLOGAN}
               </Text>
               <Text variant="body" color={semantic.textInverse} style={styles.brandText}>
-                Ứng dụng dành cho khách hàng BeeSky: hợp đồng, lịch thanh toán và phiếu thu trong một nơi.
+                Beeland Plus — ứng dụng dành cho khách hàng BeeSky: hợp đồng, lịch thanh toán và phiếu thu trong một nơi.
               </Text>
               <View style={styles.features}>
                 {features.map((f) => (

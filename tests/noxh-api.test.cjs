@@ -1,4 +1,4 @@
-// Nhánh API (không gọi server: thay client/serviceAuth/config bằng bản giả): đăng nhập dự phòng bằng fn_portal_site_login,
+// Nhánh API (không gọi server: thay client/config bằng bản giả): đăng nhập dự phòng bằng fn_portal_site_login,
 // chọn đúng website đã đăng ký, kết nối NOXH báo lỗi đúng công ty, phiên NOXH hết hạn. Chạy: npm test
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -7,11 +7,15 @@ const { loadModule, stubModule } = require('./noxh-fixtures.cjs');
 class FakeServiceError extends Error {}
 const calls = [];
 let handlers = {};
-stubModule('services/config.ts', { AUTH_BACKEND: 'api', NOXH_BACKEND: 'api', SUPABASE_URL: 'https://api.test', SUPABASE_ANON_KEY: 'anon', SERVICE_ACCOUNT: {} });
-stubModule('services/supabase/serviceAuth.ts', { getServiceJwt: async () => 'jwt' });
+stubModule('services/config.ts', { AUTH_BACKEND: 'api', NOXH_BACKEND: 'api', SUPABASE_URL: 'https://api.test', SUPABASE_ANON_KEY: 'anon' });
 stubModule('services/supabase/client.ts', {
   rpc: async (fn, args) => {
     calls.push([fn, args]);
+    if (fn === 'fn_portal_app_noxh_sites' && !handlers[fn]) {
+      const data = {};
+      for (const w of handlers.sites ?? []) if (w.slug && w.is_active !== false && args.p_company_ids.includes(w.company_id)) data[w.company_id] ??= w.slug;
+      return { data };
+    }
     const h = handlers[fn];
     if (!h) throw new Error(`rpc không mong đợi: ${fn}`);
     return h(args);
@@ -42,50 +46,83 @@ const PHONE = '0938111222';
 const customer = (id, company) => ({ id, ma_ctdk: company, ten_kh: 'Lê Thu Hà', ten_cong_ty: null, dien_thoai: PHONE, di_dong: null, email: null, dia_chi: null, cccd: '001099012345', so_cmnd: null, ma_so_kh: 'KH-1' });
 const loginRow = (company, token) => ({ session_token: token, account_id: `acc-${company}`, khach_hang_id: `kh-${company}`, ma_ctdk: company, username: PHONE, email: null, ten_kh: 'Lê Thu Hà', di_dong: PHONE, ma_so_kh: 'KH-1' });
 
-test('fn_portal_login từ chối tài khoản (máy chủ không trả nguon_web_config_id) → thử lại fn_portal_site_login', async () => {
+// Đăng nhập trên server (2026-10-08): app chỉ gọi fn_portal_app_dang_nhap — không tra cloud_customers / fn_portal_account_get /
+// fn_portal_account_set_password bằng tài khoản hệ thống.
+const company = (id, extra = {}) => ({
+  company_id: id,
+  ten_ct: `Công ty ${id}`,
+  token: `hd-${id}`,
+  account_id: `acc-${id}`,
+  khach_hang_id: `kh-${id}`,
+  username: PHONE,
+  noxh_slug: null,
+  noxh_token: null,
+  khach_hang: customer(`kh-${id}`, id),
+  ...extra,
+});
+const NO_SERVICE_JWT = ['GET', 'fn_portal_account_get', 'fn_portal_account_set_password', 'fn_portal_app_login', 'fn_portal_site_login'];
+
+test('đăng nhập: một lần gọi fn_portal_app_dang_nhap → phiên mọi công ty, không dùng tài khoản hệ thống', async () => {
   calls.length = 0;
   handlers = {
-    customers: [customer('kh-c1', 'c1')],
-    sites: [{ id: 'w1', company_id: 'c1', slug: 'c1-noxh', is_active: true }],
-    fn_portal_account_get: () => ({ id: 'acc-c1', username: PHONE, email: null, is_active: true }),
-    fn_portal_login: () => {
-      throw new errors.ServiceError('Tài khoản không được dùng trên đường này', 'UNAUTHORIZED');
-    },
-    fn_portal_site_login: (a) => (a.p_slug === 'c1-noxh' ? loginRow('c1', 'noxh-c1') : { error: 'Sai' }),
+    fn_portal_app_dang_nhap: (a) =>
+      a.p_login === PHONE && a.p_password === 'pass1234'
+        ? { data: { sdt: PHONE, cong_ty: [company('c1', { noxh_slug: 'c1-noxh', noxh_token: 'nx-c1' }), company('c2')] } }
+        : { error: 'Sai' },
   };
   const { session: s } = await auth.login(PHONE, 'pass1234');
-  assert.equal(s.companies.length, 1);
-  assert.equal(s.companies[0].token, undefined);
-  assert.deepEqual(s.companies[0].noxh, { slug: 'c1-noxh', token: 'noxh-c1' });
+  assert.equal(s.phone, PHONE);
+  assert.deepEqual(s.companies.map((c) => [c.companyId, c.companyName, c.token, c.customerId, c.loginName]), [
+    ['c1', 'Công ty c1', 'hd-c1', 'kh-c1', PHONE],
+    ['c2', 'Công ty c2', 'hd-c2', 'kh-c2', PHONE],
+  ]);
+  assert.deepEqual(s.companies[0].noxh, { slug: 'c1-noxh', token: 'nx-c1' });
+  assert.equal(s.companies[0].noxhSite, 'c1-noxh');
+  assert.equal(s.user.fullName, 'Lê Thu Hà');
+  assert.ok(!calls.some(([fn]) => NO_SERVICE_JWT.includes(fn)), JSON.stringify(calls.map(([fn]) => fn)));
 });
 
-test('tài khoản tự đăng ký → đăng nhập trên đúng website đã đăng ký (nguon_web_config_id)', async () => {
-  calls.length = 0;
+test('đăng nhập: chưa có tài khoản → lỗi ở ô SĐT/CCCD', async () => {
+  handlers = { fn_portal_app_dang_nhap: () => ({ error: 'Số điện thoại / CCCD chưa có tài khoản. Vui lòng chọn "Đăng ký" để tạo tài khoản.', ma: 'KHONG_CO_TAI_KHOAN' }) };
+  await assert.rejects(auth.login(PHONE, 'pass1234'), (e) => e.field === 'identifier' && e.code === 'NOT_FOUND' && /chưa có tài khoản/.test(e.message));
+});
+
+test('đăng nhập: sai mật khẩu → câu "Mật khẩu không đúng"; khoá tạm → giữ câu của máy chủ', async () => {
+  handlers = { fn_portal_app_dang_nhap: () => ({ error: 'Tên đăng nhập hoặc mật khẩu không đúng', errors: ['Tên đăng nhập hoặc mật khẩu không đúng'], ma: 'SAI_MAT_KHAU' }) };
+  await assert.rejects(auth.login(PHONE, 'sai12345'), (e) => e.field === 'password' && e.message.startsWith('Mật khẩu không đúng'));
+  handlers = { fn_portal_app_dang_nhap: () => ({ error: 'x', errors: ['Tài khoản tạm khoá, thử lại sau 15 phút'], ma: 'SAI_MAT_KHAU' }) };
+  await assert.rejects(auth.login(PHONE, 'sai12345'), { message: 'Tài khoản tạm khoá, thử lại sau 15 phút' });
+});
+
+test('đăng nhập: tài khoản tự đăng ký qua website → công ty chỉ có phiên NOXH; công ty có hợp đồng đứng trước', async () => {
   handlers = {
-    customers: [customer('kh-c1', 'c1')],
-    sites: [
-      { id: 'w1', company_id: 'c1', slug: 'site-a', is_active: true },
-      { id: 'w2', company_id: 'c1', slug: 'site-b', is_active: true },
-    ],
-    fn_portal_account_get: () => ({ id: 'acc-c1', username: PHONE, email: null, is_active: true, nguon_web_config_id: 'w1', pham_vi: 'CHON' }),
-    fn_portal_site_login: (a) => (a.p_slug === 'site-a' ? loginRow('c1', 'noxh-a') : { error: 'Tài khoản không được dùng trên website này' }),
+    fn_portal_app_dang_nhap: () => ({
+      data: { sdt: PHONE, cong_ty: [company('c1', { token: null, noxh_slug: 'site-a', noxh_token: 'noxh-a' }), company('c2')] },
+    }),
   };
   const { session: s } = await auth.login(PHONE, 'pass1234');
-  assert.deepEqual(s.companies[0].noxh, { slug: 'site-a', token: 'noxh-a' });
-  assert.ok(!calls.some(([fn]) => fn === 'fn_portal_login'));
+  assert.equal(s.companyId, 'c2');
+  const c1 = s.companies.find((c) => c.companyId === 'c1');
+  assert.equal(c1.token, undefined);
+  assert.deepEqual(c1.noxh, { slug: 'site-a', token: 'noxh-a' });
 });
 
 const user = { id: 'u', customerCode: '', fullName: '', email: '', phone: PHONE, idNumber: '', address: '' };
 const cs = (companyId, extra) => ({ companyId, companyName: companyId, token: `t-${companyId}`, userId: 'u', customerId: `kh-${companyId}`, user, ...extra });
 
 test('kết nối NOXH: sai mật khẩu ở công ty đang thiếu token → báo lỗi dù công ty khác đã kết nối', async () => {
-  handlers = {
-    sites: [{ id: 'wb', company_id: 'B', slug: 'b-noxh', is_active: true }],
-    fn_portal_account_get: () => ({ id: 'acc-B', username: PHONE, email: null, is_active: true }),
-    fn_portal_site_login: () => ({ error: 'Sai mật khẩu' }),
-  };
-  const s = { token: 't-A', userId: 'u', createdAt: '', companyId: 'A', customerId: 'kh-A', user, phone: PHONE, companies: [cs('A', { noxh: { slug: 'a', token: 'na' } }), cs('B')] };
+  handlers = { fn_portal_site_login: () => ({ error: 'Sai mật khẩu' }) };
+  const s = { token: 't-A', userId: 'u', createdAt: '', companyId: 'A', customerId: 'kh-A', user, phone: PHONE, companies: [cs('A', { noxh: { slug: 'a', token: 'na' } }), cs('B', { noxhSite: 'b-noxh' })] };
   await assert.rejects(auth.connectNoxh(s, 'sai'), { message: 'Mật khẩu không đúng.' });
+});
+
+test('kết nối NOXH: dùng website + tên đăng nhập đã lưu trong phiên, không tra tài khoản bằng tài khoản hệ thống', async () => {
+  calls.length = 0;
+  handlers = { fn_portal_site_login: (a) => (a.p_slug === 'b-noxh' && a.p_login === 'nv-b' ? loginRow('B', 'nx-B') : { error: 'Sai' }) };
+  const s = { token: 't-B', userId: 'u', createdAt: '', companyId: 'B', customerId: 'kh-B', user, phone: PHONE, companies: [cs('B', { noxhSite: 'b-noxh', loginName: 'nv-b' })] };
+  const next = await auth.connectNoxh(s, 'pass1234');
+  assert.deepEqual(next.companies[0].noxh, { slug: 'b-noxh', token: 'nx-B' });
+  assert.ok(!calls.some(([fn]) => fn === 'GET' || fn === 'fn_portal_account_get'));
 });
 
 test('phiên NOXH hết hạn → phát sự kiện cho đúng công ty, báo UNAUTHORIZED', async () => {
@@ -127,7 +164,8 @@ test('getRounds: đợt của MỌI công ty khách có tài khoản (kể cả 
     ['r3', 'C', 'c-noxh', 'Chưa kết nối'],
     ['r1', 'A', 'a-noxh', 'Sunshine'],
   ]);
-  assert.ok(calls.some(([fn, q]) => fn === 'GET' && q.startsWith('cloud_customer_web_configs')));
+  assert.ok(calls.some(([fn]) => fn === 'fn_portal_app_noxh_sites'));
+  assert.ok(!calls.some(([fn]) => fn === 'GET'));
 });
 
 test('getRound / getLoaiCan gọi đúng slug của công ty sở hữu đợt', async () => {
@@ -338,4 +376,71 @@ test('máy chủ lưu trữ trả lỗi → "Tải tệp lên thất bại"; m�
   await assert.rejects(storage.uploadToSignedUrl('drive-files', 'p.pdf', 'tk', file), { message: 'Tải tệp lên thất bại, vui lòng thử lại.' });
   global.XMLHttpRequest = XhrDown;
   await assert.rejects(storage.uploadToSignedUrl('drive-files', 'p.pdf', 'tk', file), (e) => e.code === 'NETWORK');
+});
+
+// Chọn hồ sơ khách hàng (2026-10-08): một công ty nhiều hồ sơ cùng SĐT → 1 tài khoản, danh sách từ fn_portal_app_ho_so_list.
+test('đăng nhập: công ty có 2 hồ sơ cùng SĐT → phiên có 2 hồ sơ, theo hồ sơ server đang xem; chọn hồ sơ gọi fn_portal_app_chon_ho_so', async () => {
+  calls.length = 0;
+  handlers = {
+    fn_portal_app_dang_nhap: () => ({ data: { sdt: PHONE, cong_ty: [company('c1')] } }),
+    fn_portal_app_ho_so_list: (a) =>
+      a.p_token === 'hd-c1'
+        ? { data: [{ ...customer('kh-c1', 'c1'), dang_xem: false }, { ...customer('kh-c1b', 'c1'), ma_so_kh: 'KH-2', dang_xem: true }] }
+        : { error: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại' },
+    fn_portal_app_chon_ho_so: () => ({ data: { ok: true } }),
+  };
+  const { session: s } = await auth.login(PHONE, 'pass1234');
+  assert.equal(s.companies[0].profiles.length, 2);
+  assert.equal(s.customerId, 'kh-c1b');
+  assert.equal(s.user.customerCode, 'KH-2');
+  await auth.selectProfile(s, 'c1', 'kh-c1');
+  assert.deepEqual(calls.find(([fn]) => fn === 'fn_portal_app_chon_ho_so')?.[1], { p_token: 'hd-c1', p_khach_hang_id: 'kh-c1' });
+});
+
+test('đăng nhập: server chưa có fn_portal_app_ho_so_list → vẫn vào được, chỉ hồ sơ của tài khoản', async () => {
+  handlers = { fn_portal_app_dang_nhap: () => ({ data: { sdt: PHONE, cong_ty: [company('c1')] } }) };
+  const { session: s } = await auth.login(PHONE, 'pass1234');
+  assert.equal(s.customerId, 'kh-c1');
+  assert.equal(s.companies[0].profiles, undefined);
+});
+
+test('liên kết công ty mới: kiểm mật khẩu ở công ty đang xem (tên đăng nhập đã lưu) rồi đăng nhập lại trên server, chỉ thêm công ty mới', async () => {
+  calls.length = 0;
+  handlers = {
+    fn_portal_app_login: (a) => (a.p_company_id === 'c1' && a.p_login === 'nv-c1' && a.p_password === 'pass1234' ? loginRow('c1', 'kiem-tra') : { error: 'Tên đăng nhập hoặc mật khẩu không đúng' }),
+    fn_portal_app_dang_nhap: () => ({ data: { sdt: PHONE, cong_ty: [company('c1', { token: 'hd-c1-moi' }), company('c2')] } }),
+    fn_portal_logout: () => null,
+  };
+  const s = { token: 'hd-c1', userId: 'acc-c1', createdAt: '', companyId: 'c1', customerId: 'kh-c1', user, phone: PHONE, companies: [cs('c1', { loginName: 'nv-c1' })] };
+  const { session: next, added } = await auth.linkNewCompanies(s, 'pass1234');
+  assert.deepEqual(added.map((o) => o.companyId), ['c2']);
+  assert.deepEqual(next.companies.map((c) => c.companyId), ['c1', 'c2']);
+  assert.equal(next.companies[0].token, 't-c1');
+  const loggedOut = calls.filter(([fn]) => fn === 'fn_portal_logout').map(([, a]) => a.p_token);
+  assert.ok(loggedOut.includes('hd-c1-moi') && loggedOut.includes('kiem-tra'));
+  assert.ok(!calls.some(([fn]) => ['GET', 'fn_portal_account_get', 'fn_portal_account_set_password'].includes(fn)));
+});
+
+test('liên kết công ty mới: gõ sai → chỉ thử 1 lần ở công ty đang xem, không đăng nhập lại mọi công ty; khoá tạm giữ câu máy chủ', async () => {
+  calls.length = 0;
+  handlers = { fn_portal_app_login: () => ({ error: 'Tên đăng nhập hoặc mật khẩu không đúng' }), fn_portal_app_dang_nhap: () => ({ data: { sdt: PHONE, cong_ty: [] } }) };
+  const s = { token: 'hd-c1', userId: 'acc-c1', createdAt: '', companyId: 'c1', customerId: 'kh-c1', user, phone: PHONE, companies: [cs('c1', { loginName: 'nv-c1' })] };
+  await assert.rejects(auth.linkNewCompanies(s, 'sai'), (e) => e.field === 'password' && e.message.startsWith('Mật khẩu không đúng'));
+  assert.equal(calls.filter(([fn]) => fn === 'fn_portal_app_login').length, 1);
+  assert.ok(!calls.some(([fn]) => fn === 'fn_portal_app_dang_nhap'));
+  handlers = { fn_portal_app_login: () => ({ error: 'Tài khoản tạm khoá, thử lại sau 15 phút' }) };
+  await assert.rejects(auth.linkNewCompanies(s, 'sai'), { message: 'Tài khoản tạm khoá, thử lại sau 15 phút' });
+});
+
+test('dò công ty mới: fn_portal_app_cong_ty_moi theo token phiên, gửi kèm công ty đã có', async () => {
+  calls.length = 0;
+  handlers = {
+    fn_portal_app_cong_ty_moi: (a) =>
+      a.p_token === 'hd-c1' && JSON.stringify(a.p_da_co) === '["c1"]'
+        ? { data: [{ company_id: 'c2', ten_ct: 'MSR', khach_hang_id: 'kh-c2', ten_kh: 'Lê Thu Hà', ma_so_kh: 'KH-9' }] }
+        : { error: 'Sai' },
+  };
+  const s = { token: 'hd-c1', userId: 'acc-c1', createdAt: '', companyId: 'c1', customerId: 'kh-c1', user, phone: PHONE, companies: [cs('c1', { token: 'hd-c1' })] };
+  assert.deepEqual(await auth.findNewCompanies(s), [{ companyId: 'c2', companyName: 'MSR', customerId: 'kh-c2', customerName: 'Lê Thu Hà', customerCode: 'KH-9' }]);
+  assert.ok(!calls.some(([fn]) => NO_SERVICE_JWT.includes(fn)));
 });

@@ -29,7 +29,7 @@
 2026-10-02: **không hỏi Họ và tên, Email** — tài khoản app gắn với hồ sơ khách hàng có sẵn; `register({ phone, password })` tra hồ sơ theo số điện thoại và lấy họ tên / email / mã KH từ đó (mock: `mockCustomerRecords` trong `data/mock/user.ts`, ví dụ `0912 345 678`).
 
 ## Bước 2 — Xác nhận OTP (2026-10-02)
-- Tiêu đề "Xác nhận số điện thoại", phụ đề "Nhập mã N số đã gửi qua Zalo tới {SĐT}." (hiện tại OTP giả `8888`).
+- Tiêu đề "Xác nhận số điện thoại", phụ đề "Nhập mã N số đã gửi qua Zalo tới {SĐT}." (OTP thật 6 số, server gửi ZNS → SMS và tự kiểm mã — 2026-10-08).
 - Một `Input` "Mã OTP" (`number-pad`, `one-time-code`, `maxLength` = độ dài mã, chỉ nhận chữ số) + `Button` primary "Xác nhận".
 - Hàng dưới: "Gửi lại mã sau N giây" (đếm ngược từ `resendIn`) → hết giờ thành `TextLink` "Gửi lại mã"; `TextLink` "Đổi số điện thoại" quay lại bước 1 (giữ nguyên dữ liệu đã nhập).
 - Lỗi OTP (sai / hết hạn / quá 5 lần) hiện dưới ô OTP và focus lại ô.

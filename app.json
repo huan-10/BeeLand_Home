@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Beeland Home",
+    "name": "Beeland Plus",
     "slug": "beeland-app-KH",
     "version": "1.0",
     "orientation": "portrait",
@@ -11,6 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.beesky.beelandhome",
       "infoPlist": {
+        "CFBundleName": "Beeland Plus",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -28,8 +29,8 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "name": "Beeland – Khách hàng",
-      "shortName": "Beeland",
+      "name": "Beeland Plus – Khách hàng",
+      "shortName": "Beeland Plus",
       "description": "Tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản.",
       "themeColor": "#0A74B8",
       "backgroundColor": "#F3F8FC",
@@ -51,8 +52,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "BeeSky cần truy cập ảnh để bạn chọn ảnh giấy tờ nộp hồ sơ nhà ở xã hội.",
-          "cameraPermission": "BeeSky cần dùng camera để bạn chụp giấy tờ nộp hồ sơ nhà ở xã hội.",
+          "photosPermission": "Beeland Plus cần truy cập ảnh để bạn chọn ảnh giấy tờ nộp hồ sơ nhà ở xã hội.",
+          "cameraPermission": "Beeland Plus cần dùng camera để bạn chụp giấy tờ nộp hồ sơ nhà ở xã hội.",
           "microphonePermission": false
         }
       ]

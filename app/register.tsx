@@ -17,7 +17,7 @@ import {
 } from '@/components/ui';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import {
-  MIN_PASSWORD_LENGTH,
+  NEW_PASSWORD_MIN_LENGTH,
   hasErrors,
   validateOtp,
   validateRegisterForm,
@@ -48,6 +48,8 @@ export default function RegisterScreen() {
   const [otpError, setOtpError] = useState<string | undefined>();
   const [resendIn, setResendIn] = useState(0);
   const otpRef = useRef<TextInput>(null);
+  /** Lượt gửi mã mới nhất — phản hồi của lượt cũ (đã "Đổi số" / gửi lại) bị bỏ qua. */
+  const sendSeq = useRef(0);
 
   // Đếm ngược "Gửi lại mã".
   useEffect(() => {
@@ -104,7 +106,9 @@ export default function RegisterScreen() {
 
   /** Bước 1 → 2: kiểm tra SĐT trong hồ sơ khách hàng và gửi OTP (cũng dùng cho "Gửi lại mã"). */
   const sendOtp = async () => {
+    const seq = ++sendSeq.current;
     const outcome = await start.submit(values.phone);
+    if (seq !== sendSeq.current) return;
     if (!outcome.ok) {
       if (otpStep) {
         setOtpError(outcome.error.message);
@@ -123,6 +127,15 @@ export default function RegisterScreen() {
     requestAnimationFrame(() => otpRef.current?.focus());
   };
 
+  /** Về bước 1: bỏ mã đang chờ và mọi lượt gửi đang chạy (không gửi `otp_id` cũ lên xác minh). */
+  const changePhone = () => {
+    sendSeq.current += 1;
+    setOtpStep(null);
+    setOtp('');
+    setOtpError(undefined);
+    setResendIn(0);
+  };
+
   /** Bước 2: xác nhận OTP → tạo tài khoản → về màn Đăng nhập. */
   const handleConfirm = async () => {
     if (submitting || !otpStep) return;
@@ -134,13 +147,21 @@ export default function RegisterScreen() {
     }
     const outcome = await confirm.submit(otpStep.requestId, otp, values.password);
     if (!outcome.ok) {
+      // Mật khẩu (nhập ở bước 1) bị server từ chối → quay lại bước 1, báo dưới ô mật khẩu.
+      if (outcome.error.field === 'password') {
+        changePhone();
+        const next = { password: outcome.error.message };
+        setErrors(next);
+        focusAfterError(next);
+        return;
+      }
       setOtpError(outcome.error.message);
       requestAnimationFrame(() => otpRef.current?.focus());
       return;
     }
     toast.show('Tạo tài khoản thành công. Vui lòng đăng nhập.', 'success');
     // Quay về màn Đăng nhập sẵn có trong stack (không tạo thêm bản sao), điền sẵn số điện thoại.
-    router.dismissTo({ pathname: '/login', params: { identifier: values.phone.trim() } });
+    router.dismissTo({ pathname: '/login', params: { identifier: otpStep.phone } });
   };
 
   const footer = (
@@ -156,7 +177,7 @@ export default function RegisterScreen() {
     return (
       <AuthLayout
         title="Xác nhận số điện thoại"
-        subtitle={`Nhập mã ${otpStep.otpLength} số đã gửi qua Zalo tới ${values.phone.trim()}.`}
+        subtitle={`Nhập mã ${otpStep.otpLength} số đã gửi qua Zalo tới ${otpStep.phone}.`}
         footer={footer}>
         <FadeIn index={1} style={styles.fields}>
           <Input
@@ -179,14 +200,14 @@ export default function RegisterScreen() {
           />
           <Button title="Xác nhận" size="lg" loading={confirm.submitting} onPress={() => void handleConfirm()} fullWidth />
           <View style={styles.otpActions}>
-            {resendIn > 0 ? (
+            {resendIn > 0 || confirm.submitting ? (
               <Text variant="caption" color={semantic.textMuted}>
-                Gửi lại mã sau {resendIn} giây
+                {resendIn > 0 ? `Gửi lại mã sau ${resendIn} giây` : 'Đang xác nhận…'}
               </Text>
             ) : (
               <TextLink label="Gửi lại mã" onPress={() => void sendOtp()} />
             )}
-            <TextLink label="Đổi số điện thoại" onPress={() => setOtpStep(null)} />
+            <TextLink label="Đổi số điện thoại" onPress={changePhone} />
           </View>
         </FadeIn>
       </AuthLayout>
@@ -225,7 +246,7 @@ export default function RegisterScreen() {
           autoComplete="new-password"
           textContentType="newPassword"
           returnKeyType="next"
-          hint={`Tối thiểu ${MIN_PASSWORD_LENGTH} ký tự`}
+          hint={`Tối thiểu ${NEW_PASSWORD_MIN_LENGTH} ký tự`}
           value={values.password}
           onChangeText={(t) => set('password', t)}
           onSubmitEditing={() => focusField('confirmPassword')}

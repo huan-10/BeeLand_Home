@@ -50,7 +50,7 @@ Lỗi trả `{ "error": "…" }`, thành công `{ "data": { otp_id, het_han, do_
 ### 3.4 `fn_portal_app_otp_xac_minh(p_otp_id uuid, p_code text, p_password text) → jsonb` (GRANT anon, authenticated)
 Thành công `{ "data": { so_tai_khoan } }`.
 
-1. Mật khẩu `btrim` dài 8–72 → nếu không: "Mật khẩu phải từ 8 đến 72 ký tự" (không tính lần thử).
+1. Mật khẩu `btrim` dài 6–72 (đổi từ 8 ngày 2026-10-08, migration `20261009170100`) → nếu không: "Mật khẩu phải từ 6 đến 72 ký tự" (không tính lần thử).
 2. `SELECT … FOR UPDATE` mã: không có → "Mã OTP không đúng"; đã dùng hoặc `attempts ≥ 5` → "Mã đã bị huỷ, vui lòng yêu cầu mã mới"; hết hạn → "Mã OTP đã hết hạn, vui lòng yêu cầu mã mới"; sai → `attempts + 1`, lần thứ 5 → "Mã đã bị huỷ…", còn lại "Mã OTP không đúng".
 3. Khoá SĐT như 3.3; tính lại hồ sơ đích.
    - **DANG_KY**: với mỗi hồ sơ chưa có tài khoản (mỗi công ty): khoá `portal_phone:<ma_ctdk>:<sdt>`; `_portal_phone_da_dung` → bỏ qua công ty đó; còn lại INSERT `cloud_portal_accounts (ma_ctdk, khach_hang_id, username = sdt, password_hash = crypt(bf), is_active, pham_vi 'TAT_CA', phone_verified_at = now())` — trigger `trg_portal_account_fill_kh` tự điền `di_dong`, `cccd`. Không tạo được tài khoản nào → "Số điện thoại đã dùng cho tài khoản khác, vui lòng liên hệ chủ đầu tư" (mã vẫn bị dùng).

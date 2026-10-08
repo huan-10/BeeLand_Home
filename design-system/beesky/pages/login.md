@@ -44,7 +44,7 @@
 | Đang gửi | Nút `loading`: spinner, `disabled`, `aria-busy` |
 | Không tìm thấy tài khoản | Lỗi gắn ô **định danh**: "Không tìm thấy tài khoản với số điện thoại này." + focus ô đó |
 | Sai mật khẩu | Lỗi gắn ô **mật khẩu**: "Mật khẩu không đúng. Vui lòng thử lại hoặc chọn "Quên mật khẩu?"." + focus ô đó |
-| SĐT ở nhiều công ty | Modal **"Chọn công ty"** (`CompanyPickerDialog`): mỗi dòng là một nút (icon `building`, tên công ty `bodyStrong`, "Tên khách · Mã KH" `caption`, cao ≥ 52); đang chọn → spinner. Đóng modal = ở lại màn đăng nhập |
+| SĐT có nhiều hồ sơ (nhiều công ty, hoặc nhiều hồ sơ trong 1 công ty — 2026-10-08) | Modal **"Chọn hồ sơ khách hàng"** (`CompanyPickerDialog`): nhóm theo công ty (tên công ty `label` làm nhãn nhóm), mỗi dòng một hồ sơ (icon `user`, tên khách `bodyStrong`, "mã KH · công ty" caption). Trước đây: mỗi dòng là một nút (icon `building`, tên công ty `bodyStrong`, "Tên khách · Mã KH" `caption`, cao ≥ 52); đang chọn → spinner. Đóng modal = ở lại màn đăng nhập |
 | Thành công | `AuthContext` → route guard chuyển vào Trang chủ. "Ghi nhớ" bật: phiên lưu AsyncStorage (giữ sau khi đóng app/tab); tắt: web `sessionStorage` (giữ khi tải lại, mất khi đóng tab), native giữ trong bộ nhớ |
 | Đã đăng nhập mà mở `/login` | Chuyển về Trang chủ |
 

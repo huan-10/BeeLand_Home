@@ -12,10 +12,10 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no" />
-        <title>BeeSky – Khách hàng</title>
-        <meta name="description" content="BeeSky – tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản." />
+        <title>Beeland Plus – Khách hàng</title>
+        <meta name="description" content="Beeland Plus – tra cứu hợp đồng, lịch thanh toán và phiếu thu bất động sản." />
         <meta name="theme-color" content={semantic.brand} />
-        <meta name="apple-mobile-web-app-title" content="BeeSky" />
+        <meta name="apple-mobile-web-app-title" content="Beeland Plus" />
 
         {/* Tắt cuộn body để ScrollView trên web hoạt động giống native. */}
         <ScrollViewStyleReset />

@@ -97,8 +97,8 @@ test('công ty không có trong phiên → giữ nguyên phiên', () => {
 
 test('danh sách công ty để chọn lấy từ phiên; phiên cũ (một công ty) → rỗng', () => {
   assert.deepEqual(m.companyOptions(session), [
-    { companyId: 'brg', companyName: 'BRG', customerName: 'KH-brg', customerCode: 'KH-brg' },
-    { companyId: 'msr', companyName: 'MSR', customerName: 'KH-msr', customerCode: 'KH-msr' },
+    { companyId: 'brg', companyName: 'BRG', customerId: 'kh-brg', customerName: 'KH-brg', customerCode: 'KH-brg' },
+    { companyId: 'msr', companyName: 'MSR', customerId: 'kh-msr', customerName: 'KH-msr', customerCode: 'KH-msr' },
   ]);
   assert.deepEqual(m.companyOptions({ ...session, companies: undefined }), []);
 });
@@ -212,4 +212,42 @@ test('planCompanyLogins: tài khoản tự đăng ký dùng slug của chính we
     { w1: 'site-a', w2: 'site-b' },
   );
   assert.equal(plan.siteLogin[0].slug, 'site-b');
+});
+
+// Chọn hồ sơ khách hàng (2026-10-08): một công ty có nhiều hồ sơ cùng SĐT → 1 tài khoản, phiên chọn hồ sơ đang xem.
+const withProfiles = {
+  ...session,
+  companies: [
+    { ...entry('brg'), profiles: [{ customerId: 'kh-brg', user: user('KH-brg') }, { customerId: 'kh-brg2', user: user('KH-brg2') }] },
+    entry('msr'),
+  ],
+};
+
+test('danh sách chọn: mỗi hồ sơ một dòng, theo thứ tự công ty; công ty chưa có profiles → hồ sơ của phiên công ty', () => {
+  assert.deepEqual(
+    m.companyOptions(withProfiles).map((o) => `${o.companyId}:${o.customerId}:${o.customerCode}`),
+    ['brg:kh-brg:KH-brg', 'brg:kh-brg2:KH-brg2', 'msr:kh-msr:KH-msr'],
+  );
+});
+
+test('đổi hồ sơ trong cùng công ty → giữ token công ty, đổi khách + thông tin khách ở phiên và ở công ty', () => {
+  const next = m.withActiveCompany(withProfiles, 'brg', 'kh-brg2');
+  assert.equal(next.token, 'tok-brg');
+  assert.equal(next.companyId, 'brg');
+  assert.equal(next.customerId, 'kh-brg2');
+  assert.equal(next.user.customerCode, 'KH-brg2');
+  assert.equal(next.companies[0].customerId, 'kh-brg2');
+  assert.equal(next.companies[0].user.customerCode, 'KH-brg2');
+  assert.equal(next.companies[0].profiles.length, 2);
+});
+
+test('đổi sang hồ sơ của công ty khác → đổi cả công ty', () => {
+  const next = m.withActiveCompany(m.withActiveCompany(withProfiles, 'brg', 'kh-brg2'), 'msr', 'kh-msr');
+  assert.equal(next.companyId, 'msr');
+  assert.equal(next.customerId, 'kh-msr');
+  assert.equal(next.companies[0].customerId, 'kh-brg2');
+});
+
+test('hồ sơ không thuộc công ty → giữ nguyên phiên', () => {
+  assert.equal(m.withActiveCompany(withProfiles, 'brg', 'kh-msr'), withProfiles);
 });

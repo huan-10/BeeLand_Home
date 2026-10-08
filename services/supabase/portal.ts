@@ -1,8 +1,9 @@
-import { normalizePhone } from '@/lib/validation';
+import { parseOtpSend, parseOtpVerify, parseProfileList, type OtpChallenge, type OtpPurpose, type ProfileRow } from '@/lib/appOtp';
+import { ACCOUNT_NOT_FOUND, loginRejectMessage, normalizePhone } from '@/lib/validation';
+import type { CompanyOption } from '@/types';
 
 import { ServiceError } from '../errors';
-import { inList, restGet, rpc, str } from './client';
-import { getServiceJwt } from './serviceAuth';
+import { rpc, str } from './client';
 
 /**
  * Truy cập dữ liệu cổng khách hàng trên database dùng chung (web `beeland` + `beeland-app_2026`).
@@ -49,52 +50,6 @@ export interface PortalLoginRow {
   ma_so_kh: string | null;
 }
 
-const CUSTOMER_COLUMNS = 'id,ma_ctdk,ten_kh,ten_cong_ty,dien_thoai,di_dong,email,dia_chi,cccd,so_cmnd,ma_so_kh';
-
-/** Gọi bằng JWT hệ thống; JWT bị từ chối (hết hạn/thu hồi) thì đăng nhập lại một lần. */
-export async function withServiceJwt<T>(run: (jwt: string) => Promise<T>): Promise<T> {
-  try {
-    return await run(await getServiceJwt());
-  } catch (e) {
-    if (e instanceof ServiceError && e.code === 'UNAUTHORIZED') return run(await getServiceJwt(true));
-    throw e;
-  }
-}
-
-/**
- * Mẫu LIKE khớp mọi cách ghi SĐT (khoảng trắng, dấu chấm, +84…): `*3*3*9*4*2*7*4*6*7` (bỏ số 0 đầu),
- * sau đó lọc lại chính xác bằng `normalizePhone` ở client.
- */
-function phoneLikePattern(phone: string): string {
-  return `*${normalizePhone(phone).replace(/^0/, '').split('').join('*')}`;
-}
-
-/** Hồ sơ khách hàng có `dien_thoai` trùng SĐT, ở mọi công ty mà tài khoản hệ thống thấy được. */
-export function findCustomersByPhone(phone: string): Promise<CustomerRow[]> {
-  const target = normalizePhone(phone);
-  const pattern = encodeURIComponent(phoneLikePattern(phone));
-  return withServiceJwt(async (jwt) => {
-    const rows = await restGet<CustomerRow[]>(`cloud_customers?select=${CUSTOMER_COLUMNS}&dien_thoai=like.${pattern}&limit=100`, jwt);
-    return (rows ?? []).filter((r) => normalizePhone(str(r.dien_thoai)) === target);
-  });
-}
-
-export function getCustomer(id: string): Promise<CustomerRow | null> {
-  return withServiceJwt(async (jwt) => {
-    const rows = await restGet<CustomerRow[]>(`cloud_customers?select=${CUSTOMER_COLUMNS}&id=eq.${encodeURIComponent(id)}&limit=1`, jwt);
-    return rows?.[0] ?? null;
-  });
-}
-
-/** Hồ sơ khách hàng có CCCD trùng (đăng nhập bằng CCCD — tài khoản đăng ký trên website NOXH). */
-export function findCustomersByCccd(cccd: string): Promise<CustomerRow[]> {
-  const target = cccd.replace(/\D/g, '');
-  const pattern = encodeURIComponent(`*${target.split('').join('*')}*`);
-  return withServiceJwt(async (jwt) => {
-    const rows = await restGet<CustomerRow[]>(`cloud_customers?select=${CUSTOMER_COLUMNS}&or=(cccd.like.${pattern},so_cmnd.like.${pattern})&limit=100`, jwt);
-    return (rows ?? []).filter((r) => [r.cccd, r.so_cmnd].some((v) => str(v).replace(/\D/g, '') === target));
-  });
-}
 
 export interface NoxhSites {
   /** Slug website NOXH theo công ty (công ty có nhiều website mau4 → website đầu tiên). */
@@ -103,72 +58,32 @@ export interface NoxhSites {
   byConfig: Record<string, string>;
 }
 
-/** Website Nhà ở xã hội (`template_code = 'mau4'`, đang chạy) của các công ty — chỉ đọc. */
+/** Website Nhà ở xã hội (mau4, đang chạy) của các công ty — `fn_portal_app_noxh_sites` (anon; slug là đường dẫn công khai). */
 export async function getNoxhSites(companyIds: string[]): Promise<NoxhSites> {
   const empty: NoxhSites = { byCompany: {}, byConfig: {} };
   if (companyIds.length === 0) return empty;
   try {
-    return await withServiceJwt(async (jwt) => {
-      const rows = await restGet<{ id: string; company_id: string; slug: string | null; is_active: boolean | null }[]>(
-        `cloud_customer_web_configs?select=id,company_id,slug,is_active&template_code=eq.mau4&company_id=in.${encodeURIComponent(inList(companyIds))}&order=id`,
-        jwt,
-      );
-      const out: NoxhSites = { byCompany: {}, byConfig: {} };
-      for (const r of rows ?? []) {
-        if (!r.slug || r.is_active === false) continue;
-        out.byConfig[r.id] = r.slug;
-        out.byCompany[r.company_id] ??= r.slug;
-      }
-      return out;
-    });
+    const res = await rpc<{ data?: Record<string, string> } | null>('fn_portal_app_noxh_sites', { p_company_ids: companyIds });
+    return { byCompany: res?.data ?? {}, byConfig: {} };
   } catch {
     // Không đọc được → coi như chưa có website NOXH (đăng nhập hợp đồng vẫn chạy).
     return empty;
   }
 }
 
-/** Tài khoản cổng khách hàng của một hồ sơ (null nếu chưa có). */
-export function getPortalAccount(companyId: string, customerId: string): Promise<PortalAccountRow | null> {
-  return withServiceJwt(async (jwt) => {
-    const data = await rpc<PortalAccountRow | null>('fn_portal_account_get', { p_ma_ctdk: companyId, p_khach_hang_id: customerId }, jwt);
-    return data && typeof data === 'object' && 'id' in data ? data : null;
-  });
-}
-
-/** Tạo (hoặc đặt lại) tài khoản cổng khách hàng — hàm server có sẵn, mật khẩu băm bcrypt trên server. */
-export function setPortalPassword(params: { companyId: string; customerId: string; password: string; username: string }) {
-  return withServiceJwt((jwt) =>
-    rpc<Record<string, unknown>>(
-      'fn_portal_account_set_password',
-      { p_ma_ctdk: params.companyId, p_khach_hang_id: params.customerId, p_password: params.password, p_username: params.username, p_email: null },
-      jwt,
-    ),
-  );
-}
-
-/** Tên công ty theo id; lỗi đọc → trả rỗng (giao diện tự dùng tên dự phòng). */
-export async function getCompanyNames(ids: string[]): Promise<Record<string, string>> {
-  if (ids.length === 0) return {};
-  try {
-    return await withServiceJwt(async (jwt) => {
-      const rows = await restGet<{ id: string; ten_ct: string | null; code: string | null }[]>(
-        `cloud_companies?select=id,ten_ct,code&id=in.${encodeURIComponent(inList(ids))}`,
-        jwt,
-      );
-      return Object.fromEntries((rows ?? []).map((r) => [r.id, str(r.ten_ct) || str(r.code).toUpperCase()]));
-    });
-  } catch {
-    return {};
-  }
-}
-
-/** Khách đăng nhập (anon) — giống `portalLogin` của web. */
-export function portalLogin(companyId: string, login: string, password: string): Promise<PortalLoginRow> {
-  return rpc<PortalLoginRow>('fn_portal_login', { p_company_id: companyId, p_login: login, p_password: password });
-}
-
 const isLoginRow = (v: unknown): v is PortalLoginRow =>
   typeof v === 'object' && v !== null && typeof (v as { session_token?: unknown }).session_token === 'string';
+
+/**
+ * Khách đăng nhập phiên hợp đồng (anon) — `fn_portal_app_login` (beeland/supabase/migrations/20261009160000_portal_app_login.sql): cùng phạm vi tài khoản
+ * với `fn_portal_login` cũ (đã bị thu quyền anon 2026-10-07, S-M10) và khoá 15 phút sau 5 lần sai. Lỗi nghiệp vụ trả `{ error }`.
+ */
+export async function portalLogin(companyId: string, login: string, password: string): Promise<PortalLoginRow> {
+  const res = await rpc<unknown>('fn_portal_app_login', { p_company_id: companyId, p_login: login, p_password: password });
+  if (isLoginRow(res)) return res;
+  const message = typeof res === 'object' && res !== null && 'error' in res ? str(res.error) : '';
+  throw new ServiceError(message || 'Đăng nhập không thành công', 'UNAUTHORIZED', 'password');
+}
 
 /**
  * Đăng nhập theo website (`fn_portal_site_login`, mọi mẫu): nhận SĐT / email / username / CCCD 12 số.
@@ -194,4 +109,111 @@ export function listMyContracts(token: string): Promise<{ rows?: unknown[] }> {
 
 export function portalLogout(token: string): Promise<unknown> {
   return rpc('fn_portal_logout', { p_token: token });
+}
+
+/**
+ * OTP thật cho Đăng ký / Quên mật khẩu (anon, `beeland/supabase/migrations/20261009170000_portal_app_otp.sql`):
+ * server tìm hồ sơ theo SĐT ở mọi công ty, gửi mã 6 số qua ZNS → SMS và tự kiểm mã trước khi tạo / đặt lại tài khoản.
+ */
+export async function sendAppOtp(phone: string, purpose: OtpPurpose): Promise<OtpChallenge> {
+  const res = await rpc<unknown>('fn_portal_app_otp_gui', { p_sdt: phone, p_muc_dich: purpose });
+  try {
+    return parseOtpSend(res);
+  } catch (e) {
+    throw new ServiceError((e as Error).message, 'UNKNOWN', 'phone');
+  }
+}
+
+/** Trả số tài khoản được tạo / đặt lại mật khẩu. */
+export async function verifyAppOtp(otpId: string, code: string, password: string): Promise<number> {
+  const res = await rpc<unknown>('fn_portal_app_otp_xac_minh', { p_otp_id: otpId, p_code: code, p_password: password });
+  try {
+    return parseOtpVerify(res);
+  } catch (e) {
+    const message = (e as Error).message;
+    throw new ServiceError(message, 'UNKNOWN', message.startsWith('Mật khẩu') ? 'password' : 'otp');
+  }
+}
+
+/**
+ * Hồ sơ khách hàng của tài khoản ở công ty của phiên (`fn_portal_app_ho_so_list`, `20261009180000_portal_app_chon_ho_so.sql`):
+ * cùng công ty, cùng SĐT — một công ty nhiều hồ sơ vẫn 1 tài khoản; phiên chọn hồ sơ đang xem.
+ */
+export async function listMyProfiles(token: string): Promise<{ rows: CustomerRow[]; activeId: string | null }> {
+  try {
+    const { rows, activeId } = parseProfileList(await rpc<unknown>('fn_portal_app_ho_so_list', { p_token: token }));
+    return { rows: rows.map(profileToCustomer), activeId };
+  } catch (e) {
+    if (e instanceof ServiceError) throw e;
+    throw new ServiceError((e as Error).message, 'UNKNOWN');
+  }
+}
+
+/** Đặt hồ sơ đang xem cho phiên (server kiểm hồ sơ cùng công ty + cùng SĐT) — yêu cầu / thanh toán online theo hồ sơ này. */
+export async function chooseProfile(token: string, customerId: string): Promise<void> {
+  const res = await rpc<unknown>('fn_portal_app_chon_ho_so', { p_token: token, p_khach_hang_id: customerId });
+  const error = typeof res === 'object' && res !== null && 'error' in res ? str((res as { error: unknown }).error) : '';
+  if (error) throw new ServiceError(error, 'UNKNOWN');
+}
+
+const profileToCustomer = (r: ProfileRow): CustomerRow => ({
+  id: r.id,
+  ma_ctdk: r.ma_ctdk ?? '',
+  ten_kh: r.ten_kh ?? null,
+  ten_cong_ty: r.ten_cong_ty ?? null,
+  dien_thoai: r.dien_thoai ?? null,
+  di_dong: r.di_dong ?? null,
+  email: r.email ?? null,
+  dia_chi: r.dia_chi ?? null,
+  cccd: r.cccd ?? null,
+  so_cmnd: r.so_cmnd ?? null,
+  ma_so_kh: r.ma_so_kh ?? null,
+});
+
+/** Một công ty trong kết quả đăng nhập trên server (`fn_portal_app_dang_nhap`). */
+export interface AppSignInCompany {
+  company_id: string;
+  ten_ct: string | null;
+  /** Phiên hợp đồng; null = tài khoản tự đăng ký qua website NOXH (chỉ có phiên NOXH). */
+  token: string | null;
+  account_id: string;
+  khach_hang_id: string;
+  username: string | null;
+  noxh_slug: string | null;
+  noxh_token: string | null;
+  khach_hang: CustomerRow | null;
+}
+
+/**
+ * Đăng nhập trên server (`beeland/supabase/migrations/20261009190000_portal_app_dang_nhap.sql`, anon): tra hồ sơ theo SĐT/CCCD,
+ * đăng nhập mọi công ty, tự liên kết công ty mới sau khi mật khẩu đúng, lấy phiên NOXH — không dùng tài khoản hệ thống.
+ */
+export async function appSignIn(login: string, password: string): Promise<{ phone: string; companies: AppSignInCompany[] }> {
+  const res = await rpc<unknown>('fn_portal_app_dang_nhap', { p_login: login, p_password: password });
+  const r = (typeof res === 'object' && res !== null ? res : {}) as {
+    data?: { sdt?: unknown; cong_ty?: unknown };
+    error?: unknown;
+    errors?: unknown;
+    ma?: unknown;
+  };
+  if (r.data && Array.isArray(r.data.cong_ty)) return { phone: str(r.data.sdt), companies: r.data.cong_ty as AppSignInCompany[] };
+  const message = str(r.error);
+  if (r.ma === 'KHONG_CO_TAI_KHOAN') throw new ServiceError(message || ACCOUNT_NOT_FOUND, 'NOT_FOUND', 'identifier');
+  if (r.ma === 'SAI_DANG') throw new ServiceError(message, 'UNKNOWN', 'identifier');
+  const errors = Array.isArray(r.errors) ? r.errors.map(str) : [message];
+  throw new ServiceError(loginRejectMessage(errors), 'UNAUTHORIZED', 'password');
+}
+
+/** Hồ sơ ở công ty mới theo SĐT tài khoản của phiên (`fn_portal_app_cong_ty_moi`, chỉ đọc) — bỏ các công ty đã có trong phiên. */
+export async function findNewCompaniesByToken(token: string, knownCompanyIds: string[]): Promise<CompanyOption[]> {
+  const res = await rpc<unknown>('fn_portal_app_cong_ty_moi', { p_token: token, p_da_co: knownCompanyIds });
+  const r = (typeof res === 'object' && res !== null ? res : {}) as { data?: unknown; error?: unknown };
+  if (!Array.isArray(r.data)) throw new ServiceError(str(r.error) || 'Không dò được hồ sơ ở công ty mới', 'UNKNOWN');
+  return (r.data as Record<string, unknown>[]).map((x) => ({
+    companyId: str(x.company_id),
+    companyName: str(x.ten_ct),
+    customerId: str(x.khach_hang_id),
+    customerName: str(x.ten_kh),
+    customerCode: str(x.ma_so_kh),
+  }));
 }

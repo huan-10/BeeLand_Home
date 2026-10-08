@@ -17,7 +17,7 @@ const HOTLINE = '1900 6868';
 const MANAGE_GROUPS = APP_MODULE_GROUPS.map((g) => ({ ...g, items: APP_MODULES.filter((m) => m.group === g.id) }));
 
 export default function ProfileScreen() {
-  const { user, signOut, companies, activeCompanyId, selectCompany, noxhNeedsConnect } = useAuth();
+  const { user, signOut, companies, activeCompanyId, activeCustomerId, selectCompany, noxhNeedsConnect } = useAuth();
   const toast = useToast();
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
@@ -28,15 +28,22 @@ export default function ProfileScreen() {
 
   if (!user) return null;
 
-  const handleSwitchCompany = async (companyId: string) => {
-    if (companyId === activeCompanyId) {
+  const handleSwitchCompany = async (companyId: string, customerId?: string) => {
+    if (companyId === activeCompanyId && (!customerId || customerId === activeCustomerId)) {
       setCompanyOpen(false);
       return;
     }
-    await selectCompany(companyId);
+    try {
+      await selectCompany(companyId, customerId);
+    } catch (e) {
+      // Mạng lỗi / phiên công ty hết hạn / hồ sơ không còn thuộc tài khoản → báo, giữ hộp chọn để thử lại.
+      toast.show(e instanceof Error && e.message ? e.message : 'Không chuyển được hồ sơ. Vui lòng thử lại.', 'danger');
+      return;
+    }
     setCompanyOpen(false);
-    const name = companies.find((c) => c.companyId === companyId)?.companyName;
-    toast.show(name ? `Đã chuyển sang ${name}` : 'Đã chuyển công ty', 'success');
+    const chosen = companies.find((c) => c.companyId === companyId && (!customerId || c.customerId === customerId));
+    const label = [chosen?.customerCode, chosen?.companyName].filter(Boolean).join(' · ');
+    toast.show(label ? `Đã chuyển sang hồ sơ ${label}` : 'Đã chuyển hồ sơ', 'success');
   };
 
   const handleSignOut = async () => {
@@ -105,13 +112,19 @@ export default function ProfileScreen() {
           <KeyValueRow label="Địa chỉ" value={user.address || '—'} last />
         </Card>
 
-        {/* Một SĐT là khách của nhiều chủ đầu tư → chuyển công ty không cần đăng nhập lại. */}
+        {/* Một SĐT có nhiều hồ sơ (nhiều chủ đầu tư, hoặc nhiều hồ sơ trong một công ty) → chuyển hồ sơ không cần đăng nhập lại. */}
         {companies.length > 1 ? (
           <Card padding="sm">
             <Text variant="label" color={semantic.textMuted} accessibilityRole="header" style={styles.menuTitle}>
-              Công ty ({companies.length})
+              Hồ sơ khách hàng ({companies.length})
             </Text>
-            <MenuItem icon="building" tone="primary" label="Chuyển công ty" value={user.companyName} onPress={() => setCompanyOpen(true)} />
+            <MenuItem
+              icon="building"
+              tone="primary"
+              label="Chuyển hồ sơ"
+              value={[user.customerCode, user.companyName].filter(Boolean).join(' · ')}
+              onPress={() => setCompanyOpen(true)}
+            />
           </Card>
         ) : null}
 
@@ -139,7 +152,7 @@ export default function ProfileScreen() {
         {/* Hành động nguy hiểm tách riêng khỏi danh sách menu và cần xác nhận. */}
         <Button title="Đăng xuất" variant="danger" leftIcon="logout" onPress={() => setLogoutOpen(true)} />
         <Text variant="caption" color={semantic.textMuted} align="center">
-          BeeSky · {appVersionLabel()}
+          Beeland Plus · {appVersionLabel()}
         </Text>
       </View>
 
@@ -148,6 +161,7 @@ export default function ProfileScreen() {
         visible={companyOpen}
         companies={companies}
         activeCompanyId={activeCompanyId}
+        activeCustomerId={activeCustomerId}
         onSelect={handleSwitchCompany}
         onClose={() => setCompanyOpen(false)}
       />

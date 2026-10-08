@@ -101,10 +101,22 @@ export function addCompanies(session: AuthSession, entries: CompanySession[]): A
   return { ...session, companies: [...current, ...entries.filter((e) => !known.has(e.companyId))] };
 }
 
-/** Chuyển sang công ty khác trong cùng phiên (không cần đăng nhập lại). Không có công ty đó → giữ nguyên. */
-export function withActiveCompany(session: AuthSession, companyId: string): AuthSession {
-  const entry = session.companies?.find((c) => c.companyId === companyId);
-  if (!entry) return session;
+/** Hồ sơ của một công ty (vắng `profiles` → chỉ hồ sơ đang xem). */
+const profilesOf = (c: CompanySession) => c.profiles ?? [{ customerId: c.customerId, user: c.user }];
+
+/**
+ * Chuyển công ty / hồ sơ đang xem trong cùng phiên (không cần đăng nhập lại). `customerId` vắng → hồ sơ đang xem của công ty đó.
+ * Công ty hoặc hồ sơ không có trong phiên → giữ nguyên. Gọi server (`selectProfile`) TRƯỚC để phiên server theo cùng hồ sơ.
+ */
+export function withActiveCompany(session: AuthSession, companyId: string, customerId?: string): AuthSession {
+  const found = session.companies?.find((c) => c.companyId === companyId);
+  if (!found) return session;
+  let entry = found;
+  if (customerId && customerId !== found.customerId) {
+    const profile = profilesOf(found).find((p) => p.customerId === customerId);
+    if (!profile) return session;
+    entry = { ...found, customerId: profile.customerId, user: profile.user };
+  }
   return {
     ...session,
     token: entry.token,
@@ -112,16 +124,21 @@ export function withActiveCompany(session: AuthSession, companyId: string): Auth
     companyId: entry.companyId,
     customerId: entry.customerId,
     user: entry.user,
+    companies: session.companies?.map((c) => (c.companyId === companyId ? entry : c)),
   };
 }
 
+/** Danh sách chọn: mỗi hồ sơ một dòng, theo thứ tự công ty. */
 export function companyOptions(session: AuthSession | null): CompanyOption[] {
-  return (session?.companies ?? []).map((c) => ({
-    companyId: c.companyId,
-    companyName: c.companyName,
-    customerName: c.user.fullName,
-    customerCode: c.user.customerCode,
-  }));
+  return (session?.companies ?? []).flatMap((c) =>
+    profilesOf(c).map((p) => ({
+      companyId: c.companyId,
+      companyName: c.companyName,
+      customerId: p.customerId,
+      customerName: p.user.fullName,
+      customerCode: p.user.customerCode,
+    })),
+  );
 }
 
 /** Token phiên của mọi công ty (hợp đồng + NOXH) — đăng xuất phải huỷ hết. */

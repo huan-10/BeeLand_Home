@@ -9,10 +9,10 @@
 ## Thành phần chính
 1. **Thẻ tài khoản nền ink** (bo 28, `raised`): `Avatar lg` + tên `title` trắng + "Mã khách hàng" (`onInverseMuted`).
 2. **Thông tin tài khoản**: `KeyValueRow` Công ty (khi có tên) · Mã khách hàng · Email · Số điện thoại (**3 dòng này chạm để sao chép**) · CCCD · Địa chỉ (thiếu dữ liệu → "—").
-   - **Công ty (n)** — chỉ khi SĐT là khách của từ 2 công ty: thẻ menu một mục "Chuyển công ty" (icon `building`, giá trị = công ty đang xem) → `CompanyPickerDialog` (công ty đang xem viền `brand` + nền `primary` pastel + ✓; chọn công ty khác → Toast "Đã chuyển sang …", các tab tải lại dữ liệu).
+   - **Hồ sơ khách hàng (n)** (2026-10-08, thay "Công ty (n)") — chỉ khi có từ 2 hồ sơ: một mục "Chuyển hồ sơ" (giá trị "mã KH · công ty") mở modal "Chọn hồ sơ khách hàng". Trước đây: thẻ menu một mục "Chuyển công ty" (icon `building`, giá trị = công ty đang xem) → `CompanyPickerDialog` (công ty đang xem viền `brand` + nền `primary` pastel + ✓; chọn công ty khác → Toast "Đã chuyển sang …", các tab tải lại dữ liệu).
 3. **Bảo mật & hỗ trợ** (menu, mỗi mục cao ≥ 52, hover/nhấn nền `gray.50`): **Đổi mật khẩu** · Thông báo · Phiếu thu của tôi · Hotline hỗ trợ 1900 6868 (mở `tel:`).
 4. **Đăng xuất**: `Button danger` tách riêng dưới menu → **hộp thoại xác nhận** "Đăng xuất?" (Hủy / Đăng xuất danger, có loading).
-5. **Phiên bản app**: "BeeSky · Phiên bản 1.0.0 · Web/iOS/Android" (`lib/appInfo.ts`, từ `app.json`).
+5. **Phiên bản app**: "Beeland Plus · Phiên bản 1.0.0 · Web/iOS/Android" (`lib/appInfo.ts`, từ `app.json`).
 
 ## Đổi mật khẩu (`ChangePasswordDialog`, chỉ giao diện)
 - 3 ô `password` có nhãn: Mật khẩu hiện tại (`current-password`) · Mật khẩu mới (`new-password`) · Nhập lại mật khẩu mới.

@@ -11,7 +11,7 @@ Chạy trên iOS, Android và Web với cùng một giao diện. Toàn bộ ch�
 - Expo Router (routes nằm ở `app/` ở gốc dự án — dự án này **không** dùng `src/app/`)
 - react-native-web + `@expo/metro-runtime` (web xuất tĩnh), NativeWind v4 + Tailwind 3
 - Font: **chỉ Be Vietnam Pro** (400/500/600/700) qua `expo-font`; icon: **Phosphor (phosphor-react-native)** qua `<Icon name variant>` (tên ngữ nghĩa trong `theme/icons.ts`, import từng icon `phosphor-react-native/src/icons/<Tên>`)
-- AsyncStorage cho phiên đăng nhập; dữ liệu giả trong `data/mock/`. Đã nối database thật (dùng chung với web `beeland` và `beeland-app_2026`) qua `services/supabase/*`: đăng ký/đăng nhập (`docs/auth-flow.md`), hợp đồng / lịch thanh toán / phiếu thu / thông báo **chỉ của khách đang đăng nhập** (`docs/real-data.md`). `AUTH_BACKEND = 'mock'` để chạy offline
+- AsyncStorage cho phiên đăng nhập; dữ liệu giả trong `data/mock/`. Đã nối database thật (dùng chung với web `beeland` và `beeland-app_2026`) qua `services/supabase/*` — chỉ hàm anon `fn_portal_app_*` theo token phiên khách, KHÔNG dùng tài khoản hệ thống: đăng ký/đăng nhập (`docs/auth-flow.md`), hợp đồng / lịch thanh toán / phiếu thu / thông báo **chỉ của khách đang đăng nhập** (`docs/real-data.md`). `AUTH_BACKEND = 'mock'` để chạy offline
 
 Lệnh: `npm run web` · `npm run ios` · `npm run android` · `npm run lint` · `npm run typecheck` · `npm test` (tương phản màu) · `npm run audit:ui` · `npx expo export --platform web`.
 Trong môi trường không truy cập được api.expo.dev, thêm `EXPO_OFFLINE=1` trước `npx expo install` / `npx expo export`.

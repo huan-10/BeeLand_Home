@@ -20,17 +20,3 @@ export const SUPABASE_URL = 'https://api-beelandv2.beesky.vn';
 /** Anon key công khai — RLS chặn đọc bảng; chỉ gọi được các RPC cổng khách hàng (fn_portal_login, fn_portal_my_contracts…). */
 export const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg3NTQ2ODQ0LCJleHAiOjE5NDUyMjY4NDR9.ftDz2g-LgHuMoXnFMzTtbIfgDodnntv5fGbbonqWYiw';
-
-/**
- * Tài khoản hệ thống (nhân viên) để app tra hồ sơ khách hàng và tạo tài khoản cổng khách hàng trước khi khách đăng nhập —
- * cách làm giống app 2026 (đăng nhập `cloud-auth` → JWT). Nên là tài khoản thuộc công ty `beesky1` để thấy khách của MỌI công ty.
- * Đặt trong `.env.local` (không commit): EXPO_PUBLIC_KH_SERVICE_COMPANY / _EMAIL / _PASSWORD.
- *
- * ⚠ Biến `EXPO_PUBLIC_*` được đóng gói vào app: ai giải nén app đều đọc được tài khoản này.
- * Hướng an toàn lâu dài: edge function `portal-auth` (`../beeland/supabase/functions/portal-auth`).
- */
-export const SERVICE_ACCOUNT = {
-  company: process.env.EXPO_PUBLIC_KH_SERVICE_COMPANY ?? '',
-  email: process.env.EXPO_PUBLIC_KH_SERVICE_EMAIL ?? '',
-  password: process.env.EXPO_PUBLIC_KH_SERVICE_PASSWORD ?? '',
-};

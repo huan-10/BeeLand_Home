@@ -8,13 +8,13 @@ import { semantic } from '@/theme';
 
 export default function AppLayout() {
   const { isWide } = useBreakpoint();
-  const { activeCompanyId, newCompanies, linkNewCompanies, dismissNewCompanies } = useAuth();
+  const { activeCompanyId, activeCustomerId, newCompanies, linkNewCompanies, dismissNewCompanies } = useAuth();
 
   return (
     <>
-      {/* Chuyển công ty → dựng lại các màn để tải hợp đồng / thanh toán / phiếu thu của hồ sơ ở công ty mới. */}
+      {/* Chuyển công ty / hồ sơ → dựng lại các màn để tải hợp đồng / thanh toán / phiếu thu của hồ sơ mới. */}
       <Tabs
-        key={activeCompanyId ?? 'none'}
+        key={`${activeCompanyId ?? 'none'}:${activeCustomerId ?? ''}`}
         tabBar={(props) => <AppNavigation {...props} />}
         screenOptions={{
           headerShown: false,
@@ -30,6 +30,8 @@ export default function AppLayout() {
         <Tabs.Screen name="profile" options={{ title: 'Cá nhân' }} />
         <Tabs.Screen name="notifications" options={{ title: 'Thông báo', href: null }} />
         <Tabs.Screen name="contract/[id]" options={{ title: 'Hợp đồng', href: null }} />
+        {/* Mã QR thanh toán — mở từ "Xác nhận thanh toán" ở Chi tiết hợp đồng. */}
+        <Tabs.Screen name="pay" options={{ title: 'Thanh toán', href: null }} />
         <Tabs.Screen name="yeu-cau" options={{ title: 'Yêu cầu', href: null }} />
         <Tabs.Screen name="ban-giao" options={{ title: 'Bàn giao căn hộ', href: null }} />
         <Tabs.Screen name="lich-ban-giao" options={{ title: 'Lịch bàn giao', href: null }} />

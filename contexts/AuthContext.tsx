@@ -11,6 +11,7 @@ import {
   linkNewCompanies as linkNewCompaniesService,
   login,
   logout,
+  selectProfile,
   setActiveSession,
 } from '@/services';
 import { onNoxhSessionExpired } from '@/services/session';
@@ -21,17 +22,22 @@ export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 interface AuthContextValue {
   status: AuthStatus;
   user: User | null;
-  /** Các công ty có SĐT đang đăng nhập (từ 2 công ty trở lên mới cho chuyển). */
+  /** Các hồ sơ khách hàng (mọi công ty) có SĐT đang đăng nhập — từ 2 hồ sơ trở lên mới cho chuyển. */
   companies: CompanyOption[];
   /** Công ty đang xem. */
   activeCompanyId: string | null;
+  /** Hồ sơ khách hàng đang xem (`cloud_customers.id`). */
+  activeCustomerId: string | null;
   /**
    * Đăng nhập bằng số điện thoại. `remember` quyết định có lưu phiên lâu dài không.
    * SĐT là khách của nhiều công ty → trả danh sách công ty (chưa vào app); gọi `selectCompany` để vào.
    */
   signIn: (phone: string, password: string, remember: boolean) => Promise<CompanyOption[] | null>;
-  /** Chọn công ty sau khi đăng nhập, hoặc chuyển công ty khi đang ở trong app — không cần nhập lại mật khẩu. */
-  selectCompany: (companyId: string) => Promise<void>;
+  /**
+   * Chọn hồ sơ (công ty + hồ sơ khách hàng) sau khi đăng nhập, hoặc chuyển hồ sơ khi đang ở trong app — không cần nhập lại mật khẩu.
+   * `customerId` vắng → hồ sơ đang xem của công ty đó.
+   */
+  selectCompany: (companyId: string, customerId?: string) => Promise<void>;
   signOut: () => Promise<void>;
   /** Hồ sơ phát sinh ở công ty mới sau khi khách đã đăng nhập — chờ khách nhập mật khẩu để liên kết. */
   newCompanies: CompanyOption[];
@@ -137,17 +143,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const selectCompany = useCallback(
-    async (companyId: string) => {
+    async (companyId: string, customerId?: string) => {
       if (pending.current) {
         const { session: chosen, remember } = pending.current;
+        // Đặt hồ sơ cho phiên server trước (lỗi → ném, giữ hộp chọn để thử lại).
+        if (customerId) await selectProfile(chosen, companyId, customerId);
         pending.current = null;
-        await enter(withActiveCompany(chosen, companyId), remember);
+        await enter(withActiveCompany(chosen, companyId, customerId), remember);
         return;
       }
-      if (!session || session.companyId === companyId) return;
-      const next = withActiveCompany(session, companyId);
+      if (!session) return;
+      if (session.companyId === companyId && (!customerId || session.customerId === customerId)) return;
+      if (customerId) await selectProfile(session, companyId, customerId);
+      const next = withActiveCompany(session, companyId, customerId);
       await updateSession(next);
-      // Đổi phiên → xoá bộ nhớ đệm dữ liệu của công ty cũ (onSessionChange).
+      // Đổi phiên → xoá bộ nhớ đệm dữ liệu của hồ sơ cũ (onSessionChange).
       setActiveSession(next);
       setSession(next);
       setUser(next.user ?? null);
@@ -218,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       companies: companyOptions(session),
       activeCompanyId: session?.companyId ?? null,
+      activeCustomerId: session?.customerId ?? null,
       signIn,
       selectCompany,
       signOut,

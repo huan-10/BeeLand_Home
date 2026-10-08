@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { loadModule, stubModule } = require('./noxh-fixtures.cjs');
 
 // Test luật của dữ liệu giả → cố định chế độ mock (mặc định app theo AUTH_BACKEND = 'api').
-stubModule('services/config.ts', { AUTH_BACKEND: 'mock', NOXH_BACKEND: 'mock', SUPABASE_URL: 'https://api.test', SUPABASE_ANON_KEY: 'anon', SERVICE_ACCOUNT: {} });
+stubModule('services/config.ts', { AUTH_BACKEND: 'mock', NOXH_BACKEND: 'mock', SUPABASE_URL: 'https://api.test', SUPABASE_ANON_KEY: 'anon' });
 
 const session = loadModule('services/session.ts');
 const svc = loadModule('services/noxhService.ts');

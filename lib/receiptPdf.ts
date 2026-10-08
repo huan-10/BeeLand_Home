@@ -125,7 +125,7 @@ export function buildReceiptHtml(r: Receipt, company: ReceiptCompany): string {
     <div class="col"><div class="role">Người lập phiếu</div><div class="hint">(Ký, họ tên)</div><div class="space"></div></div>
     <div class="col"><div class="role">Thủ quỹ</div><div class="hint">(Ký, họ tên)</div><div class="space">${esc(r.cashier)}</div></div>
   </div>
-  <div class="note">Bản phiếu thu điện tử tạo từ ứng dụng BeeSky để tra cứu — không thay thế liên phiếu thu có chữ ký, đóng dấu của chủ đầu tư.</div>
+  <div class="note">Bản phiếu thu điện tử tạo từ ứng dụng Beeland Plus để tra cứu — không thay thế liên phiếu thu có chữ ký, đóng dấu của chủ đầu tư.</div>
 </body></html>`;
 }
 

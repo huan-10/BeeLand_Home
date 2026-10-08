@@ -55,4 +55,4 @@ Danh sách phiếu thu nay là tab **Đã thanh toán** của màn Thanh toán (
 ## Tải PDF / Chia sẻ ở chi tiết phiếu thu (2026-10-06)
 - Hai nút giữ nguyên vị trí (Tải PDF secondary · Chia sẻ outline, có `loading`). Bấm → dựng PDF Mẫu 01-TT trên máy (`getReceiptDocument` → `saveReceiptPdf` / `shareReceiptPdf`, tách `receiptFile.ts` / `receiptFile.web.ts`).
 - Hệ thống tự hiện bảng lưu / chia sẻ nên không có toast khi thành công trên điện thoại; web có toast hướng dẫn ("Chọn Lưu thành PDF…", "Đã sao chép thông tin phiếu thu."); lỗi → toast `danger`.
-- Phiếu in đen trắng, chữ Times; cuối phiếu ghi "Bản phiếu thu điện tử tạo từ ứng dụng BeeSky để tra cứu…".
+- Phiếu in đen trắng, chữ Times; cuối phiếu ghi "Bản phiếu thu điện tử tạo từ ứng dụng Beeland Plus để tra cứu…".

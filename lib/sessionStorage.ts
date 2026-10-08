@@ -37,7 +37,11 @@ function parse(raw: string | null): AuthSession | null {
   }
 }
 
+/** JWT tài khoản hệ thống mà bản app cũ lưu (`beesky.serviceJwt`, trước 2026-10-08) — xoá khỏi máy, app không còn dùng. */
+const LEGACY_SERVICE_JWT_KEY = 'beesky.serviceJwt';
+
 export async function loadSession(): Promise<AuthSession | null> {
+  void AsyncStorage.removeItem(LEGACY_SERVICE_JWT_KEY).catch(() => undefined);
   try {
     const persisted = parse(await AsyncStorage.getItem(SESSION_KEY));
     if (persisted) return persisted;
