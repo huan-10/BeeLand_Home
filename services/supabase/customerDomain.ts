@@ -7,7 +7,8 @@ import {
   paymentMethodFromText,
 } from '@/lib/portalMapping';
 import { summarizeContractPayments, toInstallmentView } from '@/lib/payment';
-import type { Contract, ContractListItem, PaymentInstallment, PaymentInstallmentView, Receipt } from '@/types';
+import { recordPayTarget } from '@/lib/paymentTarget';
+import type { Contract, ContractListItem, PaymentInstallment, PaymentInstallmentView, PayTarget, Receipt } from '@/types';
 
 import { str } from './client';
 import { getCustomerRecords, getPgcSchedule, getPgcVouchers, type PgcRecord, type ScheduleRpcRow, type VoucherRow } from './customerData';
@@ -103,6 +104,8 @@ export interface ContractBundle {
   contract: Contract;
   installments: PaymentInstallmentView[];
   item: ContractListItem;
+  /** Khoản trả được ngay bằng QR (đợt kế tiếp / tiền cọc / tiền giữ chỗ); null = không có nút Thanh toán. */
+  payTarget: PayTarget | null;
 }
 
 function bundleOf(record: PgcRecord, schedule: ScheduleRpcRow[]): ContractBundle {
@@ -116,7 +119,16 @@ function bundleOf(record: PgcRecord, schedule: ScheduleRpcRow[]): ContractBundle
     summary.remainingAmount = Math.max(contract.totalValue - paid, 0);
     summary.paidPercent = contract.totalValue > 0 ? Math.min(100, (paid / contract.totalValue) * 100) : 0;
   }
-  return { record, contract, installments, item: { ...contract, summary } };
+  const payTarget = recordPayTarget({
+    contract,
+    stage: record.row.giai_doan,
+    statusCode: record.status?.item_code ?? null,
+    depositAmount: money(record.row.tien_coc),
+    paidAmount: money(record.row.da_thu),
+    booking: record.booking ? { amount: money(record.booking.tien_giu_cho), expiresAt: str(record.booking.het_han_luc) || null } : null,
+    nextInstallment: summary.nextInstallment,
+  });
+  return { record, contract, installments, item: { ...contract, summary }, payTarget };
 }
 
 /** Toàn bộ hợp đồng + lịch thanh toán của khách đang đăng nhập. */

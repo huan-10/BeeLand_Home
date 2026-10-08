@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
@@ -21,36 +21,51 @@ import {
   Skeleton,
   TabPanel,
   Text,
-  useToast,
   type LineTabItem,
 } from '@/components/ui';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useContract } from '@/hooks/useContracts';
-import { useFormSubmit } from '@/hooks/useFormSubmit';
+import { useHardwareBack } from '@/hooks/useHardwareBack';
 import { useReceipts } from '@/hooks/useReceipts';
-import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
+import { payTargetDeadline } from '@/lib/paymentTarget';
 import { contractTypeLabels } from '@/lib/labels';
 import { openDocument } from '@/lib/openDocument';
-import { startPayment, type ContractDetail } from '@/services';
-import type { PaymentInstallmentView } from '@/types';
+import type { ContractDetail } from '@/services';
+import type { PayTarget } from '@/types';
 import { colors, layout, radius, semantic, sizes, spacing } from '@/theme';
 
 type TabKey = 'schedule' | 'receipts' | 'info';
 const TABS_ID = 'contract-detail';
 
 export default function ContractDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, paidAt } = useLocalSearchParams<{ id: string; paidAt?: string }>();
+  const navigation = useNavigation();
   const { isDesktop } = useBreakpoint();
-  const toast = useToast();
   const detail = useContract(id);
   const receipts = useReceipts({ contractId: id });
-  const { submit, submitting } = useFormSubmit(startPayment);
 
   const [tab, setTab] = useState<TabKey>('schedule');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const payButtonRef = useRef<View>(null);
 
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/contracts'));
+  // Chỉ lùi TRONG nhánh Hợp đồng (Stack). `router.canGoBack()` xét cả thanh tab → `back()` rơi về tab đầu (Trang chủ)
+  // khi vào thẳng chi tiết (từ Trang chủ / Thanh toán / màn QR). Không có màn dưới → danh sách hợp đồng.
+  const goBack = () => ((navigation.getState()?.index ?? 0) > 0 ? navigation.goBack() : router.replace('/contracts'));
+  // Android: nhánh không còn màn dưới → về danh sách hợp đồng (không để thanh tab đưa về Trang chủ).
+  useHardwareBack(() => {
+    if ((navigation.getState()?.index ?? 0) > 0) return false;
+    router.replace('/contracts');
+    return true;
+  });
+
+  // Màn QR báo đã nhận tiền (`paidAt`) → tải lại lịch thanh toán + phiếu thu.
+  useEffect(() => {
+    if (!paidAt) return;
+    void detail.refetch();
+    void receipts.refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi có lần thanh toán mới
+  }, [paidAt]);
 
   const header = (title: string) => (
     <View style={styles.header}>
@@ -84,7 +99,8 @@ export default function ContractDetailScreen() {
   }
 
   const { contract, installments } = detail.data;
-  const payable = contract.summary.nextInstallment;
+  // Đợt kế tiếp (HĐMB) / tiền cọc / tiền giữ chỗ — cùng quy tắc với máy chủ (lib/paymentTarget).
+  const payable = detail.data.payTarget;
 
   const closeDialog = () => {
     setConfirmOpen(false);
@@ -94,19 +110,14 @@ export default function ContractDetailScreen() {
     }
   };
 
-  const confirmPayment = async () => {
+  // Mở màn mã QR (máy chủ tạo / dùng lại tài khoản định danh, tự tính số tiền).
+  const confirmPayment = () => {
     if (!payable) return;
-    const outcome = await submit(contract.id, payable.id);
-    closeDialog();
-    if (!outcome.ok) {
-      toast.show(outcome.error.message, 'danger');
-      return;
-    }
-    if (outcome.result.status === 'redirect' && outcome.result.checkoutUrl) {
-      await openDocument(outcome.result.checkoutUrl, 'Thanh toán');
-      return;
-    }
-    toast.show(outcome.result.message, 'info');
+    setConfirmOpen(false);
+    router.push({
+      pathname: '/pay',
+      params: { contractId: payable.contractId, code: payable.contractCode, ...(payable.dot != null ? { dot: String(payable.dot) } : {}) },
+    });
   };
 
   const payButton = (fullWidth: boolean) =>
@@ -118,7 +129,7 @@ export default function ContractDetailScreen() {
         size="lg"
         fullWidth={fullWidth}
         onPress={() => setConfirmOpen(true)}
-        accessibilityHint={`Thanh toán ${payable.name}, ${formatCurrency(payable.remainingAmount)}`}
+        accessibilityHint={`Thanh toán ${payable.name}, ${formatCurrency(payable.amount)}`}
       />
     ) : null;
 
@@ -165,9 +176,8 @@ export default function ContractDetailScreen() {
   const dialog = payable ? (
     <PaymentConfirmDialog
       visible={confirmOpen}
-      installment={payable}
-      submitting={submitting}
-      onConfirm={() => void confirmPayment()}
+      target={payable}
+      onConfirm={confirmPayment}
       onClose={closeDialog}
     />
   ) : null;
@@ -201,7 +211,7 @@ export default function ContractDetailScreen() {
         payable ? (
           <StickyActionBar>
             <View style={styles.payBar}>
-              <PayInfo installment={payable} />
+              <PayInfo target={payable} />
               {payButton(false)}
             </View>
           </StickyActionBar>
@@ -220,20 +230,23 @@ export default function ContractDetailScreen() {
   );
 }
 
-/** Thanh đáy (mobile): đợt sắp phải trả + số tiền bên trái, nút Thanh toán bên phải — biết trả gì trước khi bấm. */
-function PayInfo({ installment }: { installment: PaymentInstallmentView }) {
-  const overdue = installment.status === 'overdue';
+/** Thanh đáy (mobile): khoản sắp phải trả + số tiền bên trái, nút Thanh toán bên phải — biết trả gì trước khi bấm. */
+function PayInfo({ target }: { target: PayTarget }) {
+  const overdue = target.daysUntilDue != null && target.daysUntilDue < 0;
+  const deadline = payTargetDeadline(target);
   return (
-    <View style={styles.payInfo} accessible accessibilityLabel={`${installment.name}, ${formatCurrency(installment.remainingAmount)}, hạn ${formatDate(installment.dueDate)}, ${formatDaysLeft(installment.daysUntilDue)}`}>
+    <View style={styles.payInfo} accessible accessibilityLabel={[target.name, formatCurrency(target.amount), deadline].filter(Boolean).join(', ')}>
       <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
-        {installment.name}
+        {target.name}
       </Text>
       <Text variant="subhead" weight="bold" numeric numberOfLines={1} adjustsFontSizeToFit>
-        {formatCurrency(installment.remainingAmount)}
+        {formatCurrency(target.amount)}
       </Text>
-      <Text variant="caption" weight={overdue ? 'semibold' : undefined} color={overdue ? colors.danger[700] : semantic.textMuted} numberOfLines={1}>
-        {formatDaysLeft(installment.daysUntilDue)}
-      </Text>
+      {deadline ? (
+        <Text variant="caption" weight={overdue ? 'semibold' : undefined} color={overdue ? colors.danger[700] : semantic.textMuted} numberOfLines={1}>
+          {deadline}
+        </Text>
+      ) : null}
     </View>
   );
 }

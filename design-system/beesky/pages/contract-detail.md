@@ -42,7 +42,7 @@ Danh sách `ReceiptCard` của hợp đồng (`useReceipts({ contractId })`) →
 - Nội dung: hộp **nền ink** bo 20 "Số tiền cần thanh toán" (`title` trắng, `numeric`) + "Còn N ngày"/"Quá hạn N ngày"; `KeyValueRow` Hợp đồng · Đợt · Căn hộ · Hạn thanh toán. Khoản được chọn = `summary.nextInstallment` (đợt quá hạn trước, sau đó hạn gần nhất).
 - Nút: "Hủy" (ghost) · "Xác nhận thanh toán" (primary, `loading`).
 - **Esc** / nút X / chạm vùng tối / Back (Android) đều đóng; web: focus **giữ trong hộp thoại**, focus đầu tiên vào nút Đóng, đóng xong **trả focus về "Thanh toán ngay"**; tắt hiệu ứng khi giảm chuyển động.
-- Xác nhận → `startPayment(contractId, installmentId)` (`services/paymentService.ts`, **TODO** tích hợp cổng thanh toán). Kết quả `unavailable` → Toast thông tin; `redirect` → mở `checkoutUrl`; lỗi → Toast `danger`.
+- **2026-10-07:** khoản = `detail.payTarget` (đợt kế tiếp HĐMB, **tiền đặt cọc** của phiếu cọc chờ duyệt, **tiền giữ chỗ** của phiếu giữ chỗ chờ duyệt). Dòng "Khoản thanh toán"; "Hạn thanh toán" chỉ khi là đợt; giữ chỗ hiện "Giữ chỗ tới hh:mm dd/MM/yyyy". Xác nhận → mở màn **`/pay`** (mã QR, `pages/pay.md`).
 
 ## Trạng thái
 | Trạng thái | Hiển thị |

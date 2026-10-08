@@ -16,5 +16,6 @@ export * from './paymentService';
 export * from './receiptService';
 export * from './requestService';
 export * from './receiptFile';
+export * from './qrImage';
 export { setActiveSession } from './session';
 export { clearCustomerDataCache } from './supabase/customerData';

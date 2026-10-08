@@ -1,13 +1,16 @@
 import { mockContracts } from '@/data/mock/contracts';
 import { mockInstallments } from '@/data/mock/installments';
 import { toInstallmentView } from '@/lib/payment';
-import type { PaymentInstallmentView, PaymentIntent } from '@/types';
+import type { PaymentCheckout, PaymentCheckStatus, PaymentInstallmentView, PayTarget } from '@/types';
 
 import { AUTH_BACKEND } from './config';
-import { isNoxhOnlySession } from './session';
+import { isNoxhOnlySession, requirePortalToken } from './session';
 import { ServiceError } from './errors';
 import { simulateLatency } from './mockLatency';
 import { getContractBundles } from './supabase/customerDomain';
+import { getCheckoutStatus, startCheckout } from './supabase/portalPayment';
+
+export { PaymentBlockedError, type PaymentBlockReason } from './supabase/portalPayment';
 
 /** Lịch thanh toán của một hợp đồng, sắp theo thứ tự đợt. */
 export async function getInstallments(contractId: string): Promise<PaymentInstallmentView[]> {
@@ -40,25 +43,43 @@ export async function getAllInstallments(): Promise<PaymentInstallmentView[]> {
   });
 }
 
+/** Mock: tài khoản định danh giả; "nhận tiền" sau ~20 giây để thử trọn luồng khi chạy offline. */
+const mockCheckouts = new Map<string, { openedAt: number }>();
+const MOCK_PAID_AFTER_MS = 20_000;
+
 /**
- * Khởi tạo thanh toán cho một đợt của hợp đồng.
- * TODO: thay bằng gọi API/database thật — tạo giao dịch ở cổng thanh toán (VNPay/MoMo/ngân hàng)
- * rồi trả về `{ status: 'redirect', checkoutUrl }` để mở trang thanh toán.
+ * Mở mã QR chuyển khoản cho một khoản (đợt HĐMB / tiền cọc / tiền giữ chỗ) — luồng tài khoản định danh như web
+ * (booking / đặt cọc). Máy chủ tự tính số tiền; tiền về → webhook tạo phiếu thu (và tự duyệt booking / đặt cọc).
  */
-export async function startPayment(contractId: string, installmentId: string): Promise<PaymentIntent> {
+export async function startPayment(target: Pick<PayTarget, 'contractId' | 'dot' | 'contractCode'>): Promise<PaymentCheckout> {
   if (AUTH_BACKEND === 'api') {
-    const installments = await getInstallments(contractId);
-    if (!installments.some((i) => i.id === installmentId)) throw new ServiceError('Không tìm thấy đợt thanh toán.', 'NOT_FOUND');
-    return {
-      status: 'unavailable',
-      message: 'Thanh toán trực tuyến đang được tích hợp. Vui lòng chuyển khoản theo hướng dẫn trong hợp đồng.',
-    };
+    return startCheckout(requirePortalToken(), target.contractId, target.dot, target.contractCode);
   }
   await simulateLatency();
-  const installment = mockInstallments.find((i) => i.id === installmentId && i.contractId === contractId);
-  if (!installment) throw new ServiceError('Không tìm thấy đợt thanh toán.', 'NOT_FOUND');
+  const installment = target.dot == null ? null : mockInstallments.find((i) => i.contractId === target.contractId && i.sequence === target.dot);
+  const contract = mockContracts.find((c) => c.id === target.contractId);
+  if (!contract || !installment) throw new ServiceError('Không tìm thấy đợt thanh toán.', 'NOT_FOUND');
+  const vaId = `mock-va-${contract.id}-${installment.sequence}`;
+  mockCheckouts.set(vaId, { openedAt: Date.now() });
   return {
-    status: 'unavailable',
-    message: 'Cổng thanh toán trực tuyến đang được tích hợp. Vui lòng chuyển khoản theo hướng dẫn trong hợp đồng.',
+    vaId,
+    module: 'HOPDONG',
+    bankCode: 'BIDV',
+    accountNumber: `DA1${String(installment.sequence).padStart(8, '0')}`,
+    accountName: 'CONG TY CP BEESKY',
+    amount: Math.max(installment.amount - installment.paidAmount, 0),
+    content: `Thanh toan ${contract.code} ${installment.name}`,
+    expiresAt: null,
+    paidAmount: 0,
+    label: installment.name,
+    contractCode: contract.code,
   };
+}
+
+/** Số tiền tài khoản định danh đã nhận — màn QR hỏi lại mỗi 5 giây. */
+export async function getPaymentStatus(vaId: string): Promise<PaymentCheckStatus> {
+  if (AUTH_BACKEND === 'api') return getCheckoutStatus(requirePortalToken(), vaId);
+  const m = mockCheckouts.get(vaId);
+  if (!m) throw new ServiceError('Không tìm thấy giao dịch thanh toán.', 'NOT_FOUND');
+  return { paidAmount: Date.now() - m.openedAt >= MOCK_PAID_AFTER_MS ? 1 : 0, active: true, approved: false };
 }

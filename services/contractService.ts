@@ -5,6 +5,7 @@ import { mockContracts } from '@/data/mock/contracts';
 import { mockInstallments } from '@/data/mock/installments';
 import { countContractsByStatus, matchesContractFilter, matchesContractSearch } from '@/lib/contract';
 import { summarizeContractPayments, toInstallmentView } from '@/lib/payment';
+import { installmentPayTarget } from '@/lib/paymentTarget';
 import type {
   Contract,
   ContractCounts,
@@ -14,6 +15,7 @@ import type {
   ContractParty,
   ContractTerm,
   PaymentInstallmentView,
+  PayTarget,
 } from '@/types';
 
 import { AUTH_BACKEND } from './config';
@@ -30,6 +32,8 @@ export interface ContractDetail {
   terms: ContractTerm[];
   /** Tệp hợp đồng; dữ liệu thật chưa có PDF → không hiển thị nút xem. */
   document?: ContractDocument;
+  /** Khoản trả được ngay bằng QR (đợt kế tiếp / tiền cọc / tiền giữ chỗ); null → không có nút Thanh toán. */
+  payTarget: PayTarget | null;
 }
 
 /** Hợp đồng PDF mẫu đóng gói trong ứng dụng (mock). */
@@ -93,14 +97,18 @@ export async function getContractById(id: string): Promise<ContractDetail> {
         email: company?.email ?? '',
       },
       terms: [],
+      payTarget: bundle.payTarget,
     };
   }
   await simulateLatency();
   const contract = mockContracts.find((c) => c.id === id);
   if (!contract) throw new ServiceError('Không tìm thấy hợp đồng.', 'NOT_FOUND');
+  const item = toListItem(contract);
+  const next = item.summary.nextInstallment;
   return {
-    contract: toListItem(contract),
+    contract: item,
     installments: buildInstallmentViews(contract),
+    payTarget: next && contract.status !== 'cancelled' ? installmentPayTarget(contract, next) : null,
     seller: clone(mockSeller),
     terms: clone(mockTermsByType[contract.type]),
     document: { title: `Hợp đồng ${contract.code}.pdf`, url: Asset.fromModule(SAMPLE_CONTRACT_PDF).uri },

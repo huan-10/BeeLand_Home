@@ -1,21 +1,23 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Dialog, KeyValueRow, Text } from '@/components/ui';
-import { formatCurrency, formatDate, formatDaysLeft } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
+import { payTargetDeadline } from '@/lib/paymentTarget';
 import { radius, semantic, spacing } from '@/theme';
-import type { PaymentInstallmentView } from '@/types';
+import type { PayTarget } from '@/types';
 
 export interface PaymentConfirmDialogProps {
   visible: boolean;
-  installment: PaymentInstallmentView;
-  submitting: boolean;
+  target: PayTarget;
+  submitting?: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
 
-/** Xác nhận khoản cần thanh toán trước khi chuyển sang cổng thanh toán. */
-export function PaymentConfirmDialog({ visible, installment, submitting, onConfirm, onClose }: PaymentConfirmDialogProps) {
-  const overdue = installment.status === 'overdue';
+/** Xác nhận khoản cần thanh toán trước khi mở mã QR chuyển khoản. */
+export function PaymentConfirmDialog({ visible, target, submitting = false, onConfirm, onClose }: PaymentConfirmDialogProps) {
+  const overdue = target.daysUntilDue != null && target.daysUntilDue < 0;
+  const deadline = payTargetDeadline(target);
   return (
     <Dialog
       visible={visible}
@@ -32,18 +34,23 @@ export function PaymentConfirmDialog({ visible, installment, submitting, onConfi
           Số tiền cần thanh toán
         </Text>
         <Text variant="title" color={semantic.onInverse} numeric>
-          {formatCurrency(installment.remainingAmount)}
+          {formatCurrency(target.amount)}
         </Text>
-        <Text variant="caption" weight="semibold" color={overdue ? semantic.onInverseAccent : semantic.onInverseMuted}>
-          {formatDaysLeft(installment.daysUntilDue)}
-        </Text>
+        {deadline ? (
+          <Text variant="caption" weight="semibold" color={overdue ? semantic.onInverseAccent : semantic.onInverseMuted}>
+            {deadline}
+          </Text>
+        ) : null}
       </View>
       <View>
-        <KeyValueRow label="Hợp đồng" value={installment.contractCode} />
-        <KeyValueRow label="Đợt thanh toán" value={installment.name} />
-        <KeyValueRow label="Căn hộ" value={`${installment.unitCode} · ${installment.projectName}`} />
-        <KeyValueRow label="Hạn thanh toán" value={formatDate(installment.dueDate)} numeric last />
+        <KeyValueRow label="Hợp đồng" value={target.contractCode} />
+        <KeyValueRow label="Khoản thanh toán" value={target.name} />
+        <KeyValueRow label="Căn hộ" value={`${target.unitCode} · ${target.projectName}`} last={!target.dueDate} />
+        {target.dueDate ? <KeyValueRow label="Hạn thanh toán" value={formatDate(target.dueDate)} numeric last /> : null}
       </View>
+      <Text variant="caption" color={semantic.textMuted}>
+        Bước tiếp theo: quét mã QR bằng ứng dụng ngân hàng. Hệ thống tự ghi nhận khi nhận được tiền.
+      </Text>
     </Dialog>
   );
 }

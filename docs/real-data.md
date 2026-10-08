@@ -63,7 +63,7 @@ Bộ nhớ đệm 20 giây để Trang chủ / Hợp đồng / Thanh toán khôn
 - Tệp hợp đồng PDF: ẩn dòng "Xem hợp đồng (PDF)".
 - Điều khoản chính: ẩn khối.
 - Người đại diện / mã số thuế bên bán: ẩn dòng.
-- Thanh toán trực tuyến: báo "đang tích hợp".
+- ~~Thanh toán trực tuyến: báo "đang tích hợp".~~ → 2026-10-07: thanh toán QR, xem mục dưới.
 - **Phiếu thu PDF (2026-10-06):** dựng ngay trên máy từ dữ liệu phiếu (`lib/receiptPdf.ts`, Mẫu 01-TT như web `printReceiptTT200`, số tiền bằng chữ như web `numberToVietnameseWords`; đơn vị = `cloud_companies` của tài khoản) — `expo-print` + `expo-sharing` + `expo-file-system` (có trong Expo Go). Tải PDF: Android hộp in → "Lưu dưới dạng PDF", iOS bảng chia sẻ "Lưu vào Tệp", web hộp in "Lưu thành PDF". Chia sẻ: tệp `PhieuThu_<số>.pdf`; web dùng chia sẻ trình duyệt hoặc sao chép thông tin. Phiếu ghi rõ là bản điện tử tra cứu (database chưa có tệp phiếu ký số).
 - Thu ngân trên phiếu thu: để trống.
 
@@ -80,3 +80,19 @@ Bộ nhớ đệm 20 giây để Trang chủ / Hợp đồng / Thanh toán khôn
   - **đợt tiếp theo** (tên đợt, số tiền còn, hạn, "Còn N ngày"), nền đỏ nhạt nếu quá hạn.
 - Chưa có ảnh / ảnh lỗi → gradient xanh trời + icon toà nhà (bỏ ảnh minh hoạ cam cũ).
 - Chi tiết hợp đồng: ảnh có tên dự án + căn đè lên; thân thẻ thêm "Chuyên viên tư vấn".
+
+## Thanh toán QR — tài khoản định danh (2026-10-07)
+Cùng luồng web booking / đặt cọc (`beeland/docs/payment-flow.md`, `BookingVAQRDialog`), nhưng xác thực bằng **token phiên của khách** và **máy chủ tự tính số tiền**. Spec: `docs/superpowers/specs/2026-10-07-kh-app-payment-design.md`.
+
+| Phiếu | Module VA | Số tiền | Hạn |
+|---|---|---|---|
+| HĐMB / HĐGV chưa thanh lý (≠ 11, 12, 16) | HOPDONG | đợt kế tiếp: gốc + PBT − đã thu (`fn_contract_payment_schedule`) | không |
+| Đặt cọc chờ duyệt (8) | DATCOC | `tien_coc − da_thu` | không |
+| Giữ chỗ chờ duyệt (1) | BOOKING | `cloud_bookings.tien_giu_cho` (→ `cloud_sales_settings.tien_booking`) | `het_han_luc` (→ mốc + `thoi_gian_booking`) |
+
+- App: `payTarget` (`lib/paymentTarget.recordPayTarget`, cùng quy tắc) → nút Thanh toán ở Chi tiết hợp đồng → `PaymentConfirmDialog` → màn `/pay` (`usePaymentCheckout`): edge `portal-payment` `start` → VietQR → hỏi `fn_portal_payment_status` mỗi 5 giây; số tiền VA nhận **tăng** = đã thanh toán.
+- Máy chủ (`beeland/supabase/migrations/20261009160100_portal_payment.sql`, `beeland/supabase/functions/portal-payment`, triển khai: `beeland/scripts/deploy-portal-payment.sh`): dùng lại VA đang hoạt động (HOPDONG: mọi VA HOPDONG, kể cả nhân viên tạo — QR ghi số tiền của đợt như in thông báo; BOOKING/DATCOC: cùng số tiền, lệch thì xoá rồi tạo lại), chưa có thì **chỉ tự tạo khi dự án có đúng 1 tài khoản cấu hình** (`get-cauhinhnh`) — `create-bill` với tài khoản đó, loại thu "Thu theo tiến độ" (đặt cọc "Thu tiền cọc" như web), số tiền tạo: HĐ = giá trị HĐ (`gia_tri_hd`, như web `CreateVirtualAccountDialog`), booking/cọc = khoản cần thu; **nhiều (hoặc không có) tài khoản cấu hình → chặn**: "… chưa có tài khoản thanh toán. Vui lòng chờ ban quản lý tạo tài khoản định danh rồi thử lại." (người dùng chốt 2026-10-07). Tối đa 5 VA / phiếu / 24 giờ; người tạo `Khách hàng (app)`.
+- Không sửa `payment-gateway` / webhook: webhook có sẵn tạo phiếu thu + tự duyệt booking / đặt cọc; cron xoá VA booking hết hạn.
+- BRG Smart City có 2 tài khoản cấu hình (MaTK 43, 44) → app chỉ dùng VA nhân viên đã tạo; BRG TOWER chưa cấu hình thanh toán (`da_payment_gateway_configs`) → "Dự án chưa bật thanh toán trực tuyến" (web cũng không tạo được).
+- ⚠ Bấm "Xác nhận thanh toán" trên dữ liệu thật **có thể tạo tài khoản định danh thật** ở ngân hàng (ghi `contract_virtual_accounts`). Claude không tự bấm thử.
+- Đã thử (2026-10-07, `BEGIN…ROLLBACK`): A1-1005 Đợt 1 = 155.417.983, Đợt 2 = 331.061.508 (khớp app); đặt cọc DC-A1-1001 = 200.000.000; phiếu của khách khác → "Không tìm thấy hợp đồng"; token giả → "Phiên đăng nhập đã hết hạn".
