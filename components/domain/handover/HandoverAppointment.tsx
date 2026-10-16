@@ -2,7 +2,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 
 import { Badge, Button, Icon, IconCircle, Text } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { dayMonth, scheduleDateParts, scheduleStatusMeta } from '@/lib/handover';
+import { canSelfChange, dayMonth, scheduleDateParts, scheduleStatusMeta, vnToday } from '@/lib/handover';
 import type { AppointmentView, HandoverSchedule } from '@/types';
 import { radius, semantic, sizes, spacing, toneColors, type IconName } from '@/theme';
 
@@ -141,7 +141,7 @@ function ActiveSchedule({
         </View>
       ) : null}
 
-      {pending && s.selfBooked ? (
+      {canSelfChange(s, vnToday()) ? (
         <View style={styles.actions}>
           <View style={styles.flex}>
             <Button title="Đổi lịch" variant="secondary" leftIcon="calendar" fullWidth onPress={() => onReschedule(s)} />

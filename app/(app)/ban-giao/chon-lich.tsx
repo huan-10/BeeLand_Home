@@ -7,7 +7,7 @@ import { NoxhAlert } from '@/components/domain/noxh/NoxhAlert';
 import { Screen, Section, StickyActionBar } from '@/components/layout';
 import { Button, Card, EmptyState, ErrorState, ScreenHeader, Skeleton, SkeletonList, Text, useToast } from '@/components/ui';
 import { useHandoverOverview, useHandoverSlots } from '@/hooks/useHandover';
-import { dateStrip, dayMonth, firstAvailableDate, scheduleDateParts, shiftsForDay, type HeldSlot } from '@/lib/handover';
+import { dateStrip, dayMonth, firstAvailableDate, isStaleBookingError, scheduleDateParts, shiftsForDay, type HeldSlot } from '@/lib/handover';
 import { bookHandover, rescheduleHandover } from '@/services';
 import { getErrorMessage } from '@/services/errors';
 import { semantic, sizes, spacing } from '@/theme';
@@ -65,8 +65,9 @@ export default function HandoverBookingScreen() {
     } catch (e) {
       const msg = getErrorMessage(e);
       toast.show(msg, 'danger');
-      // Căn vừa có lịch (đặt ở máy khác / nhân viên vừa xếp) → về màn Bàn giao để thấy lịch đó; còn lại tải lại chỗ, giữ ngày đã chọn.
-      if (/đã có lịch hẹn hiệu lực/i.test(msg)) back();
+      // Lịch / căn vừa đổi trạng thái (máy khác đặt, nhân viên xếp / xác nhận…) → về màn Bàn giao (tự tải lại);
+      // còn lại (vd ca vừa kín) tải lại chỗ, giữ ngày đã chọn.
+      if (isStaleBookingError(msg)) back();
       else void slots.refetch();
     } finally {
       sendingRef.current = false;

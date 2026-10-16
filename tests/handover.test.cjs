@@ -206,3 +206,18 @@ test('ngày gọn dd/MM cho khối lịch ("Nhận nhà từ 16/10 – 30/10")',
   assert.equal(h.dayMonth('2026-01-05'), '05/01');
   assert.equal(h.dayMonth(''), '');
 });
+
+test('khách tự đổi / huỷ: chỉ lịch mình đặt, còn chờ xác nhận, chưa qua ngày', () => {
+  assert.equal(h.canSelfChange(sch({ trang_thai: 'CHO_XAC_NHAN', khach_dang_ky: true, ngay: TODAY }), TODAY), true);
+  assert.equal(h.canSelfChange(sch({ trang_thai: 'CHO_XAC_NHAN', khach_dang_ky: true, ngay: '2026-10-14' }), TODAY), false);
+  assert.equal(h.canSelfChange(sch({ trang_thai: 'CHO_XAC_NHAN', khach_dang_ky: false }), TODAY), false);
+  assert.equal(h.canSelfChange(sch({ trang_thai: 'DA_XAC_NHAN', khach_dang_ky: true }), TODAY), false);
+});
+
+test('lỗi máy chủ cho biết lịch đã đổi trạng thái → về màn Bàn giao tải lại', () => {
+  for (const m of ['Quỹ đã có lịch hẹn hiệu lực', 'Lịch đã được xác nhận — vui lòng liên hệ để thay đổi', 'Lịch do chủ đầu tư sắp xếp — vui lòng liên hệ để thay đổi', 'Lịch không còn hiệu lực', 'Lịch đã qua ngày', 'Không tìm thấy lịch nhận nhà', 'Căn đang tạm dừng bàn giao']) {
+    assert.equal(h.isStaleBookingError(m), true, m);
+  }
+  assert.equal(h.isStaleBookingError('Ca "Ca sáng" ngày 20/10/2026 đã đủ khách'), false);
+  assert.equal(h.isStaleBookingError('Ca đã bắt đầu, vui lòng chọn ca khác'), false);
+});

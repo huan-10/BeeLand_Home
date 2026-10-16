@@ -158,6 +158,16 @@ export function appointmentState(h: Handover, schedules: HandoverSchedule[], tod
   return view(window ? 'can_book' : 'expired', null);
 }
 
+/** Khách tự đổi / huỷ được: lịch do khách đặt, còn chờ xác nhận, chưa qua ngày (như `_portal_bg_kiem_lich`). */
+export function canSelfChange(s: HandoverSchedule, today: string): boolean {
+  return s.selfBooked && s.status === 'CHO_XAC_NHAN' && s.date >= today;
+}
+
+/** Lỗi máy chủ báo lịch / căn đã đổi trạng thái (không phải hết chỗ) → về màn Bàn giao tải lại thay vì thử tiếp. */
+export function isStaleBookingError(message: string): boolean {
+  return /đã có lịch hẹn hiệu lực|đã được xác nhận|chủ đầu tư sắp xếp|không còn hiệu lực|đã qua ngày|không tìm thấy|tạm dừng|đã bàn giao/i.test(message);
+}
+
 /** Căn đang chờ khách chọn lịch lên đầu, còn lại theo `sortHandovers`. */
 export function sortOverview(items: HandoverOverviewItem[]): HandoverOverviewItem[] {
   const rank = (x: HandoverOverviewItem) => (x.appointment.kind === 'can_book' ? 0 : 1);

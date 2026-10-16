@@ -55,7 +55,10 @@ export default function HandoverScreen() {
       toast.show('Đã huỷ lịch nhận nhà', 'success');
       await refetch();
     } catch (e) {
+      // Lịch có thể vừa được xác nhận / đổi ở nơi khác → đóng hộp thoại, tải lại để thẻ hiện đúng trạng thái.
       toast.show(getErrorMessage(e), 'danger');
+      setCancelling(null);
+      void refetch();
     } finally {
       busyRef.current = false;
       setBusy(false);
