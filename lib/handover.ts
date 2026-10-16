@@ -1,8 +1,17 @@
 /**
- * Bàn giao căn hộ ("Quỹ bàn giao" trên web) và lịch bàn giao — logic thuần, có test `tests/handover.test.cjs`.
+ * Bàn giao căn hộ ("Quỹ bàn giao" trên web) và lịch nhận nhà (`bg_lich_hen`) — logic thuần, có test `tests/handover.test.cjs`.
  */
 import type { IconName, Tone } from '@/theme';
-import type { Handover, HandoverSchedule, HandoverScheduleStatus, HandoverStatus } from '@/types';
+import type {
+  AppointmentView,
+  Handover,
+  HandoverOverviewItem,
+  HandoverSchedule,
+  HandoverScheduleStatus,
+  HandoverShift,
+  HandoverSlots,
+  HandoverStatus,
+} from '@/types';
 
 export type HandoverStepState = 'done' | 'current' | 'todo';
 
@@ -47,27 +56,14 @@ export function sortHandovers(items: Handover[]): Handover[] {
 
 /* ---------------- Lịch bàn giao ---------------- */
 
-const fold = (s: string | null | undefined) =>
-  String(s ?? '')
-    .normalize('NFC')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
-
-/** `trang_thai` lưu chữ trên web: Chờ xác nhận · Đã xác nhận · Đã bàn giao · Hoãn lịch. */
-export function scheduleStatusFromText(text: string | null | undefined): HandoverScheduleStatus {
-  const t = fold(text);
-  if (t === 'đã xác nhận') return 'confirmed';
-  if (t === 'đã bàn giao') return 'done';
-  if (t === 'hoãn lịch') return 'postponed';
-  return 'pending';
-}
-
+/** Nhãn theo `_bg_lich_khach.trang_thai_ten` (web Lịch bàn giao). */
 export const scheduleStatusMeta: Record<HandoverScheduleStatus, { label: string; tone: Tone; icon: IconName }> = {
-  pending: { label: 'Chờ xác nhận', tone: 'warning', icon: 'clock' },
-  confirmed: { label: 'Đã xác nhận', tone: 'primary', icon: 'calendarCheck' },
-  done: { label: 'Đã bàn giao', tone: 'success', icon: 'checkCircle' },
-  postponed: { label: 'Hoãn lịch', tone: 'danger', icon: 'warning' },
+  CHO_XAC_NHAN: { label: 'Chờ xác nhận', tone: 'warning', icon: 'hourglass' },
+  DA_XAC_NHAN: { label: 'Đã xác nhận', tone: 'primary', icon: 'calendarCheck' },
+  DANG_BAN_GIAO: { label: 'Đang bàn giao', tone: 'primary', icon: 'key' },
+  DA_BAN_GIAO: { label: 'Đã bàn giao', tone: 'success', icon: 'checkCircle' },
+  VANG_MAT: { label: 'Khách vắng mặt', tone: 'danger', icon: 'warning' },
+  HOAN: { label: 'Hoãn', tone: 'danger', icon: 'warning' },
 };
 
 /** timestamptz / yyyy-MM-dd → ngày theo giờ Việt Nam (UTC+7). */
@@ -80,74 +76,123 @@ export function vnDate(value: string | null | undefined): string {
   return new Date(t + 7 * 3600_000).toISOString().slice(0, 10);
 }
 
-/** Dòng `bee_handover_schedules` (chỉ các cột app đọc). */
-export interface ScheduleRow {
-  id: string;
-  so_hdmb: string | null;
-  ma_sp: string | null;
-  du_an: string | null;
-  ten_kh: string | null;
-  dien_thoai: string | null;
-  ngay_ban_giao: string | null;
-  khung_gio: string | null;
-  hinh_thuc: string | null;
-  nhan_vien: string | null;
-  trang_thai: string | null;
-  ghi_chu: string | null;
-}
-
-export interface OwnedKeys {
-  /** Số HĐMB / mã hợp đồng của khách. */
-  contractCodes: string[];
-  /** Mã căn của khách. */
-  unitCodes: string[];
-  /** SĐT của khách. */
-  phones: string[];
-}
-
-const digits = (s: string | null | undefined) => String(s ?? '').replace(/\D/g, '');
-const code = (s: string | null | undefined) => fold(s).replace(/\s/g, '');
-
-/**
- * Lịch lưu dạng chữ, không có khoá khách hàng → chỉ nhận dòng trùng **số HĐMB** của khách,
- * hoặc trùng **mã căn VÀ SĐT** (mã căn có thể trùng ở dự án khác nên không đủ một mình).
- */
-export function matchSchedules<T extends ScheduleRow>(rows: T[], owned: OwnedKeys): T[] {
-  const codes = new Set(owned.contractCodes.map(code).filter(Boolean));
-  const units = new Set(owned.unitCodes.map(code).filter(Boolean));
-  const phones = new Set(owned.phones.map(digits).filter((p) => p.length >= 9));
-  return rows.filter((r) => {
-    if (codes.has(code(r.so_hdmb))) return true;
-    return units.has(code(r.ma_sp)) && phones.has(digits(r.dien_thoai));
-  });
-}
-
 const cleanNote = (s: string | null | undefined) => {
   const t = String(s ?? '').trim();
   return t === '—' || t === '-' ? '' : t;
 };
 
-export function toSchedule(r: ScheduleRow): HandoverSchedule {
+const str = (s: string | null | undefined) => String(s ?? '').trim();
+const num = (v: unknown): number | null => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+
+/** Một phần tử của `_bg_lich_khach` (trong `fn_portal_app_ban_giao`). */
+export interface PortalScheduleRow {
+  id: string;
+  ban_giao_id: string;
+  so_qbg: string | null;
+  ky_hieu: string | null;
+  lan: number | null;
+  ngay: string | null;
+  ca: string | null;
+  tu_gio: string | null;
+  den_gio: string | null;
+  ca_id: string | null;
+  dia_diem: string | null;
+  trang_thai: string | null;
+  trang_thai_ten: string | null;
+  khach_dang_ky: boolean | null;
+  nhan_vien: string | null;
+  lien_he: string | null;
+  so_tien_can_nop: number | string | null;
+  bien_ban: { so_bb: string | null; ngay_ban_giao: string | null } | null;
+}
+
+const isScheduleStatus = (s: string): s is HandoverScheduleStatus => s in scheduleStatusMeta;
+
+export function toSchedule(r: PortalScheduleRow): HandoverSchedule {
+  const code = str(r.trang_thai).toUpperCase();
+  const status: HandoverScheduleStatus = isScheduleStatus(code) ? code : 'CHO_XAC_NHAN';
   return {
     id: r.id,
-    contractCode: String(r.so_hdmb ?? '').trim(),
-    unitCode: String(r.ma_sp ?? '').trim(),
-    projectName: String(r.du_an ?? '').trim(),
-    date: vnDate(r.ngay_ban_giao),
-    timeSlot: String(r.khung_gio ?? '').trim(),
-    method: String(r.hinh_thuc ?? '').trim(),
-    staff: String(r.nhan_vien ?? '').trim(),
-    status: scheduleStatusFromText(r.trang_thai),
-    statusLabel: String(r.trang_thai ?? '').trim(),
-    note: cleanNote(r.ghi_chu),
+    fundId: r.ban_giao_id,
+    unitCode: str(r.ky_hieu),
+    attempt: Number(r.lan) || 1,
+    date: vnDate(r.ngay),
+    shiftId: r.ca_id || null,
+    timeSlot: str(r.ca),
+    place: str(r.dia_diem),
+    status,
+    statusLabel: str(r.trang_thai_ten) || scheduleStatusMeta[status].label,
+    staff: str(r.nhan_vien),
+    contact: str(r.lien_he),
+    amountDue: num(r.so_tien_can_nop),
+    selfBooked: r.khach_dang_ky === true,
+    record: r.bien_ban ? { code: str(r.bien_ban.so_bb), date: vnDate(r.bien_ban.ngay_ban_giao) } : null,
   };
 }
 
-/** Sắp tới = từ hôm nay trở đi và chưa bàn giao (gần nhất trước); còn lại là đã qua (mới nhất trước). */
-export function splitSchedules(items: HandoverSchedule[], today: string): { upcoming: HandoverSchedule[]; past: HandoverSchedule[] } {
-  const upcoming = items.filter((s) => s.date >= today && s.status !== 'done').sort((a, b) => a.date.localeCompare(b.date));
-  const past = items.filter((s) => !(s.date >= today && s.status !== 'done')).sort((a, b) => b.date.localeCompare(a.date));
-  return { upcoming, past };
+/* ---------------- Khoảng đăng ký + khối "Lịch nhận nhà" ---------------- */
+
+const dayMs = (date: string) => Date.parse(`${date}T00:00:00Z`);
+
+/** Khoảng khách còn chọn được: [max(hôm nay, từ ngày), đến ngày]; `daysLeft` tính cả hôm nay và ngày cuối. */
+export function bookingWindow(h: Pick<Handover, 'fromDate' | 'toDate'>, today: string): { from: string; to: string; daysLeft: number } | null {
+  if (!h.fromDate || !h.toDate || h.toDate < today) return null;
+  return { from: h.fromDate > today ? h.fromDate : today, to: h.toDate, daysLeft: Math.round((dayMs(h.toDate) - dayMs(today)) / 86_400_000) + 1 };
+}
+
+const ACTIVE: HandoverScheduleStatus[] = ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'DANG_BAN_GIAO'];
+const newestFirst = (a: HandoverSchedule, b: HandoverSchedule) => b.date.localeCompare(a.date) || b.attempt - a.attempt;
+
+/** `schedules` đã lọc theo căn (`fundId === h.id`). Tạm dừng > đã bàn giao > lịch hiệu lực > khoảng đăng ký. */
+export function appointmentState(h: Handover, schedules: HandoverSchedule[], today: string): AppointmentView {
+  const sorted = [...schedules].sort(newestFirst);
+  const done = sorted.find((s) => s.status === 'DA_BAN_GIAO') ?? null;
+  const live = sorted.find((s) => ACTIVE.includes(s.status)) ?? null;
+  const previous = sorted.filter((s) => s.status === 'VANG_MAT' || s.status === 'HOAN');
+  const window = bookingWindow(h, today);
+  const view = (kind: AppointmentView['kind'], active: HandoverSchedule | null): AppointmentView => ({ kind, active, window, previous });
+  if (h.status === 'paused') return view('paused', live);
+  if (h.status === 'handed_over' || done) return view('handed_over', done);
+  if (live) return view(live.status === 'CHO_XAC_NHAN' ? 'pending' : 'confirmed', live);
+  if (!h.fromDate || !h.toDate || (h.status !== 'pending' && h.status !== 'notified')) return view('no_window', null);
+  return view(window ? 'can_book' : 'expired', null);
+}
+
+/** Căn đang chờ khách chọn lịch lên đầu, còn lại theo `sortHandovers`. */
+export function sortOverview(items: HandoverOverviewItem[]): HandoverOverviewItem[] {
+  const rank = (x: HandoverOverviewItem) => (x.appointment.kind === 'can_book' ? 0 : 1);
+  return [...items].sort(
+    (a, b) => rank(a) - rank(b) || ORDER[a.status] - ORDER[b.status] || a.unitCode.localeCompare(b.unitCode, 'vi', { numeric: true }),
+  );
+}
+
+/* ---------------- Màn chọn lịch ---------------- */
+
+/** Lịch đang đổi: ngày + ca khách đang giữ (chỗ của chính khách được tính lại là còn). */
+export interface HeldSlot {
+  date: string;
+  shiftId: string;
+}
+
+export function shiftsForDay(slots: HandoverSlots, date: string, keep?: HeldSlot): HandoverShift[] {
+  const day = slots.days.find((d) => d.date === date);
+  if (!day) return [];
+  return day.shifts.map((s) => (keep && keep.date === date && keep.shiftId === s.id ? { ...s, remaining: s.remaining + 1 } : s));
+}
+
+const hasRoom = (slots: HandoverSlots, date: string, keep?: HeldSlot) => shiftsForDay(slots, date, keep).some((s) => s.remaining > 0);
+
+export function dateStrip(
+  slots: HandoverSlots,
+  keep?: HeldSlot,
+): { date: string; weekday: string; day: string; month: string; available: boolean }[] {
+  return slots.days.map((d) => ({ date: d.date, ...scheduleDateParts(d.date), available: hasRoom(slots, d.date, keep) }));
+}
+
+/** Đổi lịch → ngày đang giữ (nếu còn trong khoảng); không thì ngày còn chỗ gần nhất. */
+export function firstAvailableDate(slots: HandoverSlots, keep?: HeldSlot): string | null {
+  if (keep && slots.days.some((d) => d.date === keep.date)) return keep.date;
+  return slots.days.find((d) => hasRoom(slots, d.date))?.date ?? null;
 }
 
 /** Hôm nay theo giờ Việt Nam (yyyy-MM-dd). */
@@ -184,8 +229,6 @@ export interface OwnedContract {
   projectName: string;
   projectImageUrl?: string;
 }
-
-const num = (v: unknown): number | null => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
 
 /**
  * Chỉ giữ quỹ bàn giao của ĐÚNG khách (`khach_hang_id`) VÀ thuộc một hợp đồng của khách (`phieu_giu_cho_id`) —
