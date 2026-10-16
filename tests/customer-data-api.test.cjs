@@ -85,18 +85,57 @@ test('phiếu thu: phiếu không thuộc khách → lỗi, không gọi server'
   assert.ok(!calls.some(([fn]) => fn === 'fn_portal_app_phieu_thu'));
 });
 
-test('bàn giao: fn_portal_app_ban_giao → quỹ của khách; lịch rỗng không lỗi', async () => {
+test('bàn giao: fn_portal_app_ban_giao → quỹ của khách + lịch hẹn bg_lich_hen (không lọc lại theo công ty / SĐT)', async () => {
   calls.length = 0;
   handlers.fn_portal_app_ban_giao = () => ({
     data: {
-      quy: [{ id: 'f1', so_qbg: 'QBG-1', state: 'DANG_BAN_GIAO', khach_hang_id: 'kh-1', phieu_giu_cho_id: 'p1', ky_hieu: 'A-101', so_hdmb: null, tu_ngay: null, den_ngay: null, dien_tich_hd: 70, dien_tich_bg: 70, pt_tang_giam: 0, pt_tien_do: 50, pt_tien_do_pbt: 0, ghi_chu: null }],
-      lich: [],
+      quy: [{ id: 'f1', so_qbg: 'QBG-1', state: 'NOTIFIED', khach_hang_id: 'kh-1', phieu_giu_cho_id: 'p1', ky_hieu: 'A-101', so_hdmb: null, tu_ngay: '2026-10-10', den_ngay: '2026-10-30', dien_tich_hd: 70, dien_tich_bg: 70, pt_tang_giam: 0, pt_tien_do: 50, pt_tien_do_pbt: 0, ghi_chu: null }],
+      lich: [{ id: 'l1', ban_giao_id: 'f1', so_qbg: 'QBG-1', ky_hieu: 'A-101', lan: 1, ngay: '2026-10-20', ca: '08:00–10:00', tu_gio: '08:00', den_gio: '10:00', ca_id: 'ca1', dia_diem: null, trang_thai: 'CHO_XAC_NHAN', trang_thai_ten: 'Chờ xác nhận', khach_dang_ky: true, nhan_vien: null, lien_he: '1900', so_tien_can_nop: 0, bien_ban: null }],
       sdt: ['0901234567'],
     },
   });
-  const items = await handover.fetchHandovers();
-  assert.equal(items.length, 1);
-  assert.deepEqual(await handover.fetchHandoverSchedules(), []);
+  const { handovers, schedules } = await handover.fetchHandoverData();
+  assert.deepEqual(handovers.map((x) => x.id), ['f1']);
+  assert.equal(schedules.length, 1);
+  assert.equal(schedules[0].fundId, 'f1');
+  assert.equal(schedules[0].selfBooked, true);
+  assert.equal(calls.filter(([fn]) => fn === 'fn_portal_app_ban_giao').length, 1);
+  noServiceJwt();
+});
+
+test('bàn giao: ca còn chỗ theo ngày (fn_portal_app_bg_ca) → HandoverSlots', async () => {
+  calls.length = 0;
+  handlers.fn_portal_app_bg_ca = () => ({
+    data: { tu: '2026-10-16', den: '2026-10-17', ngay: [
+      { ngay: '2026-10-16', ca: [{ ca_id: 'ca1', ten: 'Ca sáng', tu_gio: '08:00', den_gio: '10:00', so_khach: 5, con: 2 }] },
+      { ngay: '2026-10-17', ca: [] },
+    ] },
+  });
+  const slots = await handover.fetchHandoverSlots('f1');
+  assert.deepEqual(slots, { from: '2026-10-16', to: '2026-10-17', days: [
+    { date: '2026-10-16', shifts: [{ id: 'ca1', name: 'Ca sáng', from: '08:00', to: '10:00', capacity: 5, remaining: 2 }] },
+    { date: '2026-10-17', shifts: [] },
+  ] });
+  assert.deepEqual(calls.find(([fn]) => fn === 'fn_portal_app_bg_ca')[1], { p_token: 'tok-1', p_ban_giao_id: 'f1' });
+  noServiceJwt();
+});
+
+test('bàn giao: đăng ký / đổi / huỷ lịch gọi đúng hàm với token phiên; lỗi máy chủ → ServiceError giữ thông điệp', async () => {
+  calls.length = 0;
+  handlers.fn_portal_app_bg_dang_ky = () => ({ data: { id: 'l9' } });
+  handlers.fn_portal_app_bg_doi = () => ({ data: { id: 'l9' } });
+  handlers.fn_portal_app_bg_huy = () => ({ data: { id: 'l9' } });
+  await handover.submitHandoverBooking('f1', '2026-10-20', 'ca1');
+  await handover.submitHandoverReschedule('l9', '2026-10-21', 'ca2');
+  await handover.submitHandoverCancel('l9');
+  const args = (fn) => calls.find(([f]) => f === fn)[1];
+  assert.deepEqual(args('fn_portal_app_bg_dang_ky'), { p_token: 'tok-1', p_ban_giao_id: 'f1', p_ngay: '2026-10-20', p_ca_id: 'ca1' });
+  assert.deepEqual(args('fn_portal_app_bg_doi'), { p_token: 'tok-1', p_lich_id: 'l9', p_ngay: '2026-10-21', p_ca_id: 'ca2' });
+  assert.deepEqual(args('fn_portal_app_bg_huy'), { p_token: 'tok-1', p_lich_id: 'l9' });
+  handlers.fn_portal_app_bg_dang_ky = () => ({ error: 'Ca "Ca sáng" ngày 20/10/2026 đã kín' });
+  await assert.rejects(handover.submitHandoverBooking('f1', '2026-10-20', 'ca1'), { name: 'ServiceError', message: 'Ca "Ca sáng" ngày 20/10/2026 đã kín' });
+  handlers.fn_portal_app_bg_huy = () => ({ error: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại' });
+  await assert.rejects(handover.submitHandoverCancel('l9'), { code: 'UNAUTHORIZED' });
   noServiceJwt();
 });
 

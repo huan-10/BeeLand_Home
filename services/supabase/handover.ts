@@ -1,5 +1,5 @@
-import { matchSchedules, ownedHandovers, scheduleProgress, toSchedule, type FundRow, type OwnedContract, type ScheduleRow } from '@/lib/handover';
-import type { Handover, HandoverSchedule } from '@/types';
+import { ownedHandovers, scheduleProgress, toSchedule, type FundRow, type OwnedContract, type PortalScheduleRow } from '@/lib/handover';
+import type { Handover, HandoverSchedule, HandoverSlots } from '@/types';
 
 import { rpc } from './client';
 import { getPgcSchedule } from './customerData';
@@ -8,14 +8,12 @@ import { ServiceError } from '../errors';
 import { requireCustomerScope, requirePortalToken } from '../session';
 
 /**
- * Đọc THEO PHIÊN KHÁCH (2026-10-08): `fn_portal_app_ban_giao` (quỹ bàn giao của các phiếu thuộc hồ sơ đang xem + lịch + SĐT hồ sơ)
- * bằng token phiên — không đọc bảng / gọi fn_handover_fund_list bằng JWT tài khoản hệ thống nữa.
- *
- * Bàn giao căn hộ của KHÁCH ĐANG ĐĂNG NHẬP — đọc như web (Hợp đồng › Bàn giao), CHỈ ĐỌC:
- *  - Quỹ bàn giao: RPC `fn_handover_fund_list` (web `HandoverFundService.list`), tìm theo từng mã căn của khách,
- *    rồi chỉ giữ dòng có `khach_hang_id` = khách VÀ `phieu_giu_cho_id` thuộc hợp đồng của khách (`ownedHandovers`).
- *  - Lịch bàn giao: bảng `bee_handover_schedules` (web `HandoverScheduleCloud`) lọc `ma_ctdk_uid` = công ty của khách
- *    và số HĐMB / mã căn của khách; lịch lưu dạng chữ nên ghép lại phía app (`matchSchedules`: trùng số HĐMB, hoặc mã căn + SĐT).
+ * Bàn giao căn hộ của KHÁCH ĐANG ĐĂNG NHẬP — mọi hàm theo token phiên khách (anon), không tài khoản hệ thống:
+ *  - `fn_portal_app_ban_giao`: quỹ bàn giao (`bee_handover_funds`) của các phiếu thuộc hồ sơ + lịch hẹn nhận nhà
+ *    (`bg_lich_hen` qua `_bg_lich_khach`, server đã lọc đúng khách) — app ghép lại quỹ theo khách + hợp đồng (`ownedHandovers`).
+ *  - Khách tự đăng ký lịch trong khoảng bàn giao (migration web `20261017100000_portal_bg_dang_ky`):
+ *    `fn_portal_app_bg_ca` (ca + chỗ còn), `fn_portal_app_bg_dang_ky`, `fn_portal_app_bg_doi`, `fn_portal_app_bg_huy`.
+ *    Lịch khách tạo ở `CHO_XAC_NHAN` — nhân viên xác nhận trên web (màn Lịch bàn giao, nhãn "Khách tự đăng ký").
  */
 
 async function ownedContracts(): Promise<Map<string, OwnedContract>> {
@@ -25,24 +23,25 @@ async function ownedContracts(): Promise<Map<string, OwnedContract>> {
   );
 }
 
-const uniq = (values: string[]) => [...new Set(values.map((v) => v.trim()).filter(Boolean))];
+type PortalResult<T> = { data?: T; error?: string } | null;
 
-/** Quỹ + lịch bàn giao + SĐT hồ sơ của phiên (`fn_portal_app_ban_giao`). */
-async function loadHandoverData(): Promise<{ quy: FundRow[]; lich: ScheduleRow[]; sdt: string[] }> {
-  const res = await rpc<{ data?: { quy?: FundRow[]; lich?: ScheduleRow[]; sdt?: string[] }; error?: string } | null>('fn_portal_app_ban_giao', {
-    p_token: requirePortalToken(),
-  });
+/** `{error}` của máy chủ → ServiceError giữ nguyên thông điệp tiếng Việt; phiên hết hạn → UNAUTHORIZED. */
+function unwrap<T>(res: PortalResult<T>): T | undefined {
   if (res?.error) throw new ServiceError(res.error, /hết hạn/i.test(res.error) ? 'UNAUTHORIZED' : 'UNKNOWN');
-  return { quy: res?.data?.quy ?? [], lich: res?.data?.lich ?? [], sdt: (res?.data?.sdt ?? []).filter(Boolean) };
+  return res?.data;
 }
 
-export async function fetchHandovers(): Promise<Handover[]> {
+/** Quỹ bàn giao của khách (tiến độ thật) + mọi lịch hẹn nhận nhà còn lưu (trừ lịch đã huỷ). */
+export async function fetchHandoverData(): Promise<{ handovers: Handover[]; schedules: HandoverSchedule[] }> {
   const scope = requireCustomerScope();
   const contracts = await ownedContracts();
-  if (contracts.size === 0) return [];
-  const { quy } = await loadHandoverData();
+  if (contracts.size === 0) return { handovers: [], schedules: [] };
+  const data = unwrap(
+    await rpc<PortalResult<{ quy?: FundRow[]; lich?: PortalScheduleRow[] }>>('fn_portal_app_ban_giao', { p_token: requirePortalToken() }),
+  );
   // Server đã lọc theo hồ sơ; ownedHandovers ghép lại theo khách + hợp đồng của khách (lọc thêm một lần ở app).
-  return withRealProgress(ownedHandovers(quy, scope.customerId, contracts));
+  const handovers = await withRealProgress(ownedHandovers(data?.quy ?? [], scope.customerId, contracts));
+  return { handovers, schedules: (data?.lich ?? []).map(toSchedule) };
 }
 
 /**
@@ -61,14 +60,41 @@ async function withRealProgress(items: Handover[]): Promise<Handover[]> {
   );
 }
 
-export async function fetchHandoverSchedules(): Promise<HandoverSchedule[]> {
-  const scope = requireCustomerScope();
-  const contracts = [...(await ownedContracts()).values()];
-  const codes = uniq(contracts.map((c) => c.code));
-  const units = uniq(contracts.map((c) => c.unitCode));
-  if (codes.length === 0 && units.length === 0) return [];
-  const { lich, sdt } = await loadHandoverData();
-  // Lọc lại phía app: đúng công ty + ghép đúng khách.
-  const own = lich.filter((r) => (r as ScheduleRow & { ma_ctdk_uid?: string | null }).ma_ctdk_uid === scope.companyId);
-  return matchSchedules(own, { contractCodes: codes, unitCodes: units, phones: uniq(sdt) }).map(toSchedule);
+interface SlotsRow {
+  tu: string;
+  den: string;
+  ngay: { ngay: string; ca: { ca_id: string; ten: string | null; tu_gio: string | null; den_gio: string | null; so_khach: number; con: number }[] }[];
+}
+
+/** Ca + chỗ còn cho mọi ngày trong khoảng đăng ký của căn (hôm nay đã bỏ ca đã bắt đầu). */
+export async function fetchHandoverSlots(fundId: string): Promise<HandoverSlots> {
+  const data = unwrap(await rpc<PortalResult<SlotsRow>>('fn_portal_app_bg_ca', { p_token: requirePortalToken(), p_ban_giao_id: fundId }));
+  if (!data) throw new ServiceError('Không tải được lịch trống, vui lòng thử lại');
+  return {
+    from: data.tu,
+    to: data.den,
+    days: (data.ngay ?? []).map((d) => ({
+      date: d.ngay,
+      shifts: (d.ca ?? []).map((c) => ({
+        id: c.ca_id,
+        name: String(c.ten ?? '').trim(),
+        from: String(c.tu_gio ?? ''),
+        to: String(c.den_gio ?? ''),
+        capacity: Number(c.so_khach) || 0,
+        remaining: Number(c.con) || 0,
+      })),
+    })),
+  };
+}
+
+export async function submitHandoverBooking(fundId: string, date: string, shiftId: string): Promise<void> {
+  unwrap(await rpc<PortalResult<{ id: string }>>('fn_portal_app_bg_dang_ky', { p_token: requirePortalToken(), p_ban_giao_id: fundId, p_ngay: date, p_ca_id: shiftId }));
+}
+
+export async function submitHandoverReschedule(scheduleId: string, date: string, shiftId: string): Promise<void> {
+  unwrap(await rpc<PortalResult<{ id: string }>>('fn_portal_app_bg_doi', { p_token: requirePortalToken(), p_lich_id: scheduleId, p_ngay: date, p_ca_id: shiftId }));
+}
+
+export async function submitHandoverCancel(scheduleId: string): Promise<void> {
+  unwrap(await rpc<PortalResult<{ id: string }>>('fn_portal_app_bg_huy', { p_token: requirePortalToken(), p_lich_id: scheduleId }));
 }
