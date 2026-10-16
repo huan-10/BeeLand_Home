@@ -200,3 +200,9 @@ test('ngày chọn sẵn: ngày còn chỗ gần nhất; đổi lịch → ngày
   assert.equal(h.firstAvailableDate(slots, { date: '2026-09-01', shiftId: 'ca1' }), '2026-10-17');
   assert.equal(h.firstAvailableDate({ from: TODAY, to: TODAY, days: [{ date: TODAY, shifts: [ca('ca1', 0)] }] }), null);
 });
+
+test('ngày gọn dd/MM cho khối lịch ("Nhận nhà từ 16/10 – 30/10")', () => {
+  assert.equal(h.dayMonth('2026-10-16'), '16/10');
+  assert.equal(h.dayMonth('2026-01-05'), '05/01');
+  assert.equal(h.dayMonth(''), '');
+});

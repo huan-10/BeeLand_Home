@@ -3,25 +3,29 @@ import { StyleSheet, View } from 'react-native';
 import { Badge, Button, Card, Icon, ProgressBar, Text } from '@/components/ui';
 import { formatDate, formatPercent } from '@/lib/format';
 import { formatArea, formatAreaDiff, handoverStatusMeta } from '@/lib/handover';
-import type { Handover } from '@/types';
+import type { HandoverOverviewItem, HandoverSchedule } from '@/types';
 import { colors, radius, semantic, sizes, spacing, toneColors } from '@/theme';
 
 import { NoxhAlert } from '../noxh/NoxhAlert';
 import { ProjectImage } from '../ProjectImage';
+import { HandoverAppointment } from './HandoverAppointment';
 import { HandoverStepper } from './HandoverStepper';
 
 export interface HandoverCardProps {
-  handover: Handover;
-  /** Có lịch bàn giao của căn này → hiện nút "Xem lịch bàn giao". */
-  onOpenSchedule?: () => void;
+  handover: HandoverOverviewItem;
+  /** Hotline chủ đầu tư (gọi khi cần đổi lịch đã xác nhận / quá hạn đăng ký). */
+  hotline: string;
+  onBook: () => void;
+  onReschedule: (s: HandoverSchedule) => void;
+  onCancel: (s: HandoverSchedule) => void;
   onOpenContract: () => void;
 }
 
 /**
- * Thẻ bàn giao một căn: ảnh dự án (mã căn + trạng thái) → 4 bước → thời gian bàn giao, diện tích HĐ / thực tế,
- * tiến độ thanh toán & phí bảo trì → ghi chú của chủ đầu tư → nút lịch / hợp đồng.
+ * Thẻ bàn giao một căn: ảnh dự án (mã căn + trạng thái) → 4 bước → khối "Lịch nhận nhà" (chọn / đổi / huỷ lịch)
+ * → thời gian bàn giao, diện tích HĐ / thực tế, tiến độ thanh toán & phí bảo trì → ghi chú của chủ đầu tư → nút hợp đồng.
  */
-export function HandoverCard({ handover: h, onOpenSchedule, onOpenContract }: HandoverCardProps) {
+export function HandoverCard({ handover: h, hotline, onBook, onReschedule, onCancel, onOpenContract }: HandoverCardProps) {
   const meta = handoverStatusMeta[h.status];
   const period = h.fromDate && h.toDate ? `${formatDate(h.fromDate)} – ${formatDate(h.toDate)}` : h.fromDate ? `Từ ${formatDate(h.fromDate)}` : null;
   const diff = h.areaDiffPercent;
@@ -50,6 +54,8 @@ export function HandoverCard({ handover: h, onOpenSchedule, onOpenContract }: Ha
         {h.status === 'paused' ? (
           <NoxhAlert tone="danger" icon="warning" title="Bàn giao đang tạm dừng" message="Chủ đầu tư sẽ thông báo khi tiếp tục bàn giao căn hộ của bạn." />
         ) : null}
+
+        <HandoverAppointment view={h.appointment} hotline={hotline} onBook={onBook} onReschedule={onReschedule} onCancel={onCancel} />
 
         <View style={styles.facts}>
           {period ? <Fact icon="calendar" label="Thời gian bàn giao" value={period} /> : null}
@@ -81,7 +87,6 @@ export function HandoverCard({ handover: h, onOpenSchedule, onOpenContract }: Ha
         {h.note ? <NoxhAlert tone="primary" icon="info" title="Lưu ý từ chủ đầu tư" message={h.note} /> : null}
 
         <View style={styles.actions}>
-          {onOpenSchedule ? <Button title="Xem lịch bàn giao" leftIcon="calendarCheck" fullWidth onPress={onOpenSchedule} /> : null}
           <Button title="Xem hợp đồng" variant="secondary" leftIcon="document" fullWidth onPress={onOpenContract} />
         </View>
       </View>

@@ -1,3 +1,3 @@
 export * from './HandoverCard';
-export * from './HandoverScheduleCard';
+export * from './HandoverAppointment';
 export * from './HandoverStepper';

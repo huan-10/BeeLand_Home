@@ -1,3 +1,5 @@
+> **Đã gộp vào `handover.md` (2026-10-16).** Route `/lich-ban-giao` chuyển hướng về `/ban-giao`; phần dưới chỉ còn để tham khảo.
+
 # Trang: Lịch bàn giao (`app/(app)/lich-ban-giao.tsx`)
 
 > Chỉ ghi điểm khác `MASTER.md`. Dữ liệu = "Lịch bàn giao" trên web. **Chỉ xem** (xác nhận / xin đổi lịch làm sau).

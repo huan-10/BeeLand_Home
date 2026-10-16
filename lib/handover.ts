@@ -277,6 +277,12 @@ export function scheduleDateParts(date: string): { day: string; month: string; w
   return { day: m[3], month: `Th${Number(m[2])}`, weekday: WEEKDAYS[d.getUTCDay()] ?? '' };
 }
 
+/** "16/10" — ngày gọn trong khối lịch nhận nhà. */
+export function dayMonth(date: string): string {
+  const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(date);
+  return m ? `${m[2]}/${m[1]}` : '';
+}
+
 /** Tối đa 2 chữ số thập phân, dấu phẩy thập phân (như `formatCompactCurrency`; không dùng toLocaleString vì Hermes). */
 const vnNumber = (v: number) => (Math.round(v * 100) / 100).toString().replace('.', ',');
 
