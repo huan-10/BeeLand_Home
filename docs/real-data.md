@@ -23,18 +23,24 @@ Cập nhật: 2026-10-02. Dùng chung database với web `beeland` và `beeland-
 
 Bộ nhớ đệm 20 giây để Trang chủ / Hợp đồng / Thanh toán không gọi trùng. Kéo để làm mới → đọc lại từ server.
 
-## Bàn giao căn hộ & lịch bàn giao (`services/supabase/handover.ts`, `lib/handover.ts`, test `tests/handover.test.cjs`) — 2026-10-05, CHỈ ĐỌC
-| App | Database | Giống web |
-|---|---|---|
-| Bàn giao căn hộ | RPC `fn_handover_fund_list` (bảng `bee_handover_funds`): tìm theo `di_dong` của khách (không có thì theo từng mã căn), **chỉ giữ dòng `khach_hang_id` = khách VÀ `phieu_giu_cho_id` thuộc hợp đồng của khách** | `HandoverFundService.list` (Hợp đồng › Bàn giao › Quỹ bàn giao) |
-| Lịch bàn giao | `bee_handover_schedules` lọc `ma_ctdk_uid` = công ty + `so_hdmb` / `ma_sp` của khách; lịch lưu chữ, không có khoá khách → ghép lại: **trùng số HĐMB, hoặc trùng mã căn VÀ SĐT** (mã căn một mình không đủ) | `HandoverScheduleCloud` (Lịch bàn giao) |
-| Hotline đổi lịch | `cloud_companies.dien_thoai` của công ty | |
+## Bàn giao căn hộ & lịch nhận nhà (`services/supabase/handover.ts`, `services/handoverService.ts`, `lib/handover.ts`, test `tests/handover.test.cjs` + `tests/customer-data-api.test.cjs`) — gộp 2026-10-16
 
-- **Tiến độ trên thẻ bàn giao tính từ lịch thanh toán thật** (`fn_contract_payment_schedule`: đã thu / phải thu gốc, PBT riêng; không có lịch → % đã trả của hợp đồng). KHÔNG dùng `pt_tien_do` / `pt_tien_do_pbt` của quỹ — đó là ô nhân viên gõ tay trên web ("% Tiến độ", mặc định 0). Ví dụ QBG-2026-0001 gõ 100% nhưng khách mới trả 4.000 / 8.695.815.474 đ.
-- Trạng thái quỹ (`state`): PENDING Chờ bàn giao · NOTIFIED Đã thông báo · HANDING_OVER Đang bàn giao · HANDED_OVER Đã bàn giao · PAUSED Tạm dừng; lạ → Chờ bàn giao.
-- Trạng thái lịch (`trang_thai`, chữ): Chờ xác nhận · Đã xác nhận · Đã bàn giao · Hoãn lịch; badge hiện nhãn gốc. Ngày `ngay_ban_giao` (timestamptz) đổi sang ngày giờ VN.
-- Lưu ý dữ liệu: màn Lịch bàn giao trên web **tự chèn dữ liệu mẫu** khi công ty chưa có lịch (60 dòng hiện tại là mẫu, SĐT 092…) → khách thật chưa thấy lịch nào cho tới khi nhân viên nhập lịch với đúng số HĐMB.
-- Đã thử trên dữ liệu thật 2026-10-05: khách 0859021385 nhận đúng QBG-2026-0001 (A1-1103, Đã bàn giao); lịch: truy vấn hợp lệ, 0 dòng.
+Máy chủ: beeland migration `20261017100000_portal_bg_dang_ky` (spec `docs/superpowers/specs/2026-10-16-ban-giao-dang-ky-lich-design.md`). Màn "Lịch bàn giao" cũ (`/lich-ban-giao`) chuyển hướng về `/ban-giao`.
+
+| App | Database (token phiên khách, anon) | Giống web |
+|---|---|---|
+| Bàn giao căn hộ | `fn_portal_app_ban_giao` → `quy` (`bee_handover_funds` của các phiếu thuộc hồ sơ); app ghép lại theo `khach_hang_id` + hợp đồng của khách (`ownedHandovers`) | Hợp đồng › Bàn giao › Quỹ bàn giao |
+| Lịch nhận nhà | cùng hàm → `lich` = `_bg_lich_khach` (`bg_lich_hen`, đã lọc đúng khách, bỏ lịch `HUY`): ngày, ca, địa điểm, người phụ trách + SĐT, số tiền cần nộp, biên bản đã ký, `khach_dang_ky` | Lịch bàn giao |
+| Ca còn chỗ | `fn_portal_app_bg_ca(p_token, p_ban_giao_id)` — mọi ngày trong khoảng đăng ký, hôm nay bỏ ca đã bắt đầu | Ca ký (`cloud_signing_shifts`) |
+| **Đăng ký / đổi / huỷ (GHI)** | `fn_portal_app_bg_dang_ky(p_token, p_ban_giao_id, p_ngay, p_ca_id)` · `fn_portal_app_bg_doi(p_token, p_lich_id, p_ngay, p_ca_id)` · `fn_portal_app_bg_huy(p_token, p_lich_id)` — lỗi trả `{error}` tiếng Việt (app hiện nguyên văn) | Nhân viên thấy nhãn "Khách tự đăng ký", xác nhận như lịch thường |
+| Hotline | `cloud_companies.dien_thoai` của công ty | |
+
+- **Khoảng đăng ký** = `[max(hôm nay, tu_ngay), den_ngay]` giờ VN (tối đa 92 ngày), mọi ngày trong tuần; chỉ quỹ `PENDING` / `NOTIFIED` chưa có lịch hiệu lực (`CHO_XAC_NHAN` / `DA_XAC_NHAN` / `DANG_BAN_GIAO`). Sức chứa theo `so_khach` của ca (`_bg_kiem_ca`, khoá advisory).
+- Lịch khách tạo: `CHO_XAC_NHAN`, `khach_dang_ky = true`, chưa địa điểm / nhân viên. Khách chỉ đổi / huỷ lịch **do mình đặt**, còn chờ xác nhận, chưa qua ngày; lịch nhân viên xếp hoặc đã xác nhận → nút gọi SĐT phụ trách / hotline.
+- Khối "Lịch nhận nhà" theo `appointmentState`: tạm dừng > đã bàn giao > lịch hiệu lực (chờ / đã xác nhận) > chưa có khoảng / được chọn lịch / quá hạn. Căn đang chờ chọn lịch lên đầu danh sách.
+- **Tiến độ trên thẻ bàn giao tính từ lịch thanh toán thật** (`fn_contract_payment_schedule`: đã thu / phải thu gốc, PBT riêng; không có lịch → % đã trả của hợp đồng). KHÔNG dùng `pt_tien_do` / `pt_tien_do_pbt` của quỹ — đó là ô nhân viên gõ tay trên web ("% Tiến độ", mặc định 0).
+- Trạng thái quỹ (`state`): PENDING Chờ bàn giao · NOTIFIED Đã thông báo · HANDING_OVER Đang bàn giao · HANDED_OVER Đã bàn giao · PAUSED Tạm dừng; lạ → Chờ bàn giao. Trạng thái lịch (mã): CHO_XAC_NHAN vàng · DA_XAC_NHAN / DANG_BAN_GIAO xanh · DA_BAN_GIAO xanh lá · VANG_MAT / HOAN đỏ.
+- Trước 2026-10-16 app đọc bảng chữ cũ `bee_handover_schedules` (đã bỏ) nên khách thật luôn thấy lịch trống — nay đọc `bg_lich_hen`.
 
 ## Yêu cầu khách hàng (`services/requestService.ts`, `lib/requests.ts`, test `tests/requests.test.cjs`) — 2026-10-06
 - Cùng luồng web khách hàng (`beeland/docs-claude/08-features/customer-requests.md`): token phiên cổng khách hàng của công ty đang xem (`requirePortalToken`: phiên hợp đồng, không có thì phiên NOXH) → `fn_portal_request_options` (loại + hợp đồng của khách), `fn_portal_my_requests` (yêu cầu + lịch sử, không có ghi chú nội bộ), `fn_portal_request_create` (**ghi** `cloud_customer_requests` + 1 dòng log khi KHÁCH bấm "Gửi yêu cầu" — người dùng duyệt 2026-10-06; Claude không tự gọi).

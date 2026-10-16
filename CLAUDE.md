@@ -37,6 +37,8 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 
 Database / API `https://api-beelandv2.beesky.vn` **chỉ được phép đọc: không thêm, sửa, xoá gì**. Server không có môi trường test, nên mọi thao tác ghi đều đi vào dữ liệu thật. Lệnh được phép và bị cấm, cùng tài khoản đọc (`.env.local`, không commit), xem `docs/database.md`.
 
+Ngoại lệ (chức năng của app, khách bấm mới ghi): **khách tự đăng ký / đổi / huỷ lịch nhận nhà** qua `fn_portal_app_bg_dang_ky` / `_doi` / `_huy` (người dùng duyệt 2026-10-16, `docs/real-data.md` › Bàn giao). Claude không tự gọi các hàm ghi này để thử.
+
 ## Kiến trúc dữ liệu (bắt buộc)
 
 - Luồng: **màn hình → hooks → services → (mock hoặc API thật)**.
@@ -63,7 +65,7 @@ Database / API `https://api-beelandv2.beesky.vn` **chỉ được phép đọc: 
 Áp dụng cho mọi thay đổi ảnh hưởng tới cách màn hình trông hoặc tương tác (màn mới, sửa component, đổi màu, bố cục…):
 
 1. **Đọc `design-system/beesky/MASTER.md`.**
-2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, register, forgot-password, home, contracts, contract-detail, receipts, payments, profile, noxh-home, noxh-round, noxh-applications, noxh-application-detail, noxh-personal-info, noxh-documents, noxh-lottery, noxh-results, noxh-components, handover, handover-schedule, home-modules, requests). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
+2. **Đọc `design-system/beesky/pages/<màn>.md` nếu có** (login, register, forgot-password, home, contracts, contract-detail, receipts, payments, profile, noxh-home, noxh-round, noxh-applications, noxh-application-detail, noxh-personal-info, noxh-documents, noxh-lottery, noxh-results, noxh-components, handover, handover-booking, handover-schedule, home-modules, requests). File page **ưu tiên hơn** Master. Màn mới chưa có file → tạo file page chỉ ghi điểm khác Master.
 3. **Tra cứu skill `ui-ux-pro-max`** (`.claude/skills/ui-ux-pro-max/SKILL.md`) cho vấn đề cụ thể, mỗi truy vấn một ý, 2–5 từ khóa:
    ```bash
    python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<vấn đề UX>" --domain ux
