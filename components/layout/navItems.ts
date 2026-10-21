@@ -2,7 +2,7 @@ import type { IconName } from '@/theme';
 
 export interface NavItem {
   /** Tên route trong nhóm `(app)`. */
-  name: 'index' | 'contracts' | 'noxh' | 'payments' | 'profile' | 'notifications';
+  name: 'index' | 'contracts' | 'noxh' | 'payments' | 'profile' | 'notifications' | 'tin-nhan';
   label: string;
   /** Nhãn đầy đủ trên sidebar (màn rộng) khi khác nhãn ngắn của thanh tab. */
   sidebarLabel?: string;
@@ -24,7 +24,11 @@ export const primaryNavItems: NavItem[] = [
 /** Mục bổ sung chỉ hiện trên sidebar. */
 export const secondaryNavItems: NavItem[] = [
   { name: 'notifications', label: 'Thông báo', icon: 'bell' },
+  { name: 'tin-nhan', label: 'Nhắn tin', icon: 'chat' },
 ];
+
+/** Màn có ô soạn dính đáy (Nhắn tin): ẩn thanh tab kính nổi trên mobile để ô soạn sát đáy, không bị che. */
+export const TAB_BAR_HIDDEN = new Set(['tin-nhan']);
 
 /** Route con được tô sáng theo một tab chính. */
 const ALIASES: Record<string, NavItem['name']> = { receipts: 'payments', 'tuy-chinh-trang-chu': 'profile' };

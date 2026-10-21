@@ -30,6 +30,7 @@ export const APP_MODULES: AppModule[] = [
   { id: 'receipts', group: 'bds', label: 'Phiếu thu', short: 'Phiếu thu', icon: 'receipt', href: { pathname: '/payments', params: { tab: 'paid' } } },
   { id: 'handover', group: 'bds', label: 'Bàn giao căn hộ', short: 'Bàn giao\ncăn hộ', icon: 'key', href: '/ban-giao' },
   { id: 'requests', group: 'bds', label: 'Yêu cầu', short: 'Yêu cầu', icon: 'message', href: '/yeu-cau' },
+  { id: 'chat', group: 'bds', label: 'Nhắn tin với chủ đầu tư', short: 'Nhắn tin', icon: 'chat', href: '/tin-nhan' },
   { id: 'notifications', group: 'bds', label: 'Thông báo', short: 'Thông báo', icon: 'bell', href: '/notifications' },
   { id: 'noxh', group: 'noxh', label: 'Nhà ở xã hội', short: 'Nhà ở\nxã hội', icon: 'building', href: '/noxh' },
   { id: 'noxh-applications', group: 'noxh', label: 'Hồ sơ nhà ở xã hội', short: 'Hồ sơ\nNOXH', icon: 'idCard', href: '/noxh/ho-so' },

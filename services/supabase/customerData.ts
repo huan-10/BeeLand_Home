@@ -2,6 +2,7 @@ import { rpc, str } from './client';
 import { chooseProfile } from './portal';
 import { onSessionChange, requireCustomerScope, requirePortalToken, type CustomerScope } from '../session';
 import { ServiceError } from '../errors';
+import type { AllocationInput } from '@/lib/receiptAllocation';
 
 /**
  * Đọc THEO PHIÊN KHÁCH (2026-10-08, giai đoạn 2 bỏ tài khoản hệ thống): `fn_portal_app_hop_dong` / `fn_portal_app_lich_tt` /
@@ -122,12 +123,14 @@ type Entry<T> = { at: number; value: Promise<T> };
 let recordsCache: (Entry<PgcRecord[]> & { key: string }) | null = null;
 const scheduleCache = new Map<string, Entry<ScheduleRpcRow[]>>();
 const voucherCache = new Map<string, Entry<VoucherRow[]>>();
+const allocationCache = new Map<string, Entry<AllocationInput | null>>();
 
 /** Đổi / thoát phiên → xoá sạch dữ liệu đệm của khách trước. */
 export function clearCustomerDataCache(): void {
   recordsCache = null;
   scheduleCache.clear();
   voucherCache.clear();
+  allocationCache.clear();
 }
 onSessionChange(clearCustomerDataCache);
 
@@ -238,6 +241,27 @@ export async function getPgcVouchers(pgcId: string, force = false): Promise<Vouc
       const rows = unwrap(await rpc<Envelope<VoucherRow[]>>('fn_portal_app_phieu_thu', { p_token: token, p_pgc_id: row.id }), []);
       return Array.isArray(rows) ? rows : [];
     },
+    force,
+  );
+}
+
+/**
+ * Dòng thu + lịch đầy đủ để tính mỗi phiếu được trừ vào đâu (`fn_portal_app_phieu_thu_phan_bo`).
+ * Hàm chưa có trên máy chủ / lỗi → null (tab Phiếu thu hiển thị như cũ); phiên hết hạn vẫn báo đăng nhập lại.
+ */
+export async function getPgcAllocation(pgcId: string, force = false): Promise<AllocationInput | null> {
+  const token = requirePortalToken();
+  const { row } = await requireOwnedPgc(pgcId);
+  return cached(
+    allocationCache,
+    pgcId,
+    () =>
+      rpc<Envelope<AllocationInput | null>>('fn_portal_app_phieu_thu_phan_bo', { p_token: token, p_pgc_id: row.id })
+        .then((r) => unwrap(r, null))
+        .catch((e: unknown) => {
+          if (e instanceof ServiceError && e.code === 'UNAUTHORIZED') throw e;
+          return null;
+        }),
     force,
   );
 }

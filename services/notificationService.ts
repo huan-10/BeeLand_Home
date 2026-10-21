@@ -3,9 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mockNotifications } from '@/data/mock/notifications';
 import { buildPaymentNotifications } from '@/lib/notification';
 import { noxhNotificationId, noxhToAppNotification } from '@/lib/noxh';
-import type { AppNotification } from '@/types';
+import type { AppNotification, Receipt } from '@/types';
 
 import { AUTH_BACKEND, NOXH_BACKEND } from './config';
+import { ServiceError } from './errors';
 import { clone, simulateLatency } from './mockLatency';
 import { getAllInstallments } from './paymentService';
 import { getNoxhNotifications, markNoxhNotificationsRead } from './noxhService';
@@ -44,7 +45,12 @@ async function saveReadIds(ids: Set<string>): Promise<void> {
 async function buildRealNotifications(): Promise<AppNotification[]> {
   // Công ty chỉ có phiên NOXH → không có lịch thanh toán / phiếu thu.
   if (isNoxhOnlySession()) return [];
-  const [installments, receipts, read] = await Promise.all([getAllInstallments(), getCustomerReceipts(''), loadReadIds()]);
+  // Phiếu thu lỗi (trừ hết phiên / mất mạng) → vẫn hiện nhắc thanh toán, chỉ thiếu thông báo "phiếu thu mới".
+  const receiptsOrEmpty = getCustomerReceipts('').catch((e: unknown) => {
+    if (e instanceof ServiceError && (e.code === 'UNAUTHORIZED' || e.code === 'NETWORK')) throw e;
+    return [] as Receipt[];
+  });
+  const [installments, receipts, read] = await Promise.all([getAllInstallments(), receiptsOrEmpty, loadReadIds()]);
   return buildPaymentNotifications(installments, receipts).map((n) => ({ ...n, read: read.has(n.id) }));
 }
 

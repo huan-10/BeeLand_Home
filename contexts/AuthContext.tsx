@@ -15,6 +15,7 @@ import {
   selectProfile,
   setActiveSession,
 } from '@/services';
+import { unregisterPush } from '@/services/pushService';
 import { onNoxhSessionExpired } from '@/services/session';
 import type { AuthSession, CompanyOption, User } from '@/types';
 
@@ -217,6 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    // Gỡ máy khỏi push tin nhắn trước khi huỷ phiên.
+    await unregisterPush();
     await logout(session).catch(() => undefined);
     // Nháp form NOXH có CCCD/SĐT → xoá khi đăng xuất.
     clearAllPersonalDrafts();

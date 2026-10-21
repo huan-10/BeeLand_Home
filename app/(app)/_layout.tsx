@@ -36,6 +36,8 @@ export default function AppLayout() {
         <Tabs.Screen name="ban-giao" options={{ title: 'Bàn giao căn hộ', href: null }} />
         <Tabs.Screen name="lich-ban-giao" options={{ title: 'Lịch bàn giao', href: null }} />
         <Tabs.Screen name="tuy-chinh-trang-chu" options={{ title: 'Tuỳ chỉnh Trang chủ', href: null }} />
+        {/* Nhắn tin với chủ đầu tư — mở từ nút tin nhắn ở Trang chủ / lưới chức năng. */}
+        <Tabs.Screen name="tin-nhan" options={{ title: 'Nhắn tin', href: null }} />
       </Tabs>
       {/* Hồ sơ phát sinh ở công ty mới khi đang đăng nhập → nhập mật khẩu để liên kết. */}
       <LinkCompanyDialog companies={newCompanies} onLink={linkNewCompanies} onDismiss={dismissNewCompanies} />

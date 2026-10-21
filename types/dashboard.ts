@@ -1,4 +1,3 @@
-import type { AppNotification } from './notification';
 import type { PaymentInstallmentView } from './payment';
 
 export interface DashboardSummary {
@@ -10,6 +9,4 @@ export interface DashboardSummary {
   paidPercent: number;
   nextInstallment: PaymentInstallmentView | null;
   overdueInstallments: PaymentInstallmentView[];
-  unreadNotificationCount: number;
-  latestNotifications: AppNotification[];
 }

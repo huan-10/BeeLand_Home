@@ -8,10 +8,11 @@ import {
 } from '@/lib/portalMapping';
 import { summarizeContractPayments, toInstallmentView } from '@/lib/payment';
 import { recordPayTarget } from '@/lib/paymentTarget';
+import { allocateReceipts } from '@/lib/receiptAllocation';
 import type { Contract, ContractListItem, PaymentInstallment, PaymentInstallmentView, PayTarget, Receipt } from '@/types';
 
 import { str } from './client';
-import { getCustomerRecords, getPgcSchedule, getPgcVouchers, type PgcRecord, type ScheduleRpcRow, type VoucherRow } from './customerData';
+import { getCustomerRecords, getPgcAllocation, getPgcSchedule, getPgcVouchers, type PgcRecord, type ScheduleRpcRow, type VoucherRow } from './customerData';
 
 /** Một phiếu của khách → hợp đồng của app. */
 export function buildContract(rec: PgcRecord): Contract {
@@ -40,7 +41,11 @@ export function buildContract(rec: PgcRecord): Contract {
   };
 }
 
-/** Lịch lưu trên phiếu (khi hàm máy chủ chưa trả lịch) + phân bổ "đã thu" như web `allocatePaidToSchedule`. */
+/**
+ * Lịch lưu trên phiếu (khi hàm máy chủ chưa trả lịch). Số tiền lấy theo thứ tự cột như `fn_contract_payment_schedule`.
+ * Máy chủ tách tiền gốc / phí bảo trì theo loại phiếu thu, còn phiếu chỉ có tổng `da_thu` (gốc + PBT, không gồm lãi),
+ * nên trừ lần lượt từng đợt: hết gốc rồi tới PBT của chính đợt đó — khớp máy chủ khi khách trả theo thứ tự đợt.
+ */
 function fallbackSchedule(rec: PgcRecord): ScheduleRpcRow[] {
   const stored = (rec.row.lich_thanh_toan ?? [])
     .map((r, i) => ({
@@ -48,22 +53,23 @@ function fallbackSchedule(rec: PgcRecord): ScheduleRpcRow[] {
       text: str(r.DotTTText) || `Đợt ${Number(r.DotTT ?? i + 1)}`,
       date: str(r.NgayTT),
       rate: Number(r.TyLeTT) || 0,
-      due: money(r.SoTien ?? r.TuongUng ?? r.PhaiThu),
-      duePbt: money(r.PhaiThuPBT ?? r.PhiBT),
+      due: money(r.PhaiThu ?? r.SoTien ?? r.TuongUng),
+      duePbt: money(r.PhiBT ?? r.PhaiThuPBT),
       note: str(r.DienGiai),
     }))
     .sort((a, b) => a.dot - b.dot);
   let remain = money(rec.row.da_thu);
-  const paid = stored.map((s) => {
-    const pay = Math.min(remain, s.due);
+  const take = (need: number) => {
+    const pay = Math.min(remain, need);
     remain -= pay;
     return pay;
-  });
-  const paidPbt = stored.map((s) => {
-    const pay = Math.min(remain, s.duePbt);
-    remain -= pay;
-    return pay;
-  });
+  };
+  const paid: number[] = [];
+  const paidPbt: number[] = [];
+  for (const s of stored) {
+    paid.push(take(s.due));
+    paidPbt.push(take(s.duePbt));
+  }
   return stored.map((s, i) => ({
     dot_tt: s.dot,
     dot_tt_text: s.text,
@@ -89,9 +95,10 @@ export function buildInstallments(rec: PgcRecord, schedule: ScheduleRpcRow[]): P
         contractId: rec.row.id,
         sequence: Number(r.dot_tt) || 0,
         name: str(r.dot_tt_text) || `Đợt ${r.dot_tt}`,
-        description: [str(r.dien_giai), pbt > 0 ? 'Bao gồm phí bảo trì' : ''].filter(Boolean).join(' · ') || undefined,
+        description: str(r.dien_giai) || undefined,
         percentOfContract: Number(r.ty_le_tt) || 0,
         amount: money(r.phai_thu) + pbt,
+        maintenanceFee: pbt > 0 ? pbt : undefined,
         paidAmount: money(r.da_thu) + money(r.da_thu_pbt),
         dueDate: dateOnly(r.ngay_tt),
       };
@@ -168,7 +175,11 @@ export function buildReceipt(contract: Contract, v: VoucherRow, payerFallback: s
 export async function getCustomerReceipts(payerFallback: string, contractId?: string, force = false): Promise<Receipt[]> {
   const bundles = (await getContractBundles(force)).filter((b) => !contractId || b.contract.id === contractId);
   const lists = await Promise.all(
-    bundles.map(async (b) => (await getPgcVouchers(b.contract.id, force)).map((v) => buildReceipt(b.contract, v, payerFallback))),
+    bundles.map(async (b) => {
+      const [vouchers, alloc] = await Promise.all([getPgcVouchers(b.contract.id, force), getPgcAllocation(b.contract.id, force)]);
+      const byVoucher = alloc ? allocateReceipts(alloc) : null;
+      return vouchers.map((v) => ({ ...buildReceipt(b.contract, v, payerFallback), allocation: byVoucher?.get(v.id) }));
+    }),
   );
   return lists.flat().sort((a, b) => b.paidDate.localeCompare(a.paidDate));
 }

@@ -23,7 +23,7 @@ import {
 } from '@/theme';
 
 import { Logo } from './Logo';
-import { activeNavName, primaryNavItems, secondaryNavItems, type NavItem } from './navItems';
+import { activeNavName, primaryNavItems, secondaryNavItems, TAB_BAR_HIDDEN, type NavItem } from './navItems';
 
 /**
  * Thanh điều hướng của ứng dụng, dùng làm `tabBar` cho `<Tabs>`.
@@ -49,11 +49,8 @@ export function AppNavigation({ state, navigation }: BottomTabBarProps) {
     }
   };
 
-  return isWide ? (
-    <Sidebar activeName={activeName} onNavigate={onNavigate} />
-  ) : (
-    <BottomBar activeName={activeName} onNavigate={onNavigate} />
-  );
+  if (isWide) return <Sidebar activeName={activeName} onNavigate={onNavigate} />;
+  return routeName && TAB_BAR_HIDDEN.has(routeName) ? null : <BottomBar activeName={activeName} onNavigate={onNavigate} />;
 }
 
 interface BarProps {

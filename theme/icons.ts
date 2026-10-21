@@ -67,6 +67,10 @@ import { ConfettiIcon } from 'phosphor-react-native/src/icons/Confetti';
 import { PrinterIcon } from 'phosphor-react-native/src/icons/Printer';
 import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
 import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
+import { ChatsCircleIcon } from 'phosphor-react-native/src/icons/ChatsCircle';
+import { HeadsetIcon } from 'phosphor-react-native/src/icons/Headset';
+import { PaperclipIcon } from 'phosphor-react-native/src/icons/Paperclip';
+import { PaperPlaneRightIcon } from 'phosphor-react-native/src/icons/PaperPlaneRight';
 
 /**
  * Bộ icon duy nhất của dự án: Phosphor Icons (phosphor-react-native) — bo tròn mềm, nhiều kiểu nét
@@ -142,6 +146,10 @@ export const icons = {
   printer: PrinterIcon,
   chevronDown: CaretDownIcon,
   chevronUp: CaretUpIcon,
+  headset: HeadsetIcon,
+  chat: ChatsCircleIcon,
+  attach: PaperclipIcon,
+  send: PaperPlaneRightIcon,
 } satisfies Record<string, PhosphorIcon>;
 
 export type IconName = keyof typeof icons;

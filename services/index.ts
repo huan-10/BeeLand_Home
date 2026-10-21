@@ -15,6 +15,7 @@ export * from './noxhService';
 export * from './paymentService';
 export * from './receiptService';
 export * from './requestService';
+export * from './chatService';
 export * from './receiptFile';
 export * from './qrImage';
 export { setActiveSession } from './session';

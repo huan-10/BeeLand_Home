@@ -7,6 +7,7 @@ import {
   InstallmentTimeline,
   PaymentConfirmDialog,
   ReceiptCard,
+  ReceiptsSummaryCard,
 } from '@/components/domain';
 import { Screen, StickyActionBar } from '@/components/layout';
 import {
@@ -28,6 +29,8 @@ import { useContract } from '@/hooks/useContracts';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
 import { useReceipts } from '@/hooks/useReceipts';
 import { formatCurrency } from '@/lib/format';
+import { payTargetLabel } from '@/lib/installmentText';
+import { summarizeReceipts } from '@/lib/receiptAllocation';
 import { payTargetDeadline } from '@/lib/paymentTarget';
 import { contractTypeLabels } from '@/lib/labels';
 import { openDocument } from '@/lib/openDocument';
@@ -154,7 +157,10 @@ export default function ContractDetailScreen() {
         {tab === 'schedule' ? (
           <Card padding="ml">
             {installments.length > 0 ? (
-              <InstallmentTimeline installments={installments} />
+              <InstallmentTimeline
+                installments={installments}
+                defaultExpandedId={payable?.module === 'HOPDONG' ? installments.find((i) => i.sequence === payable.dot)?.id : null}
+              />
             ) : (
               <EmptyState icon="calendar" title="Chưa có lịch thanh toán" />
             )}
@@ -235,9 +241,9 @@ function PayInfo({ target }: { target: PayTarget }) {
   const overdue = target.daysUntilDue != null && target.daysUntilDue < 0;
   const deadline = payTargetDeadline(target);
   return (
-    <View style={styles.payInfo} accessible accessibilityLabel={[target.name, formatCurrency(target.amount), deadline].filter(Boolean).join(', ')}>
+    <View style={styles.payInfo} accessible accessibilityLabel={[payTargetLabel(target), formatCurrency(target.amount), deadline].filter(Boolean).join(', ')}>
       <Text variant="caption" color={semantic.textMuted} numberOfLines={1}>
-        {target.name}
+        {payTargetLabel(target)}
       </Text>
       <Text variant="subhead" weight="bold" numeric numberOfLines={1} adjustsFontSizeToFit>
         {formatCurrency(target.amount)}
@@ -274,8 +280,11 @@ function ReceiptsPanel({ state }: { state: ReturnType<typeof useReceipts> }) {
       </Card>
     );
   }
+  // Tổng phiếu ≠ phần trừ vào hợp đồng (tiền lãi, thu dư) → khối đối chiếu để khách hiểu vì sao vẫn còn nợ.
+  const summary = summarizeReceipts(state.data);
   return (
     <View style={styles.list}>
+      {summary && summary.total !== summary.intoContract ? <ReceiptsSummaryCard summary={summary} /> : null}
       {state.data.map((r) => (
         <ReceiptCard key={r.id} receipt={r} onPress={() => router.push({ pathname: '/receipts/[id]', params: { id: r.id } })} />
       ))}

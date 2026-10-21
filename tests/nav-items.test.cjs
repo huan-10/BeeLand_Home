@@ -32,3 +32,10 @@ test('route của tab giữ nguyên tên; route phụ không thuộc tab nào', 
   assert.equal(m.activeNavName('notifications'), 'notifications');
   assert.equal(m.activeNavName('contract/[id]'), undefined);
 });
+
+test('Nhắn tin: mục sidebar, ẩn thanh tab nổi trên mobile', () => {
+  assert.deepEqual(m.secondaryNavItems.map((i) => i.name), ['notifications', 'tin-nhan']);
+  assert.equal(m.activeNavName('tin-nhan'), 'tin-nhan');
+  assert.ok(m.TAB_BAR_HIDDEN.has('tin-nhan'));
+  assert.ok(!m.TAB_BAR_HIDDEN.has('index'));
+});

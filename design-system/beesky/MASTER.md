@@ -178,6 +178,7 @@ Thẻ cần ảnh tràn góc: **cắt ảnh ở lớp riêng** (`imageWrap` bo g
 | `sizes.qrCode` | 232 | Ảnh mã VietQR ở màn Thanh toán QR (`pages/pay.md`), trong khung trắng viền mảnh |
 | `sizes.roundImage` · `pickerList` · `formColumnMin` | 140 · 320 · 240 | Nhà ở xã hội: ảnh thẻ đợt · danh sách chọn tỉnh/xã · bề rộng tối thiểu một cột form 2 cột |
 | `sizes.lotteryDrum` | mobile 200 · wide 260 | Lồng cầu bốc thăm NOXH |
+| `sizes.chat` | bubbleMaxWidth 520 · image 200 · imageSmall 120 · composerMaxHeight 132 · contentMaxWidth 760 | Màn Nhắn tin (`pages/chat.md`, 2026-10-12) |
 | `layout.contentMaxWidth` / `sidebarWidth` | 1100 / 248 | [Dự án] |
 
 ## 7. Icon — [Làm mới]

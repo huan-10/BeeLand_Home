@@ -7,3 +7,4 @@ export * from './user';
 export * from './noxh';
 export * from './handover';
 export * from './request';
+export * from './chat';

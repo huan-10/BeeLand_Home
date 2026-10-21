@@ -13,7 +13,7 @@ const BASE = process.env.BASE_URL || 'http://localhost:8081';
 const WIDTHS = (process.env.WIDTHS || '375,768,1024,1440').split(',').map(Number);
 const PUBLIC = ['/login', '/register', '/forgot-password'];
 const PRIVATE = [
-  '/', '/contracts', '/contracts/ct-001', '/payments', '/receipts', '/receipts/rc-015', '/profile', '/notifications',
+  '/', '/tin-nhan', '/contracts', '/contracts/ct-001', '/payments', '/receipts', '/receipts/rc-015', '/profile', '/notifications',
   // Nhà ở xã hội (dữ liệu mock)
   '/noxh', '/noxh/dot/dot-a', '/noxh/huong-dan', '/noxh/ho-so', '/noxh/ho-so/hs-001', '/noxh/ho-so/hs-001/thong-tin', '/noxh/ho-so/hs-001/giay-to',
   '/noxh/boc-tham', '/noxh/boc-tham/bt-hs004', '/noxh/ket-qua',

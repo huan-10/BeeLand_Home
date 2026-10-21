@@ -30,7 +30,11 @@
 | Chưa đến hạn | **Xám** viền + icon đồng hồ | "Chưa đến hạn" |
 | Quá hạn | Đỏ đặc + icon cảnh báo (Master: `danger`) | "Quá hạn" |
 
-Mỗi đợt: tên, số tiền `heading`, "% giá trị HĐ · ngày thanh toán/hạn + số ngày còn lại"; mỗi dòng có tên truy cập đầy đủ (tên, số tiền, ngày, trạng thái). Đường nối tô xanh giữa các đợt đã thanh toán.
+Mỗi đợt: tên, số tiền `heading`, đợt trả một phần thêm thanh tiến độ `sm` xanh lá + hàng "Đã trả …" (xanh lá) | "Còn phải trả …" (đậm, đỏ khi quá hạn — cùng số ở thanh Thanh toán, nhãn thanh là "Còn phải trả · Đợt N"), "% giá trị HĐ · ngày thanh toán/hạn + số ngày còn lại" (đã trả hết mà không có ngày trả → chỉ "Hạn …", không đếm quá hạn) — chữ do `lib/installmentText.ts`; mỗi dòng có tên truy cập đầy đủ (tên, số tiền, ngày, trạng thái). Đường nối tô xanh giữa các đợt đã thanh toán.
+
+**2026-10-21 (mẫu A, anh Phúc duyệt):** đợt còn nợ mà có phí bảo trì hoặc đã trả một phần → số chính là **"Còn phải trả"** (`heading`, màu trạng thái) + hộp `surfaceMuted` bo `lg` kiểu hoá đơn: "Tiền căn hộ (N% HĐ)" · "Phí bảo trì" · "Tổng đợt" · "Đã trả −…" (xanh lá) · "Còn phải trả" (đậm, đỏ khi quá hạn). Bỏ thanh tiến độ của đợt.
+
+**2026-10-21 (sau đó):** **mọi đợt** đều có bảng kê, **ẩn/hiện** bằng cách bấm hàng số tiền (bên phải: "Chi tiết" + mũi tên, vùng chạm ≥ 44, `accessibilityState.expanded`). Mới vào màn: chỉ đợt cần trả (`payTarget`, đợt HĐ) mở sẵn, các đợt khác đóng; khách bấm thì giữ theo khách tới khi rời màn, vào lại → về mặc định. Số chính: đã trả một phần → "Còn phải trả" + phần còn lại, còn lại → tổng đợt. Phí bảo trì = `phai_thu_pbt` (web: "Phải thu PBT"); đã thu lấy nguyên từ `fn_contract_payment_schedule` (cùng hàm web): phiếu "Thu theo tiến độ / đặt cọc / thanh toán sớm" vào gốc, phiếu "Phí bảo trì" vào PBT, "Thu tiền lãi" không tính vào đợt; dư gốc của đợt chảy sang gốc đợt sau, tiền gốc không trả PBT.
 
 ### Phiếu thu
 Danh sách `ReceiptCard` của hợp đồng (`useReceipts({ contractId })`) → bấm mở chi tiết phiếu thu. Đang tải: 2 Skeleton `row`; rỗng: `EmptyState` "Chưa có phiếu thu"; lỗi: `ErrorState` + Thử lại.
@@ -59,3 +63,10 @@ Danh sách `ReceiptCard` của hợp đồng (`useReceipts({ contractId })`) →
 - **Một thẻ thông tin** (`ContractSummaryCard`), mỗi thông tin xuất hiện một lần: ảnh dự án `sizes.roundImage` (loại HĐ viên kính + badge trạng thái ở trên, tên dự án + căn ở dưới — như thẻ danh sách) → khối tiền nền `surfaceMuted` (Giá trị hợp đồng `title`, thanh tiến độ, "Đã trả · x%" | "Còn lại" xanh) → `KeyValueRow` Mã hợp đồng (chạm để sao chép) + Ngày ký → link PDF → (desktop) nút "Thanh toán ngay". Bỏ thẻ xanh đêm lớn: mã HĐ dài không còn bị bẻ dòng cạnh badge, tên dự án / mã HĐ không lặp hai lần.
 - **Tab gạch chân** `LineTabs` (cùng kiểu màn Thanh toán): Lịch thanh toán · Phiếu thu n · Thông tin; rộng theo nội dung để nhãn không bị cắt; `id` nối với `TabPanel`. Bỏ dòng tổng gọn khi cuộn — thanh bám dính chỉ còn tab.
 - **Thanh đáy mobile**: trái tên đợt cần trả, số tiền còn phải trả (đậm), "Còn n ngày" / "Quá hạn n ngày" (đỏ); phải nút "Thanh toán". Khách thấy trả khoản nào, bao nhiêu trước khi bấm. Không còn đợt cần trả → không có thanh.
+
+
+### Phiếu thu — đã trừ vào đâu (2026-10-21, mẫu C)
+
+- Đầu tab: `ReceiptsSummaryCard` (thẻ trắng) **chỉ khi** tổng phiếu ≠ phần trừ vào hợp đồng: tổng tiền các phiếu, thanh chia màu (xanh trời = trừ vào HĐ, cam = tiền lãi, xám = chưa trừ vào đợt nào), từng dòng (không thêm câu giải thích — người dùng bỏ 2026-10-21).
+- `ReceiptCard`: thêm dòng loại phiếu (danh mục), hộp `surfaceMuted` "ĐÃ TRỪ VÀO" (Đợt N · tiền căn hộ / phí bảo trì), ghi chú cam chỉ cho thu dư / HĐ chuyển nhượng (tiền lãi không ghi chú). Phiếu chỉ có tiền lãi: icon + số tiền màu cam.
+- Dữ liệu: `fn_portal_app_phieu_thu_phan_bo` (lịch đầy đủ + dòng thu GOC/PBT/LAI) → `lib/receiptAllocation.ts` chia theo luật `fn_contract_payment_schedule`. Hàm chưa có / lỗi → thẻ như cũ, không hiện khối tổng.

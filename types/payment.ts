@@ -10,7 +10,10 @@ export interface PaymentInstallment {
   description?: string;
   /** Tỷ lệ phần trăm trên giá trị hợp đồng. */
   percentOfContract: number;
+  /** Tổng phải thu của đợt (đã gồm `maintenanceFee`). */
   amount: number;
+  /** Phí bảo trì thu cùng đợt (web: "Phải thu PBT"); phần còn lại của `amount` là tiền căn hộ. */
+  maintenanceFee?: number;
   paidAmount: number;
   /** Hạn thanh toán, ISO yyyy-MM-dd. */
   dueDate: string;

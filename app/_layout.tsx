@@ -1,23 +1,23 @@
-import '../global.css';
+import "../global.css";
 
-import { useFonts } from 'expo-font';
-import { DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useReducedMotion } from 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import { DefaultTheme, Stack, ThemeProvider, type Theme } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useReducedMotion } from "react-native-reanimated";
 
-import { Logo } from '@/components/layout';
-import { ToastProvider } from '@/components/ui';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { appFonts, colors, semantic, spacing } from '@/theme';
+import { ChatNotifier, Logo } from "@/components/layout";
+import { ToastProvider } from "@/components/ui";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { appFonts, colors, semantic, spacing } from "@/theme";
 
 export {
   // Bắt lỗi render của toàn bộ cây điều hướng.
   ErrorBoundary,
-} from 'expo-router';
+} from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -62,35 +62,56 @@ function RootNavigator() {
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (status !== 'loading') void SplashScreen.hideAsync();
+    if (status !== "loading") void SplashScreen.hideAsync();
   }, [status]);
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
       <View style={styles.loading}>
         <Logo size="xl" />
-        <ActivityIndicator color={semantic.brand} accessibilityLabel="Đang tải" />
+        <ActivityIndicator
+          color={semantic.brand}
+          accessibilityLabel="Đang tải"
+        />
       </View>
     );
   }
 
-  const isAuthenticated = status === 'authenticated';
+  const isAuthenticated = status === "authenticated";
 
   return (
-    <Stack
-      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: semantic.bg }, animation: reduceMotion ? 'none' : 'default' }}>
-      <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="login" options={{ title: 'Đăng nhập' }} />
-        <Stack.Screen name="register" options={{ title: 'Đăng ký' }} />
-        <Stack.Screen name="forgot-password" options={{ title: 'Quên mật khẩu' }} />
-      </Stack.Protected>
-    </Stack>
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: semantic.bg },
+          animation: reduceMotion ? "none" : "default",
+        }}
+      >
+        <Stack.Protected guard={isAuthenticated}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen name="login" options={{ title: "Đăng nhập" }} />
+          <Stack.Screen name="register" options={{ title: "Đăng ký" }} />
+          <Stack.Screen
+            name="forgot-password"
+            options={{ title: "Quên mật khẩu" }}
+          />
+        </Stack.Protected>
+      </Stack>
+      {/* Banner tin nhắn mới + push (đăng ký / bấm mở) — chỉ khi đã đăng nhập. */}
+      {isAuthenticated ? <ChatNotifier /> : null}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg, backgroundColor: semantic.bg },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.lg,
+    backgroundColor: semantic.bg,
+  },
 });

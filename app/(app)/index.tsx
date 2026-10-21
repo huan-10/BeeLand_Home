@@ -17,12 +17,14 @@ import {
 } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useChatUnread } from '@/hooks/useChat';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useHomeModules } from '@/hooks/useHomeModules';
 import { useLatestNotifications } from '@/hooks/useNotifications';
 import { useNoxhApplications, useNoxhLotteries } from '@/hooks/useNoxh';
 import { useServerClock } from '@/hooks/useServerClock';
 import { appModule, type AppModule } from '@/lib/appModules';
+import { chatUnreadLabel } from '@/lib/chat';
 import { formatRelativeTime, formatWeekdayDate } from '@/lib/format';
 import { notificationTypeMeta } from '@/lib/labels';
 import { unreadLabel } from '@/lib/notification';
@@ -45,6 +47,7 @@ export default function HomeScreen() {
     .map((m) => ({ label: m.short, icon: m.icon, onPress: () => router.push(m.href, { withAnchor: true }) }));
   const dashboard = useDashboard();
   const notifications = useLatestNotifications(NOTIFICATION_LIMIT);
+  const chatUnread = useChatUnread();
   // Việc cần làm Nhà ở xã hội (cần bổ sung / bốc thăm đang mở / sắp mở trong 24 giờ). Lỗi tải → ẩn thẻ, không ảnh hưởng Trang chủ.
   const noxhApps = useNoxhApplications();
   const noxhLots = useNoxhLotteries();
@@ -85,13 +88,21 @@ export default function HomeScreen() {
                 {formatWeekdayDate()}
               </Text>
             </View>
-            <IconButton
-              icon="bell"
-              accessibilityLabel="Thông báo"
-              dot={notifications.unreadCount > 0}
-              dotLabel={unreadLabel(notifications.unreadCount)}
-              onPress={() => router.push('/notifications')}
-            />
+            <View style={styles.headerActions}>
+              <IconButton
+                icon="chat"
+                accessibilityLabel={chatUnreadLabel(chatUnread)}
+                dot={chatUnread > 0}
+                onPress={() => router.push('/tin-nhan')}
+              />
+              <IconButton
+                icon="bell"
+                accessibilityLabel="Thông báo"
+                dot={notifications.unreadCount > 0}
+                dotLabel={unreadLabel(notifications.unreadCount)}
+                onPress={() => router.push('/notifications')}
+              />
+            </View>
           </View>
         </Col>
 
@@ -183,6 +194,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.ms },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   name: fontSizes.headline,
   flex: { flex: 1 },
   cards: { gap: spacing.ms },

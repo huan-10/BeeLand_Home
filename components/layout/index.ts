@@ -1,4 +1,5 @@
 export * from './AppNavigation';
+export * from './ChatNotifier';
 export * from './Logo';
 export * from './ResponsiveGrid';
 export * from './Screen';

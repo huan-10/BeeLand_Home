@@ -15,7 +15,8 @@ Cập nhật: 2026-10-02. Dùng chung database với web `beeland` và `beeland-
 | App | Database | Giống |
 |---|---|---|
 | Danh sách hợp đồng / phiếu | `cloud_pgc_phieu_giucho` (lọc như trên, `deleted_at is null`) + tra `bds_products`, `da_projects`, `cloud_catalogs` theo id | 2026 `CustomerService.getCustomerTransactions` |
-| Lịch thanh toán | RPC `fn_contract_payment_schedule(p_ma_ctdk_uid, p_pgc_id)`; rỗng → lịch lưu `lich_thanh_toan` trên phiếu + phân bổ `da_thu` (hết gốc từng đợt rồi mới PBT) | 2026 `PaymentProgressService.getSchedule`, web `ContractScheduleService` |
+| Lịch thanh toán | RPC `fn_contract_payment_schedule(p_ma_ctdk_uid, p_pgc_id)`; rỗng → lịch lưu `lich_thanh_toan` trên phiếu + phân bổ `da_thu` lần lượt từng đợt, mỗi đợt hết gốc rồi tới PBT của đợt đó (2026-10-21; `da_thu` gộp gốc + PBT nên không tách được theo loại phiếu như máy chủ) | 2026 `PaymentProgressService.getSchedule`, web `ContractScheduleService` |
+| Phiếu thu: đã trừ vào đâu | RPC `fn_portal_app_phieu_thu_phan_bo(p_token, p_pgc_id)` (migration web `20261028170000_portal_app_phieu_thu_phan_bo`, chỉ đọc) → `lib/receiptAllocation.ts`; chưa có hàm → bỏ qua | `fn_contract_payment_schedule` (CTE `ln`, `loai`, `alloc`) |
 | Phiếu thu | RPC `fn_cash_vouchers_by_pgc(…, 'THU')`, tiền = `so_tien_pgc` | 2026 `getReceipts`, web `PgcCashVouchersTab` |
 | Ảnh dự án | `cloud_catalogs` loại `du_an_anh` (`item_code = da_projects.ma_da_code`, `ma_ctdk_uid` = công ty) → `anh_background` → `anh_icon`; không có thì `da_projects.image_url`. Đường dẫn `upload/...` thêm tiền tố `https://upload.beesky.vn/` | 2026 `ProjectService` (`fetchDuAnAnhMap`, `absUrl`) |
 | Bên bán | `cloud_companies` (`ten_ct`, `dia_chi`, `dien_thoai`, `email`) của công ty tài khoản | |
@@ -102,3 +103,17 @@ Cùng luồng web booking / đặt cọc (`beeland/docs/payment-flow.md`, `Booki
 - BRG Smart City có 2 tài khoản cấu hình (MaTK 43, 44) → app chỉ dùng VA nhân viên đã tạo; BRG TOWER chưa cấu hình thanh toán (`da_payment_gateway_configs`) → "Dự án chưa bật thanh toán trực tuyến" (web cũng không tạo được).
 - ⚠ Bấm "Xác nhận thanh toán" trên dữ liệu thật **có thể tạo tài khoản định danh thật** ở ngân hàng (ghi `contract_virtual_accounts`). Claude không tự bấm thử.
 - Đã thử (2026-10-07, `BEGIN…ROLLBACK`): A1-1005 Đợt 1 = 155.417.983, Đợt 2 = 331.061.508 (khớp app); đặt cọc DC-A1-1001 = 200.000.000; phiếu của khách khác → "Không tìm thấy hợp đồng"; token giả → "Phiên đăng nhập đã hết hạn".
+
+## Thông báo tin nhắn (banner + push) — 2026-10-13
+
+Máy chủ: beeland migration `20261013150000_chat_push` + edge `chat-push` (spec `beeland/docs/superpowers/specs/2026-10-13-chat-push-design.md`).
+
+- **Đăng ký** (`services/pushService.ts`): đăng nhập / đổi công ty / quay lại app → xin quyền (lần đầu) → Expo push token →
+  `fn_portal_app_push_dang_ky(token phiên cổng của MỌI công ty, …)` — máy nhận tin của hồ sơ đang chọn ở từng công ty, hết hạn
+  theo phiên. Đăng xuất → `fn_portal_app_push_huy` (AuthContext `signOut`, trước khi huỷ phiên). Bản xem thử (`mock`) / web: bỏ qua.
+- **Push** khi nhân viên trả lời (tiêu đề = tên công ty, "Tên NV: nội dung"); tin của chính khách không báo.
+- **Banner trong app** (`components/layout/ChatNotifier.tsx`, gắn ở `app/_layout.tsx` khi đã đăng nhập): realtime `chatv:` của
+  công ty đang xem (`new` → tải tin cuối) + push nhận lúc đang mở (ẩn thông báo hệ thống). Khử trùng theo id tin; không hiện khi
+  đang ở màn Nhắn tin của công ty đó; tự ẩn 4,5 s. Logic thuần: `lib/chatNotify.ts` (test `tests/chat-notify.test.cjs`).
+- **Bấm banner / push** → chuyển công ty / hồ sơ nếu push thuộc công ty khác (`selectCompany`) rồi mở `/tin-nhan`.
+- Bản build **1.1** (native module + plugin `expo-notifications`). Android cần `google-services.json` + khoá FCM V1 trên EAS.
