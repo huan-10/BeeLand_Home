@@ -9,9 +9,10 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useReducedMotion } from "react-native-reanimated";
 
-import { ChatNotifier, Logo } from "@/components/layout";
+import { ChatNotifier, Logo, OtaUpdateScreen } from "@/components/layout";
 import { ToastProvider } from "@/components/ui";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useOtaUpdate } from "@/hooks/useOtaUpdate";
 import { appFonts, colors, semantic, spacing } from "@/theme";
 
 export {
@@ -36,6 +37,8 @@ const navigationTheme: Theme = {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(appFonts);
+  // Hỏi bản OTA ngay khi mở app (song song với tải font / phiên đăng nhập).
+  const ota = useOtaUpdate();
 
   useEffect(() => {
     if (fontError) throw fontError;
@@ -51,6 +54,7 @@ export default function RootLayout() {
             <StatusBar style="dark" />
             <RootNavigator />
           </AuthProvider>
+          {ota.updating ? <OtaUpdateScreen percent={ota.percent} /> : null}
         </ToastProvider>
       </ThemeProvider>
     </SafeAreaProvider>

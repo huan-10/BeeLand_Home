@@ -109,6 +109,8 @@ Mỗi sắc thái có cặp **nền pastel + chữ đậm cùng tông** (`tokens
 | `caption` / `captionStrong` | 14 / 20 · 400 / 500 | Thông tin phụ, ngày, giá trị dòng, nút nhỏ, chip |
 | `label` | 12 / 16 · 600, giãn 0.4 | **Cỡ nhỏ nhất**: badge, tiêu đề cột bảng, nhãn nhóm, nhãn tab |
 
+- **Ngoài thang**: `fontSizes.clock` 88 / 92 + `letterSpacing.clock` −2 — chỉ cho đồng hồ lớn ở màn "đang cập nhật dữ liệu mới" (`pages/ota-update.md`).
+- **Ngoại lệ màu**: nhóm `colors.ota` (navy `#16233B` / thẻ `#243556` / nhấn cam `#F59E6B`) chỉ dùng cho màn "đang cập nhật dữ liệu mới" — giống hệt app admin theo yêu cầu người dùng (2026-10-21), không theo bảng Xanh trời.
 - **Số tiền, ngày, mã**: prop `numeric` của `<Text>` → chữ số đều độ rộng (`tabular-nums`) để cột số thẳng hàng.
 - Ô nhập 15px; line-height ~1.3–1.45; **không tắt** `allowFontScaling`. Nhãn tab nổi / ô chức năng hẹp bỏ giãn chữ để vừa một dòng.
 
@@ -265,7 +267,7 @@ Breakpoint (`useBreakpoint`): mobile < 768 ≤ tablet < 1024 ≤ desktop < 1280 
 ## 10. Hiệu ứng & chuyển động — [Skill]
 
 - Token thời lượng `motion`: `fast` 150ms (phản hồi nhấn, hover web, toast ẩn) · `base` 200ms (toast hiện) · `slow` 300ms · `enter` 320ms + `stagger` 60ms (xuất hiện màn xác thực) · `skeleton` 800ms · `toast` 3500ms (thời gian hiển thị).
-- Lớp hiển thị `zIndex`: `base` 0 · `overlay` 40 · `toast` 100.
+- Lớp hiển thị `zIndex`: `base` 0 · `overlay` 40 · `toast` 100 · `system` 1000 (chỉ màn "đang cập nhật dữ liệu mới", phủ trên mọi thứ).
 - Phản hồi nhấn bằng màu nền/opacity, không thay đổi kích thước bố cục.
 - Chỉ animate `opacity`/`transform`; tối đa 1–2 phần tử động mỗi màn hình.
 - Tôn trọng giảm chuyển động: `useReducedMotion()` (native) và `@media (prefers-reduced-motion)` (web, trong `app/+html.tsx`).

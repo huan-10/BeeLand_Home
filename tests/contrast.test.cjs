@@ -78,6 +78,15 @@ for (const bg of ['inverse', 'inverseHover', 'inverseStrong']) {
   check(`onInverseAccent / ${bg}`, s.onInverseAccent, s[bg], TEXT);
 }
 check('thanh tiến độ màu nhấn / inverse', s.brand, s.inverse, GRAPHIC);
+
+// Màn "đang cập nhật dữ liệu mới" (OTA) — cùng bảng navy + cam với app admin beeland-app_2026
+const ota = tokens.colors.ota;
+for (const bg of ['bg', 'surface']) {
+  check(`ota.text / ota.${bg}`, ota.text, ota[bg], TEXT);
+  check(`ota.muted / ota.${bg}`, ota.muted, ota[bg], TEXT);
+  check(`ota.accent / ota.${bg}`, ota.accent, ota[bg], TEXT);
+}
+check('ota thanh tiến độ / rãnh', ota.accent, ota.track, GRAPHIC);
 check('icon lỗi toast / inverseStrong', tokens.colors.danger['500'], s.inverseStrong, GRAPHIC);
 check('thanh tiến độ xanh / inverse', tone.success.solid, s.inverse, GRAPHIC);
 check('thanh tiến độ màu nhấn / track trên inverse', s.brand, over(s.inverseTrack, s.inverse), GRAPHIC);

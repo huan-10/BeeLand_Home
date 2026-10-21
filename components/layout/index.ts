@@ -1,6 +1,7 @@
 export * from './AppNavigation';
 export * from './ChatNotifier';
 export * from './Logo';
+export * from './OtaUpdateScreen';
 export * from './ResponsiveGrid';
 export * from './Screen';
 export * from './Section';
