@@ -9,6 +9,7 @@ export * from './BrandBanner';
 export * from './ProjectImage';
 export * from './ContractSummaryCard';
 export * from './PaymentConfirmDialog';
+export * from './BankApps';
 export * from './ChangePasswordDialog';
 export * from './CompanyPickerDialog';
 export * from './LinkCompanyDialog';

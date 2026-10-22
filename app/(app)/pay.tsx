@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
+import { BankApps } from '@/components/domain';
 import { Screen } from '@/components/layout';
 import { Badge, Button, Card, ErrorState, KeyValueRow, ScreenHeader, Skeleton, StateView, Text, useToast } from '@/components/ui';
 import { useHardwareBack } from '@/hooks/useHardwareBack';
@@ -144,6 +145,7 @@ function Checkout({ checkout, remaining }: { checkout: PaymentCheckout; remainin
         <Text variant="caption" color={semantic.textMuted} align="center">
           Mở ứng dụng ngân hàng, quét mã để chuyển đúng số tiền và nội dung.
         </Text>
+        <BankApps info={checkout} disabled={remaining === 0} />
         <View style={styles.waiting} accessibilityLiveRegion="polite">
           <ActivityIndicator size="small" color={semantic.textBrand} />
           <Text variant="captionStrong" color={semantic.textBrand}>
