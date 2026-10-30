@@ -13,6 +13,7 @@ import { str } from './supabase/client';
 import {
   appSignIn,
   chooseProfile,
+  deleteAppAccount,
   findNewCompaniesByToken,
   getNoxhSites,
   listMyContracts,
@@ -488,6 +489,23 @@ export async function selectProfile(session: AuthSession, companyId: string, cus
   const entry = sessionCompanies(session).find((c) => c.companyId === companyId);
   if (!entry?.token || entry.customerId === customerId) return;
   await chooseProfile(entry.token, customerId);
+}
+
+/**
+ * Xoá tài khoản (Apple 5.1.1(v)): kiểm mật khẩu hiện tại rồi xoá tài khoản đăng nhập ở mọi công ty của SĐT này.
+ * Chỉ xoá tài khoản app — hồ sơ, hợp đồng, phiếu thu do chủ đầu tư quản lý vẫn giữ. Sai mật khẩu → lỗi gắn ô `password`.
+ */
+export async function deleteAccount(session: AuthSession, password: string): Promise<void> {
+  if (AUTH_BACKEND === 'mock') {
+    await simulateLatency();
+    const account = mockAccounts.find((a) => a.id === session.userId);
+    if (!account || account.password !== password) throw new ServiceError('Mật khẩu không đúng', 'UNAUTHORIZED', 'password');
+    for (let i = mockAccounts.length - 1; i >= 0; i -= 1) if (samePhone(mockAccounts[i].phone, account.phone)) mockAccounts.splice(i, 1);
+    return;
+  }
+  const tokens = sessionTokens(session);
+  if (tokens.length === 0) throw new ServiceError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại', 'UNAUTHORIZED');
+  await deleteAppAccount(tokens, password);
 }
 
 export async function logout(session: AuthSession | null): Promise<void> {

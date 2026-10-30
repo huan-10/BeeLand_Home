@@ -37,3 +37,7 @@
 - 2026-10-06 (gọn lại): tiêu đề "Quản lý" `captionStrong` đậm; tên nhóm `label` `textMuted`; lưới `QuickActions bare size="sm"` (icon `md`, ô đệm `sm`, nhãn cao tự nhiên — không giữ 2 dòng). Nhãn ngắn một dòng: "Bàn giao", "Hồ sơ" (trong nhóm NOXH); chỉ "Lịch\nbàn giao" 2 dòng. Chiều cao mục còn khoảng một nửa.
 - 2026-10-06 (dạng xổ xuống — thay 2 mục trên): "Quản lý" là thẻ `padding="sm"` tiêu đề `label` như các thẻ menu khác; mỗi nhóm một dòng như `MenuItem` (icon nhóm `IconCircle sm` · tên `bodyStrong` · "n mục" · `chevronDown`/`chevronUp`), `aria-expanded`; mặc định **thu gọn**, bấm mở lưới `QuickActions bare size="sm"` của nhóm ngay dưới dòng.
 - 2026-10-06: tiêu đề "Quản lý" có nút **"Tuỳ chỉnh"** bên phải (icon `sliders` + chữ `textBrand`, nền tròn khi nhấn) → màn Tuỳ chỉnh Trang chủ. Danh sách nhóm / mục lấy từ `lib/appModules.ts` (nhãn `short`).
+
+## Xóa tài khoản (2026-10-30, Apple 5.1.1(v))
+- Dòng cuối "Bảo mật & hỗ trợ": `MenuItem` icon `trash`, tone `danger`, "Xóa tài khoản" → `DeleteAccountDialog`.
+- Hộp thoại "Xóa tài khoản?": khối cảnh báo nền `toneColors.danger.bg` (icon `warning`, chữ `danger.fg`: không hoàn tác, xoá ở mọi chủ đầu tư, đăng xuất mọi thiết bị) · đoạn `caption` muted (hợp đồng/phiếu thu/hồ sơ NOXH vẫn được chủ đầu tư lưu, có thể đăng ký lại) · `Input password` "Nhập mật khẩu để xác nhận". Nút: Hủy (ghost) / **Xóa vĩnh viễn** (danger, `trash`, loading). Sai mật khẩu → lỗi dưới ô, focus lại.

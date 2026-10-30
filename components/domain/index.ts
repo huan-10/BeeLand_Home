@@ -12,6 +12,7 @@ export * from './PaymentConfirmDialog';
 export * from './BankApps';
 export * from './ChangePasswordDialog';
 export * from './CompanyPickerDialog';
+export * from './DeleteAccountDialog';
 export * from './LinkCompanyDialog';
 export * from './noxh';
 export * from './UnitFilterBar';

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
-import { ChangePasswordDialog, CompanyPickerDialog, ConnectNoxhDialog } from '@/components/domain';
+import { ChangePasswordDialog, CompanyPickerDialog, ConnectNoxhDialog, DeleteAccountDialog } from '@/components/domain';
 import { Screen } from '@/components/layout';
 import { Avatar, Button, Card, Dialog, Icon, IconCircle, KeyValueRow, Pressable, QuickActions, ScreenHeader, Text, useToast, type QuickAction } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
   const [companyOpen, setCompanyOpen] = useState(false);
   const [noxhOpen, setNoxhOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
@@ -147,6 +148,8 @@ export default function ProfileScreen() {
             value={HOTLINE}
             onPress={() => void Linking.openURL(`tel:${HOTLINE.replace(/\s/g, '')}`)}
           />
+          {/* Apple 5.1.1(v): khách tự xoá tài khoản ngay trong app; hộp thoại xác nhận bằng mật khẩu. */}
+          <MenuItem icon="trash" tone="danger" label="Xóa tài khoản" onPress={() => setDeleteOpen(true)} />
         </Card>
 
         {/* Hành động nguy hiểm tách riêng khỏi danh sách menu và cần xác nhận. */}
@@ -180,6 +183,7 @@ export default function ProfileScreen() {
         </Text>
       </Dialog>
       <ConnectNoxhDialog visible={noxhOpen} onClose={() => setNoxhOpen(false)} />
+      <DeleteAccountDialog visible={deleteOpen} onClose={() => setDeleteOpen(false)} />
     </Screen>
   );
 }

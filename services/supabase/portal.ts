@@ -156,6 +156,19 @@ export async function chooseProfile(token: string, customerId: string): Promise<
   if (error) throw new ServiceError(error, 'UNKNOWN');
 }
 
+/**
+ * Khách tự xoá tài khoản (`fn_portal_app_xoa_tai_khoan`): xác nhận bằng mật khẩu, server xoá tài khoản của mọi token
+ * + mọi tài khoản dùng cùng SĐT ở mọi công ty (phiên bị huỷ theo). Hồ sơ khách / hợp đồng của chủ đầu tư giữ nguyên.
+ */
+export async function deleteAppAccount(tokens: string[], password: string): Promise<void> {
+  const res = await rpc<unknown>('fn_portal_app_xoa_tai_khoan', { p_tokens: tokens, p_password: password });
+  const r = (typeof res === 'object' && res !== null ? res : {}) as { error?: unknown; ma?: unknown };
+  const error = str(r.error);
+  if (!error) return;
+  if (r.ma === 'SAI_MAT_KHAU') throw new ServiceError(error, 'UNAUTHORIZED', 'password');
+  throw new ServiceError(error, 'UNKNOWN');
+}
+
 const profileToCustomer = (r: ProfileRow): CustomerRow => ({
   id: r.id,
   ma_ctdk: r.ma_ctdk ?? '',

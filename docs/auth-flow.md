@@ -96,3 +96,11 @@ Một SĐT có thể là khách của **nhiều công ty** (mỗi công ty một
 - SĐT / CCCD không có tài khoản ở công ty nào → **"Số điện thoại / CCCD chưa có tài khoản. Vui lòng chọn "Đăng ký" để tạo tài khoản."** (dưới ô SĐT; `ACCOUNT_NOT_FOUND`).
 - Có tài khoản nhưng mọi lần đăng nhập bị từ chối → **"Mật khẩu không đúng. Vui lòng thử lại hoặc chọn "Quên mật khẩu?"."** (dưới ô mật khẩu; `WRONG_PASSWORD`). App đã kiểm tra tài khoản tồn tại trước bước này nên câu chung của máy chủ ("Tên đăng nhập hoặc mật khẩu không đúng") nghĩa là sai mật khẩu. Riêng "Tài khoản tạm khoá, thử lại sau 15 phút" (sai 5 lần, `fn_portal_site_login`) và "Tài khoản không được dùng trên website này…" giữ nguyên câu máy chủ (`loginRejectMessage`, `lib/validation.ts`, test `tests/login-id.test.cjs`).
 - Bấm "Đăng ký" / "Quên mật khẩu?" → xoá lỗi trước khi chuyển màn; đăng ký xong quay về (điền sẵn SĐT) → xoá lỗi + mật khẩu cũ.
+
+## Xoá tài khoản (2026-10-30 — Apple App Review 5.1.1(v))
+Tab Cá nhân → "Bảo mật & hỗ trợ" → **Xóa tài khoản** → `DeleteAccountDialog` (cảnh báo + ô mật khẩu hiện tại) → `deleteAccount` (`AuthContext`) → `authService.deleteAccount` → **`fn_portal_app_xoa_tai_khoan(p_tokens, p_password)`** (anon, `beeland/supabase/migrations/20261030090000_portal_app_xoa_tai_khoan.sql`, test `supabase/tests/portal_app_xoa_tai_khoan.sql`, đã áp lên server 2026-10-30).
+- App gửi mọi token của phiên (`sessionTokens`: hợp đồng + NOXH, mọi công ty). Mật khẩu phải đúng ở ít nhất một tài khoản của các token; sai → `ma = SAI_MAT_KHAU` (lỗi dưới ô mật khẩu), sai 5 lần khoá 15 phút như `fn_portal_app_login`.
+- Server xoá: tài khoản của các token + mọi tài khoản dùng cùng SĐT làm `username`/`di_dong` ở mọi công ty (`_portal_app_quen_mk_dich`, cùng phạm vi Quên mật khẩu) → phiên + phạm vi website xoá theo FK; gỡ `chat_push_thiet_bi` (customer) của hồ sơ không còn tài khoản nào khác.
+- **Không xoá** dữ liệu nghiệp vụ của chủ đầu tư: `cloud_customers`, hợp đồng, phiếu thu, hồ sơ NOXH, yêu cầu, tin nhắn. Web quản lý thấy khách "chưa cấp tài khoản" (trạng thái web vốn có) — nhân viên cấp lại được, khách đăng ký lại bằng OTP được.
+- Thành công → app gỡ push máy này, quên SĐT/mật khẩu "Ghi nhớ đăng nhập", xoá phiên → màn Đăng nhập. Lỗi → giữ nguyên phiên.
+- Mock: kiểm mật khẩu demo rồi xoá tài khoản giả cùng SĐT trong bộ nhớ.

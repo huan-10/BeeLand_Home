@@ -7,6 +7,7 @@ import { clearRememberedLogin, clearSession, loadRememberedLogin, loadSession, s
 import {
   clearAllPersonalDrafts,
   connectNoxh as connectNoxhService,
+  deleteAccount as deleteAccountService,
   findNewCompanies,
   getCurrentUser,
   linkNewCompanies as linkNewCompaniesService,
@@ -43,6 +44,8 @@ interface AuthContextValue {
    */
   selectCompany: (companyId: string, customerId?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Xoá tài khoản (xác nhận bằng mật khẩu hiện tại) rồi đăng xuất, quên SĐT/mật khẩu đã ghi nhớ. Sai mật khẩu → ném lỗi, giữ phiên. */
+  deleteAccount: (password: string) => Promise<void>;
   /** Hồ sơ phát sinh ở công ty mới sau khi khách đã đăng nhập — chờ khách nhập mật khẩu để liên kết. */
   newCompanies: CompanyOption[];
   /** Xác minh mật khẩu hiện tại rồi liên kết các công ty mới; trả các công ty đã thêm. */
@@ -217,10 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [replaceSession],
   );
 
-  const signOut = useCallback(async () => {
-    // Gỡ máy khỏi push tin nhắn trước khi huỷ phiên.
-    await unregisterPush();
-    await logout(session).catch(() => undefined);
+  const clearLocal = useCallback(async () => {
     // Nháp form NOXH có CCCD/SĐT → xoá khi đăng xuất.
     clearAllPersonalDrafts();
     setNewCompanies([]);
@@ -229,7 +229,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setUser(null);
     setStatus('unauthenticated');
-  }, [session]);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    // Gỡ máy khỏi push tin nhắn trước khi huỷ phiên.
+    await unregisterPush();
+    await logout(session).catch(() => undefined);
+    await clearLocal();
+  }, [session, clearLocal]);
+
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      if (!session) return;
+      // Kiểm mật khẩu + xoá trên server trước: lỗi → giữ nguyên phiên và push.
+      await deleteAccountService(session, password);
+      await unregisterPush();
+      await clearRememberedLogin();
+      await clearLocal();
+    },
+    [session, clearLocal],
+  );
 
   const value = useMemo(
     () => ({
@@ -242,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       rememberedLogin: loadRememberedLogin,
       selectCompany,
       signOut,
+      deleteAccount,
       newCompanies,
       linkNewCompanies,
       dismissNewCompanies,
@@ -250,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       contractsAvailable: !!session?.token,
       connectNoxh,
     }),
-    [status, user, session, signIn, selectCompany, signOut, newCompanies, linkNewCompanies, dismissNewCompanies, connectNoxh],
+    [status, user, session, signIn, selectCompany, signOut, deleteAccount, newCompanies, linkNewCompanies, dismissNewCompanies, connectNoxh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
