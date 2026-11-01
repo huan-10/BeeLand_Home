@@ -11,8 +11,8 @@ export interface UploadableFile {
 }
 
 /**
- * URL ký do máy chủ tạo có thể mang host nội bộ (kong) → đổi sang host công khai của Supabase
- * (giống `toPublicStorageUrl` của web). Không có `/storage/v1/` → giữ nguyên.
+ * URL ký do máy chủ tạo có thể mang host nội bộ / host cũ → đổi sang host API công khai
+ * (giống `toPublicStorageUrl` của web). Không có `/storage/v1/` (vd URL ký mới `…/api/storage/local/…`) → giữ nguyên.
  */
 export function publicStorageUrl(url: string): string {
   const i = url.indexOf('/storage/v1/');

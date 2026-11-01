@@ -14,8 +14,12 @@ export const AUTH_BACKEND: 'mock' | 'api' = process.env.EXPO_PUBLIC_AUTH_BACKEND
  */
 export const NOXH_BACKEND: 'mock' | 'api' = AUTH_BACKEND;
 
-/** Server Supabase dùng chung (giống `beeland-app_2026/sevicesSupabase/axiosApiSupabase.ts`). */
-export const SUPABASE_URL = 'https://api-beelandv2.beesky.vn';
+/**
+ * API BEELAND (.NET + SQL Server từ 01/11/2026, nhận nguyên cú pháp Supabase: `rest/v1`, `functions/v1`, `storage/v1`;
+ * realtime là SignalR `/api/realtime`). Giống `beeland-app_2026/sevicesSupabase/axiosApiSupabase.ts`.
+ * Địa chỉ cũ `api-beelandv2.beesky.vn` chỉ còn chuyển tiếp tạm cho bản app đã phát hành.
+ */
+export const SUPABASE_URL = 'https://api-beeland26.beesky.vn';
 
 /** Anon key công khai — RLS chặn đọc bảng; chỉ gọi được các RPC cổng khách hàng (fn_portal_login, fn_portal_my_contracts…). */
 export const SUPABASE_ANON_KEY =

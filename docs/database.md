@@ -1,7 +1,10 @@
-# Database thật (api-beelandv2.beesky.vn)
+# Database thật (api-beeland26.beesky.vn)
+
+> Từ 01/11/2026 dữ liệu thật nằm ở API .NET + SQL Server `https://api-beeland26.beesky.vn` (nhận nguyên cú pháp
+> `rest/v1` / `functions/v1` / `storage/v1`). Phần SSH / `psql` vào server Supabase cũ bên dưới không còn là nguồn dữ liệu thật.
 
 > ## ⛔ CHỈ ĐƯỢC PHÉP ĐỌC
-> Với database / API `https://api-beelandv2.beesky.vn`, **tuyệt đối không thêm, sửa hay xoá dữ liệu**. Quy tắc này áp dụng cho cả người lẫn AI.
+> Với database / API `https://api-beeland26.beesky.vn`, **tuyệt đối không thêm, sửa hay xoá dữ liệu**. Quy tắc này áp dụng cho cả người lẫn AI.
 > Server **không có môi trường test**: mọi thao tác ghi đều đi thẳng vào dữ liệu thật của khách hàng.
 
 ## Được phép

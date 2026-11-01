@@ -11,7 +11,7 @@ Chạy trên iOS, Android và Web với cùng một giao diện. Toàn bộ ch�
 - Expo Router (routes nằm ở `app/` ở gốc dự án — dự án này **không** dùng `src/app/`)
 - react-native-web + `@expo/metro-runtime` (web xuất tĩnh), NativeWind v4 + Tailwind 3
 - Font: **chỉ Be Vietnam Pro** (400/500/600/700) qua `expo-font`; icon: **Phosphor (phosphor-react-native)** qua `<Icon name variant>` (tên ngữ nghĩa trong `theme/icons.ts`, import từng icon `phosphor-react-native/src/icons/<Tên>`)
-- AsyncStorage cho phiên đăng nhập; dữ liệu giả trong `data/mock/`. Đã nối database thật (dùng chung với web `beeland` và `beeland-app_2026`) qua `services/supabase/*` — chỉ hàm anon `fn_portal_app_*` theo token phiên khách, KHÔNG dùng tài khoản hệ thống: đăng ký/đăng nhập (`docs/auth-flow.md`), hợp đồng / lịch thanh toán / phiếu thu / thông báo **chỉ của khách đang đăng nhập** (`docs/real-data.md`); **nhắn tin với chủ đầu tư** (`app/(app)/tin-nhan.tsx`, `fn_portal_app_chat_*` + edge `chat-app` + realtime `chatv:`; khách bấm gửi = ghi thật — nhân viên trả lời ở web BeeChat). `AUTH_BACKEND = 'mock'` để chạy offline
+- AsyncStorage cho phiên đăng nhập; dữ liệu giả trong `data/mock/`. Đã nối database thật (dùng chung với web `beeland` và `beeland-app_2026`) qua `services/supabase/*` — chỉ hàm anon `fn_portal_app_*` theo token phiên khách, KHÔNG dùng tài khoản hệ thống: đăng ký/đăng nhập (`docs/auth-flow.md`), hợp đồng / lịch thanh toán / phiếu thu / thông báo **chỉ của khách đang đăng nhập** (`docs/real-data.md`); **nhắn tin với chủ đầu tư** (`app/(app)/tin-nhan.tsx`, `fn_portal_app_chat_*` + edge `chat-app` + realtime `chatv:` qua SignalR `services/supabase/realtimeHub.ts`; khách bấm gửi = ghi thật — nhân viên trả lời ở web BeeChat). `AUTH_BACKEND = 'mock'` để chạy offline
 
 Lệnh: `npm run web` · `npm run ios` · `npm run android` · `npm run lint` · `npm run typecheck` · `npm test` (tương phản màu) · `npm run audit:ui` · `npx expo export --platform web`.
 Trong môi trường không truy cập được api.expo.dev, thêm `EXPO_OFFLINE=1` trước `npx expo install` / `npx expo export`.
@@ -35,7 +35,7 @@ design-system/beesky/ MASTER.md + pages/*.md — quy chuẩn giao diện
 
 ## Database thật — CHỈ ĐỌC (bắt buộc)
 
-Database / API `https://api-beelandv2.beesky.vn` **chỉ được phép đọc: không thêm, sửa, xoá gì**. Server không có môi trường test, nên mọi thao tác ghi đều đi vào dữ liệu thật. Lệnh được phép và bị cấm, cùng tài khoản đọc (`.env.local`, không commit), xem `docs/database.md`.
+Database / API `https://api-beeland26.beesky.vn` (API .NET + SQL Server từ 01/11/2026, cú pháp Supabase; địa chỉ cũ `api-beelandv2` chỉ chuyển tiếp tạm) **chỉ được phép đọc: không thêm, sửa, xoá gì**. Server không có môi trường test, nên mọi thao tác ghi đều đi vào dữ liệu thật. Lệnh được phép và bị cấm, cùng tài khoản đọc (`.env.local`, không commit), xem `docs/database.md`.
 
 Ngoại lệ (chức năng của app, khách bấm mới ghi): **khách tự đăng ký / đổi / huỷ lịch nhận nhà** qua `fn_portal_app_bg_dang_ky` / `_doi` / `_huy` (người dùng duyệt 2026-10-16, `docs/real-data.md` › Bàn giao). Claude không tự gọi các hàm ghi này để thử.
 
