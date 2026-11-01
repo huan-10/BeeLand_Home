@@ -63,7 +63,8 @@
           "color": "#0A74B8",
           "defaultChannel": "chat"
         }
-      ]
+      ],
+      "./plugins/withSceneLifecycle"
     ],
     "experiments": {
       "typedRoutes": true
